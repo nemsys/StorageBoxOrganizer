@@ -197,6 +197,56 @@ async function getAll() {
 }
 
 // export API (adjust to your project's module system)
+
+
+// Helper to get boxes with sorting
+async function getBoxes() {
+	const data = await loadData();
+	return (data.boxes || []).sort((a, b) => b.createdAt - a.createdAt);
+}
+
+// Helper to get items for a box with sorting
+async function getItems(boxId) {
+	const data = await loadData();
+	return (data.items || [])
+		.filter(i => i.boxId === boxId)
+		.sort((a, b) => b.createdAt - a.createdAt);
+}
+
+// Helper to get all items
+async function getAllItems() {
+	const data = await loadData();
+	return data.items || [];
+}
+
+// Seed function
+async function seed() {
+	const data = await loadData();
+	if (data.boxes && data.boxes.length > 0) return;
+
+	const boxId = 'seed-box-' + Date.now();
+	const box = {
+		id: boxId,
+		name: 'Garage Tools',
+		description: 'Tools and equipment stored in the garage',
+		image: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+		createdAt: Date.now()
+	};
+
+	const item = {
+		id: 'seed-item-' + Date.now(),
+		boxId: boxId,
+		name: 'Hammer',
+		description: 'Heavy duty hammer',
+		image: 'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+		tags: ['tool', 'construction'],
+		createdAt: Date.now()
+	};
+
+	await saveData({ boxes: [box], items: [item] });
+}
+
+// Update export
 export default {
 	saveAll,
 	getAll,
@@ -206,5 +256,9 @@ export default {
 	deleteBox,
 	idbGetImage,
 	idbPutImage,
-	idbDeleteImage
+	idbDeleteImage,
+	getBoxes,
+	getItems,
+	getAllItems,
+	seed
 };

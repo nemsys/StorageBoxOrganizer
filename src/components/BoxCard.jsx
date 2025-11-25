@@ -27,19 +27,29 @@ export function BoxCard({ box, onClick, onDelete }) {
             )}
 
             {onDelete && (
-                <button
-                    type="button"
-                    data-delete-button
+                <div
+                    className="absolute top-2 right-2 z-50"
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (typeof onDelete === 'function') onDelete(box.id);
                     }}
-                    className="absolute top-2 right-2 p-1.5 bg-red-500/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-30"
-                    title="Delete Box"
                 >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
-                </button>
+                    <button
+                        type="button"
+                        data-delete-button
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.nativeEvent.stopImmediatePropagation();
+                            console.log('Delete button clicked for box:', box.id);
+                            if (typeof onDelete === 'function') onDelete(box.id);
+                        }}
+                        className="p-1.5 bg-red-500/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        title="Delete Box"
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
+                    </button>
+                </div>
             )}
 
             <div className="absolute bottom-0 left-0 right-0 p-4 z-20">

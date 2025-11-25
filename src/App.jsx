@@ -1,16 +1,19 @@
 import { useState, useEffect, useMemo } from 'react';
 import Fuse from 'fuse.js';
-import { storageService } from './services/storage';
 import { BoxList } from './components/BoxList';
 import { ItemList } from './components/ItemList';
 import { AddBoxModal } from './components/AddBoxModal';
 import { AddItemModal } from './components/AddItemModal';
 import { SearchBar } from './components/SearchBar';
-import { ArrowLeft, PackageOpen } from 'lucide-react';
-import storage from './storage';
-import { BoxCard } from './components/BoxCard';
+import { AuthModal } from './components/AuthModal';
+import { ArrowLeft, PackageOpen, LogOut, User } from 'lucide-react';
+import { firebaseStorage } from './services/firebaseStorage';
+import { auth } from './firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [view, setView] = useState('boxes'); // 'boxes' | 'items'
   const [currentBox, setCurrentBox] = useState(null);
   const [boxes, setBoxes] = useState([]);
@@ -20,27 +23,45 @@ function App() {
   const [isAddBoxOpen, setIsAddBoxOpen] = useState(false);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
 
-  // Load initial data
+  // Auth Listener
   useEffect(() => {
-    storageService.seed(); // Seed if empty
-    refreshData();
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
-  const refreshData = () => {
-    setBoxes(storageService.getBoxes());
-    if (currentBox) {
-      setItems(storageService.getItems(currentBox.id));
+  // Load data when user changes
+  useEffect(() => {
+    if (user) {
+      refreshData();
     } else {
-      setItems(storageService.getAllItems());
+      setBoxes([]);
+      setItems([]);
+    }
+  }, [user]);
+
+  const refreshData = async () => {
+    if (!user) return;
+    const loadedBoxes = await firebaseStorage.getBoxes();
+    setBoxes(loadedBoxes);
+    if (currentBox) {
+      const loadedItems = await firebaseStorage.getItems(currentBox.id);
+      setItems(loadedItems);
+    } else {
+      const allItems = await firebaseStorage.getAllItems();
+      setItems(allItems);
     }
   };
 
   // Handle Box Selection
-  const handleBoxClick = (box) => {
+  const handleBoxClick = async (box) => {
     setCurrentBox(box);
-    setItems(storageService.getItems(box.id));
+    const boxItems = await firebaseStorage.getItems(box.id);
+    setItems(boxItems);
     setView('items');
-    setSearchQuery(''); // Clear search when entering a box
+    setSearchQuery('');
   };
 
   // Handle Back to Home
@@ -53,9 +74,11 @@ function App() {
 
   // Handle Adding Box
   async function handleAddBox(payload) {
+    if (!user) return;
     const id = Date.now().toString();
-    const createdAt = new Date().toISOString();
+    const createdAt = Date.now(); // Firestore prefers timestamps or numbers
 
+    // Optimistic UI update
     let previewImage = '';
     if (payload.image && (payload.image instanceof File || payload.image instanceof Blob)) {
       previewImage = URL.createObjectURL(payload.image);
@@ -73,84 +96,104 @@ function App() {
 
     const boxToStore = {
       ...boxForState,
-      image: payload.image
+      image: payload.image // File will be uploaded by service
     };
 
     try {
-      await storageService.addBox(boxToStore);
+      // Add to state immediately
       setBoxes(prev => [boxForState, ...prev]);
+
+      // Persist
+      const savedBox = await firebaseStorage.addBox(boxToStore);
+
+      // Update state with real URL if it changed (e.g. from blob to firebase storage url)
+      setBoxes(prev => prev.map(b => b.id === id ? savedBox : b));
     } catch (err) {
       console.error('Failed to save box', err);
-      if (previewImage) URL.revokeObjectURL(previewImage);
+      // Revert state on error
+      setBoxes(prev => prev.filter(b => b.id !== id));
+      if (previewImage && previewImage.startsWith('blob:')) URL.revokeObjectURL(previewImage);
+      alert('Failed to save box: ' + err.message);
     }
   }
 
   // Handle Adding Item
   async function handleAddItem(payload) {
+    if (!user) return;
     const id = Date.now().toString();
-    const createdAt = new Date().toISOString();
+    const createdAt = Date.now();
 
-    // Create a preview URL for immediate UI rendering if image is a File/Blob
     let previewImage = '';
     if (payload.image && (payload.image instanceof File || payload.image instanceof Blob)) {
       previewImage = URL.createObjectURL(payload.image);
     } else if (typeof payload.image === 'string') {
-      previewImage = payload.image; // already a data URL or URL
+      previewImage = payload.image;
     }
 
     const itemForState = {
       id,
+      boxId: currentBox.id,
       name: payload.name,
       description: payload.description,
       tags: payload.tags || [],
-      image: previewImage, // string for <img src=...>
+      image: previewImage,
       createdAt
     };
 
-    // Persist original item; pass the File/Blob so storage can store the blob in IndexedDB
     const itemToStore = {
       ...itemForState,
-      image: payload.image // File | Blob | dataURL | '' (storage.js will handle)
+      image: payload.image
     };
 
     try {
-      // persist (storage.addItem will offload blobs to IDB and write metadata to localStorage)
-      await storageService.addItem(itemToStore);
-      // update UI state (insert at top for example)
       setItems(prev => [itemForState, ...prev]);
+      const savedItem = await firebaseStorage.addItem(itemToStore);
+      setItems(prev => prev.map(i => i.id === id ? savedItem : i));
     } catch (err) {
       console.error('Failed to save item', err);
-      // revoke preview if persistence failed and you won't keep it in state
-      if (previewImage) URL.revokeObjectURL(previewImage);
+      setItems(prev => prev.filter(i => i.id !== id));
+      if (previewImage && previewImage.startsWith('blob:')) URL.revokeObjectURL(previewImage);
+      alert('Failed to save item: ' + err.message);
     }
   }
 
   // Handle Deleting Item
-  const handleDeleteItem = (itemId) => {
+  const handleDeleteItem = async (itemId) => {
     if (confirm('Are you sure you want to delete this item?')) {
-      storageService.deleteItem(itemId);
-      refreshData();
+      // Optimistic update
+      setItems(prev => prev.filter(i => i.id !== itemId));
+      try {
+        await firebaseStorage.deleteItem(itemId);
+      } catch (err) {
+        console.error('Failed to delete item', err);
+        refreshData(); // Revert on error
+        alert('Failed to delete item');
+      }
     }
   };
 
-  // new/updated handler: revoke preview URL, update state, call storage.deleteBox
+  // Handle Deleting Box
   async function handleDeleteBox(id) {
-    console.log('handleDeleteBox called for id:', id);
-    // optimistic UI update: remove from state and revoke preview URL if needed
-    setBoxes(prev => {
-      const box = prev.find(b => b.id === id);
-      if (box && box.image && typeof box.image === 'string' && box.image.startsWith('blob:')) {
-        try { URL.revokeObjectURL(box.image); } catch (e) { /* ignore */ }
-      }
-      return prev.filter(b => b.id !== id);
-    });
+    if (!confirm('Are you sure you want to delete this box and all its items?')) return;
+
+    // Optimistic update
+    setBoxes(prev => prev.filter(b => b.id !== id));
 
     try {
-      await storage.deleteBox(id);
-      console.log('storage.deleteBox succeeded for id:', id);
+      await firebaseStorage.deleteBox(id);
     } catch (err) {
-      console.error('Failed to delete box from storage', err);
-      // optional: reload boxes from storage.getAll() to reconcile
+      console.error('Failed to delete box', err);
+      refreshData(); // Revert
+      alert('Failed to delete box');
+    }
+  };
+
+  // Handle Sign Out
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error signing out:', error);
     }
   };
 
@@ -166,11 +209,11 @@ function App() {
     return fuse.search(searchQuery).map(result => result.item);
   }, [items, searchQuery]);
 
-  // Global Search (when in 'boxes' view, searching switches to 'global-search' view effectively)
+  // Global Search
   const globalSearchResults = useMemo(() => {
     if (view !== 'boxes' || !searchQuery) return [];
 
-    const allItems = storageService.getAllItems();
+    const allItems = items;
     const fuse = new Fuse(allItems, {
       keys: ['name', 'description', 'tags'],
       threshold: 0.3,
@@ -178,12 +221,11 @@ function App() {
 
     const results = fuse.search(searchQuery).map(result => result.item);
 
-    // Enrich items with box names
     return results.map(item => {
       const box = boxes.find(b => b.id === item.boxId);
       return { ...item, boxName: box?.name || 'Unknown Box' };
     });
-  }, [view, searchQuery, boxes]); // Dependency on boxes to refresh if data changes
+  }, [view, searchQuery, boxes, items]);
 
   // Handle Box Click from Search Results
   const handleBoxClickFromSearch = (boxId) => {
@@ -193,12 +235,21 @@ function App() {
     }
   };
 
-  // Determine what to display
   const displayItems = view === 'items' ? filteredItems : globalSearchResults;
   const isSearchingGlobal = view === 'boxes' && searchQuery.length > 0;
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pb-20">
+      <AuthModal isOpen={!user} onClose={() => { }} />
+
       {/* Header */}
       <header className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-white/5">
         <div className="container py-4">
@@ -214,17 +265,35 @@ function App() {
                   <PackageOpen size={24} />
                 </div>
                 <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-                  {view === 'items' ? currentBox.name : 'StorageBox'}
+                  {view === 'items' ? currentBox?.name : 'StorageBox'}
                 </h1>
               </div>
             </div>
 
-            <div className="w-full md:w-auto md:min-w-[300px]">
-              <SearchBar
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder={view === 'items' ? "Search in this box..." : "Search all items..."}
-              />
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              <div className="w-full md:w-auto md:min-w-[300px]">
+                <SearchBar
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder={view === 'items' ? "Search in this box..." : "Search all items..."}
+                />
+              </div>
+
+              {user && (
+                <div className="flex items-center gap-2 pl-4 border-l border-white/10">
+                  <div className="hidden md:flex flex-col items-end mr-2">
+                    <span className="text-xs text-slate-400">Signed in as</span>
+                    <span className="text-sm font-medium text-white truncate max-w-[150px]">{user.email}</span>
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="btn-icon btn-ghost text-slate-400 hover:text-red-400"
+                    title="Sign Out"
+                  >
+                    <LogOut size={20} />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -259,7 +328,7 @@ function App() {
             {displayItems.length > 0 ? (
               <ItemList
                 items={displayItems}
-                onAddClick={() => { }} // Cannot add item in global search
+                onAddClick={() => { }}
                 onDeleteItem={handleDeleteItem}
                 onBoxClick={handleBoxClickFromSearch}
               />
