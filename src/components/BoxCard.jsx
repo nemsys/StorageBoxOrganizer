@@ -3,7 +3,13 @@ import { Package } from 'lucide-react';
 export function BoxCard({ box, onClick, onDelete }) {
     return (
         <div
-            onClick={() => onClick(box)}
+            onClick={(e) => {
+                // if the click originated inside the delete button, ignore and do not open the box
+                if (e.target && e.target.closest && e.target.closest('[data-delete-button]')) {
+                    return;
+                }
+                if (typeof onClick === 'function') onClick(box);
+            }}
             className="card group cursor-pointer relative aspect-square flex flex-col"
         >
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
@@ -22,7 +28,13 @@ export function BoxCard({ box, onClick, onDelete }) {
 
             {onDelete && (
                 <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(box.id); }}
+                    type="button"
+                    data-delete-button
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (typeof onDelete === 'function') onDelete(box.id);
+                    }}
                     className="absolute top-2 right-2 p-1.5 bg-red-500/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-30"
                     title="Delete Box"
                 >

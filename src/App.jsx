@@ -7,6 +7,8 @@ import { AddBoxModal } from './components/AddBoxModal';
 import { AddItemModal } from './components/AddItemModal';
 import { SearchBar } from './components/SearchBar';
 import { ArrowLeft, PackageOpen } from 'lucide-react';
+import storage from './storage';
+import { BoxCard } from './components/BoxCard';
 
 function App() {
   const [view, setView] = useState('boxes'); // 'boxes' | 'items'
@@ -50,17 +52,78 @@ function App() {
   };
 
   // Handle Adding Box
-  const handleAddBox = (boxData) => {
-    storageService.addBox(boxData);
-    refreshData();
-  };
+  async function handleAddBox(payload) {
+    const id = Date.now().toString();
+    const createdAt = new Date().toISOString();
+
+    let previewImage = '';
+    if (payload.image && (payload.image instanceof File || payload.image instanceof Blob)) {
+      previewImage = URL.createObjectURL(payload.image);
+    } else if (typeof payload.image === 'string') {
+      previewImage = payload.image;
+    }
+
+    const boxForState = {
+      id,
+      name: payload.name,
+      description: payload.description,
+      image: previewImage,
+      createdAt
+    };
+
+    const boxToStore = {
+      ...boxForState,
+      image: payload.image
+    };
+
+    try {
+      await storageService.addBox(boxToStore);
+      setBoxes(prev => [boxForState, ...prev]);
+    } catch (err) {
+      console.error('Failed to save box', err);
+      if (previewImage) URL.revokeObjectURL(previewImage);
+    }
+  }
 
   // Handle Adding Item
-  const handleAddItem = (itemData) => {
-    if (!currentBox) return;
-    storageService.addItem({ ...itemData, boxId: currentBox.id });
-    refreshData();
-  };
+  async function handleAddItem(payload) {
+    const id = Date.now().toString();
+    const createdAt = new Date().toISOString();
+
+    // Create a preview URL for immediate UI rendering if image is a File/Blob
+    let previewImage = '';
+    if (payload.image && (payload.image instanceof File || payload.image instanceof Blob)) {
+      previewImage = URL.createObjectURL(payload.image);
+    } else if (typeof payload.image === 'string') {
+      previewImage = payload.image; // already a data URL or URL
+    }
+
+    const itemForState = {
+      id,
+      name: payload.name,
+      description: payload.description,
+      tags: payload.tags || [],
+      image: previewImage, // string for <img src=...>
+      createdAt
+    };
+
+    // Persist original item; pass the File/Blob so storage can store the blob in IndexedDB
+    const itemToStore = {
+      ...itemForState,
+      image: payload.image // File | Blob | dataURL | '' (storage.js will handle)
+    };
+
+    try {
+      // persist (storage.addItem will offload blobs to IDB and write metadata to localStorage)
+      await storageService.addItem(itemToStore);
+      // update UI state (insert at top for example)
+      setItems(prev => [itemForState, ...prev]);
+    } catch (err) {
+      console.error('Failed to save item', err);
+      // revoke preview if persistence failed and you won't keep it in state
+      if (previewImage) URL.revokeObjectURL(previewImage);
+    }
+  }
 
   // Handle Deleting Item
   const handleDeleteItem = (itemId) => {
@@ -70,14 +133,26 @@ function App() {
     }
   };
 
-  // Handle Deleting Box
-  const handleDeleteBox = (boxId) => {
-    if (confirm('Are you sure you want to delete this box? All items in this box will also be deleted.')) {
-      storageService.deleteBox(boxId);
-      refreshData();
+  // new/updated handler: revoke preview URL, update state, call storage.deleteBox
+  async function handleDeleteBox(id) {
+    console.log('handleDeleteBox called for id:', id);
+    // optimistic UI update: remove from state and revoke preview URL if needed
+    setBoxes(prev => {
+      const box = prev.find(b => b.id === id);
+      if (box && box.image && typeof box.image === 'string' && box.image.startsWith('blob:')) {
+        try { URL.revokeObjectURL(box.image); } catch (e) { /* ignore */ }
+      }
+      return prev.filter(b => b.id !== id);
+    });
+
+    try {
+      await storage.deleteBox(id);
+      console.log('storage.deleteBox succeeded for id:', id);
+    } catch (err) {
+      console.error('Failed to delete box from storage', err);
+      // optional: reload boxes from storage.getAll() to reconcile
     }
   };
-
 
   // Fuzzy Search Logic
   const filteredItems = useMemo(() => {

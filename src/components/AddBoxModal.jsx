@@ -1,39 +1,48 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Modal } from './Modal';
 import { Upload, X } from 'lucide-react';
 
 export function AddBoxModal({ isOpen, onClose, onAdd }) {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [image, setImage] = useState('');
+    const [image, setImage] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
+    const fileInputRef = useRef(null);
 
     const handleFileChange = (e) => {
-        const file = e.target.files?.[0];
+        const file = e.target.files?.[0] || null;
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const result = reader.result;
-                setImage(result);
-                setImagePreview(result);
-            };
-            reader.readAsDataURL(file);
+            const url = URL.createObjectURL(file);
+            setImage(file);
+            setImagePreview(url);
+            if (fileInputRef.current) fileInputRef.current.value = null;
         }
     };
 
+    useEffect(() => {
+        return () => {
+            if (imagePreview) URL.revokeObjectURL(imagePreview);
+        };
+    }, [imagePreview]);
+
     const handleRemoveImage = () => {
-        setImage('');
+        if (imagePreview) URL.revokeObjectURL(imagePreview);
+        setImage(null);
         setImagePreview('');
+        if (fileInputRef.current) fileInputRef.current.value = null;
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        // pass File|null to parent
         onAdd({ name, description, image });
         setName('');
         setDescription('');
-        setImage('');
+        if (imagePreview) URL.revokeObjectURL(imagePreview);
+        setImage(null);
         setImagePreview('');
-        onClose();
+        if (fileInputRef.current) fileInputRef.current.value = null;
+        if (typeof onClose === 'function') onClose();
     };
 
     return (
@@ -83,8 +92,10 @@ export function AddBoxModal({ isOpen, onClose, onAdd }) {
                                 <input
                                     type="file"
                                     accept="image/*"
+                                    capture="environment"
                                     onChange={handleFileChange}
                                     className="hidden"
+                                    ref={fileInputRef}
                                 />
                             </label>
                         </div>
@@ -95,8 +106,10 @@ export function AddBoxModal({ isOpen, onClose, onAdd }) {
                             <input
                                 type="file"
                                 accept="image/*"
+                                capture="environment"
                                 onChange={handleFileChange}
                                 className="hidden"
+                                ref={fileInputRef}
                             />
                         </label>
                     )}
