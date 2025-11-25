@@ -66,7 +66,7 @@ export function AddBoxModal({ isOpen, onClose, onAdd }) {
 
                     {imagePreview ? (
                         <div className="relative group">
-                            <img src={imagePreview} alt="Preview" className="w-full h-28 object-cover rounded-lg" />
+                            <img src={imagePreview} alt="Preview" className="w-full preview-img object-cover rounded-lg" />
                             <button
                                 type="button"
                                 onClick={handleRemoveImage}

@@ -787,3 +787,11 @@ textarea {
 .space-y-4>*+* {
   margin-top: 1rem;
 }
+
+/* Image preview used in AddBoxModal and AddItemModal */
+.preview-img {
+  width: 100%;
+  max-height: 30vh;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+}

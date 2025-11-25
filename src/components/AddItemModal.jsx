@@ -73,7 +73,7 @@ export function AddItemModal({ isOpen, onClose, onAdd }) {
 
                     {imagePreview ? (
                         <div className="relative group">
-                            <img src={imagePreview} alt="Preview" className="w-full h-28 object-cover rounded-lg" />
+                            <img src={imagePreview} alt="Preview" className="preview-img" />
                             <button
                                 type="button"
                                 onClick={handleRemoveImage}
