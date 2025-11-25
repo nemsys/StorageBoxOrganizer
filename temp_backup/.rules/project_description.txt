@@ -1,0 +1,7 @@
+I want to Vibe Code a StorageBoxOrganizer app.I want to be able to:
+
+. Add box: description and pictures
+. Add items to the box: description and pictures
+. Fuzzy search for items in boxes: by text
+
+You can use pictures in @sample_images folder
