@@ -8,6 +8,7 @@ import { EditBoxModal } from './components/EditBoxModal';
 import { EditItemModal } from './components/EditItemModal';
 import { SearchBar } from './components/SearchBar';
 import { AuthModal } from './components/AuthModal';
+import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { ArrowLeft, PackageOpen, LogOut, User } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
@@ -26,6 +27,8 @@ function App() {
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [editingBox, setEditingBox] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
+
+  const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, url: '', name: '' });
 
   // Auth Listener
   useEffect(() => {
@@ -261,6 +264,15 @@ function App() {
     }
   };
 
+  // Handle Fullscreen Image
+  const handleImageClick = (imageUrl, itemName) => {
+    setFullscreenImage({ isOpen: true, url: imageUrl, name: itemName });
+  };
+
+  const handleCloseFullscreenImage = () => {
+    setFullscreenImage({ isOpen: false, url: '', name: '' });
+  };
+
   // Fuzzy Search Logic
   const filteredItems = useMemo(() => {
     if (!searchQuery) return items;
@@ -419,6 +431,7 @@ function App() {
                 onDeleteItem={handleDeleteItem}
                 onEditItem={handleEditItem}
                 onBoxClick={handleBoxClickFromSearch}
+                onImageClick={handleImageClick}
               />
             ) : (
               <div className="text-center py-20 text-slate-500">
@@ -443,6 +456,7 @@ function App() {
               onDeleteItem={handleDeleteItem}
               onEditItem={handleEditItem}
               onBoxClick={view === 'allItems' ? handleBoxClickFromSearch : undefined}
+              onImageClick={handleImageClick}
             />
           </>
         )}
@@ -473,6 +487,13 @@ function App() {
         onClose={() => setEditingItem(null)}
         onSave={handleUpdateItem}
         item={editingItem}
+      />
+
+      <FullscreenImageModal
+        isOpen={fullscreenImage.isOpen}
+        onClose={handleCloseFullscreenImage}
+        imageUrl={fullscreenImage.url}
+        itemName={fullscreenImage.name}
       />
     </div>
   );

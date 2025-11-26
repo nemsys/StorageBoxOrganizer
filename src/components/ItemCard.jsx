@@ -1,9 +1,17 @@
-import { Tag, Package, Pencil } from 'lucide-react';
+import { Tag, Package, Pencil, Trash2 } from 'lucide-react';
 
-export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick }) {
+export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageClick }) {
     return (
         <div className="card flex flex-col h-full relative group">
-            <div className="aspect-video w-full overflow-hidden bg-slate-800 relative">
+            <div
+                className="aspect-video w-full overflow-hidden bg-slate-800 relative cursor-pointer"
+                onClick={() => {
+                    if (item.image && onImageClick) {
+                        onImageClick(item.image, item.name);
+                    }
+                }}
+                title={item.image ? "Click to view fullscreen" : ""}
+            >
                 {item.image ? (
                     <img
                         src={item.image}
@@ -15,26 +23,6 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick }) {
                         <span className="text-4xl">📦</span>
                     </div>
                 )}
-                <div className="absolute top-2 right-2 flex gap-2">
-                    {onEdit && (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); onEdit(item); }}
-                            className="p-1.5 bg-blue-500/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-600"
-                            title="Edit Item"
-                        >
-                            <Pencil size={16} />
-                        </button>
-                    )}
-                    {onDelete && (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
-                            className="p-1.5 bg-red-500/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                            title="Delete Item"
-                        >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
-                        </button>
-                    )}
-                </div>
             </div>
 
             <div className="p-4 flex-1 flex flex-col">
@@ -50,8 +38,34 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick }) {
                         <span className="font-medium underline">{boxName}</span>
                     </button>
                 )}
-                <h3 className="text-lg font-bold text-white mb-1">{item.name}</h3>
-                <p className="text-sm text-slate-300 mb-3 flex-1">{item.description}</p>
+
+                <div className="flex items-start justify-between gap-2 mb-1">
+                    <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-bold text-white">{item.name}</h3>
+                        <p className="text-sm text-slate-300 mb-3">{item.description}</p>
+                    </div>
+
+                    <div className="flex gap-1 flex-shrink-0">
+                        {onEdit && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+                                className="p-1.5 bg-blue-500/80 text-white rounded-full hover:bg-blue-600 transition-colors"
+                                title="Edit Item"
+                            >
+                                <Pencil size={14} />
+                            </button>
+                        )}
+                        {onDelete && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
+                                className="p-1.5 bg-red-500/80 text-white rounded-full hover:bg-red-600 transition-colors"
+                                title="Delete Item"
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        )}
+                    </div>
+                </div>
 
                 {item.tags && item.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-auto">
