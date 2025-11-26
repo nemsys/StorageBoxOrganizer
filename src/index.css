@@ -142,6 +142,7 @@ textarea {
   margin-bottom: 1rem;
   background: linear-gradient(to right, #fff, #94a3b8);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -483,6 +484,7 @@ textarea {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 /* Colors */
@@ -540,6 +542,14 @@ textarea {
 
 .bg-red-500\/80 {
   background-color: rgba(239, 68, 68, 0.8);
+}
+
+.bg-red-500\/10 {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.bg-red-500\/20 {
+  background-color: rgba(239, 68, 68, 0.2);
 }
 
 .bg-black\/60 {

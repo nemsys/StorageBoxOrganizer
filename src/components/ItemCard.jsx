@@ -49,7 +49,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                         {onEdit && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); onEdit(item); }}
-                                className="p-1.5 bg-blue-500/80 text-white rounded-full hover:bg-blue-600 transition-colors"
+                                className="p-1.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
                                 title="Edit Item"
                             >
                                 <Pencil size={14} />
@@ -58,7 +58,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                         {onDelete && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
-                                className="p-1.5 bg-red-500/80 text-white rounded-full hover:bg-red-600 transition-colors"
+                                className="p-1.5 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors"
                                 title="Delete Item"
                             >
                                 <Trash2 size={14} />
