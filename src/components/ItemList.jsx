@@ -10,7 +10,7 @@ export function ItemList({ items, onAddClick, onDeleteItem, onEditItem, onBoxCli
                     className="card border-dashed border-2 border-slate-700 bg-transparent flex items-center justify-center min-h-[160px] cursor-pointer hover:border-primary hover:bg-slate-800/50 group"
                     title="Add New Item"
                 >
-                    <div className="p-3 rounded-full bg-slate-800 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
+                    <div className="p-3 rounded-lg bg-slate-800 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
                         <Plus size={32} />
                     </div>
                 </div>
@@ -34,7 +34,7 @@ export function ItemList({ items, onAddClick, onDeleteItem, onEditItem, onBoxCli
                     className="card border-dashed border-2 border-slate-700 bg-transparent flex items-center justify-center min-h-[160px] cursor-pointer hover:border-primary hover:bg-slate-800/50 group"
                     title="Add New Item"
                 >
-                    <div className="p-3 rounded-full bg-slate-800 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
+                    <div className="p-3 rounded-lg bg-slate-800 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
                         <Plus size={32} />
                     </div>
                 </div>

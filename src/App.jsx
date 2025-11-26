@@ -413,7 +413,7 @@ function App() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               {(view === 'items' || view === 'allItems') && (
-                <button onClick={handleBack} className="btn-icon btn-ghost text-slate-400 hover:text-white">
+                <button onClick={handleBack} className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors mr-2">
                   <ArrowLeft size={24} />
                 </button>
               )}
