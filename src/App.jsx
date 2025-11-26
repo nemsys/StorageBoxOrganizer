@@ -49,6 +49,49 @@ function App() {
     }
   }, [user]);
 
+  // Browser history support
+  useEffect(() => {
+    const handlePopState = async (event) => {
+      if (event.state) {
+        const { view: historyView, boxId, boxName } = event.state;
+
+        if (historyView === 'boxes') {
+          setCurrentBox(null);
+          setView('boxes');
+          setSearchQuery('');
+          if (user) {
+            const loadedBoxes = await firebaseStorage.getBoxes();
+            setBoxes(loadedBoxes);
+            const allItems = await firebaseStorage.getAllItems();
+            setItems(allItems);
+          }
+        } else if (historyView === 'items' && boxId) {
+          const box = boxes.find(b => b.id === boxId) || { id: boxId, name: boxName };
+          setCurrentBox(box);
+          const boxItems = await firebaseStorage.getItems(boxId);
+          setItems(boxItems);
+          setView('items');
+          setSearchQuery('');
+        } else if (historyView === 'allItems') {
+          setCurrentBox(null);
+          const allItems = await firebaseStorage.getAllItems();
+          setItems(allItems);
+          setView('allItems');
+          setSearchQuery('');
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // Initialize history state if not set
+    if (!window.history.state) {
+      window.history.replaceState({ view: 'boxes' }, '', window.location.pathname);
+    }
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [user, boxes]);
+
   const refreshData = async () => {
     if (!user) return;
     const loadedBoxes = await firebaseStorage.getBoxes();
@@ -69,6 +112,13 @@ function App() {
     setItems(boxItems);
     setView('items');
     setSearchQuery('');
+
+    // Push to browser history
+    window.history.pushState(
+      { view: 'items', boxId: box.id, boxName: box.name },
+      '',
+      `#box/${box.id}`
+    );
   };
 
   // Handle Back to Home
@@ -77,6 +127,9 @@ function App() {
     setView('boxes');
     setSearchQuery('');
     refreshData();
+
+    // Push to browser history
+    window.history.pushState({ view: 'boxes' }, '', '#');
   };
 
   // Handle Adding Box
@@ -318,6 +371,9 @@ function App() {
     setItems(allItems);
     setView('allItems');
     setSearchQuery('');
+
+    // Push to browser history
+    window.history.pushState({ view: 'allItems' }, '', '#all-items');
   };
 
   const displayItems = (view === 'items' || view === 'allItems') ? filteredItems : globalSearchResults;
