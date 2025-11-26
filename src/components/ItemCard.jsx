@@ -1,6 +1,6 @@
-import { Tag, Package } from 'lucide-react';
+import { Tag, Package, Pencil } from 'lucide-react';
 
-export function ItemCard({ item, onDelete, boxName, onBoxClick }) {
+export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick }) {
     return (
         <div className="card flex flex-col h-full relative group">
             <div className="aspect-video w-full overflow-hidden bg-slate-800 relative">
@@ -15,13 +15,26 @@ export function ItemCard({ item, onDelete, boxName, onBoxClick }) {
                         <span className="text-4xl">📦</span>
                     </div>
                 )}
-                <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
-                    className="absolute top-2 right-2 p-1.5 bg-red-500/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                    title="Delete Item"
-                >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
-                </button>
+                <div className="absolute top-2 right-2 flex gap-2">
+                    {onEdit && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+                            className="p-1.5 bg-blue-500/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-600"
+                            title="Edit Item"
+                        >
+                            <Pencil size={16} />
+                        </button>
+                    )}
+                    {onDelete && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
+                            className="p-1.5 bg-red-500/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                            title="Delete Item"
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="p-4 flex-1 flex flex-col">

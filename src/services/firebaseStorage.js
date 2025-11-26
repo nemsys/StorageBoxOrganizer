@@ -1,4 +1,4 @@
-import { db, storage, auth } from '../firebase';
+import { db, auth } from '../firebase';
 import {
   collection,
   doc,
@@ -10,35 +10,19 @@ import {
   orderBy,
   getDoc
 } from 'firebase/firestore';
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject
-} from 'firebase/storage';
+import { resizeImage } from '../utils/imageUtils';
 
 const BOXES_COLL = 'boxes';
 const ITEMS_COLL = 'items';
 
-// Helper to upload image
-async function uploadImage(file, path) {
+// Helper to process image - resize and convert to base64
+async function processImage(file) {
   if (!file) return '';
-  if (typeof file === 'string') return file; // Already a URL
+  if (typeof file === 'string') return file; // Already a data URL or regular URL
 
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
-  return await getDownloadURL(storageRef);
-}
-
-// Helper to delete image from URL
-async function deleteImage(url) {
-  if (!url || !url.includes('firebasestorage')) return;
-  try {
-    const storageRef = ref(storage, url);
-    await deleteObject(storageRef);
-  } catch (error) {
-    console.warn('Failed to delete image:', error);
-  }
+  // Resize image to max 800x800 with 0.7 quality to keep size down
+  const dataUrl = await resizeImage(file, 800, 800, 0.7);
+  return dataUrl;
 }
 
 // Get user ID or throw
@@ -78,12 +62,11 @@ export const firebaseStorage = {
 
   addBox: async (box) => {
     const uid = getUserId();
-    const imagePath = `images/${uid}/boxes/${box.id}`;
-    const imageUrl = await uploadImage(box.image, imagePath);
+    const imageData = await processImage(box.image);
 
     const newBox = {
       ...box,
-      image: imageUrl,
+      image: imageData,
       userId: uid
     };
 
@@ -91,25 +74,44 @@ export const firebaseStorage = {
     return newBox;
   },
 
-  deleteBox: async (id) => {
-    // Get box to delete image
+  updateBox: async (id, updates) => {
+    const uid = getUserId();
+
+    // Get existing box
     const boxRef = doc(db, BOXES_COLL, id);
     const boxSnap = await getDoc(boxRef);
-    if (boxSnap.exists()) {
-      const box = boxSnap.data();
-      await deleteImage(box.image);
+    if (!boxSnap.exists()) throw new Error("Box not found");
+
+    const existingBox = boxSnap.data();
+
+    // Process image if it's being updated
+    let imageData = existingBox.image;
+    if (updates.image !== undefined) {
+      imageData = await processImage(updates.image);
     }
 
+    const updatedBox = {
+      ...existingBox,
+      ...updates,
+      image: imageData,
+      userId: uid,
+      id: id // Ensure ID doesn't change
+    };
+
+    await setDoc(boxRef, updatedBox);
+    return updatedBox;
+  },
+
+  deleteBox: async (id) => {
     // Delete box
+    const boxRef = doc(db, BOXES_COLL, id);
     await deleteDoc(boxRef);
 
     // Delete items in box
     const q = query(collection(db, ITEMS_COLL), where("boxId", "==", id));
     const snapshot = await getDocs(q);
-    const deletePromises = snapshot.docs.map(async (d) => {
-      const item = d.data();
-      await deleteImage(item.image);
-      return deleteDoc(doc(db, ITEMS_COLL, item.id));
+    const deletePromises = snapshot.docs.map((d) => {
+      return deleteDoc(doc(db, ITEMS_COLL, d.data().id));
     });
     await Promise.all(deletePromises);
   },
@@ -146,12 +148,11 @@ export const firebaseStorage = {
 
   addItem: async (item) => {
     const uid = getUserId();
-    const imagePath = `images/${uid}/items/${item.id}`;
-    const imageUrl = await uploadImage(item.image, imagePath);
+    const imageData = await processImage(item.image);
 
     const newItem = {
       ...item,
-      image: imageUrl,
+      image: imageData,
       userId: uid
     };
 
@@ -159,19 +160,41 @@ export const firebaseStorage = {
     return newItem;
   },
 
-  deleteItem: async (id) => {
+  updateItem: async (id, updates) => {
+    const uid = getUserId();
+
+    // Get existing item
     const itemRef = doc(db, ITEMS_COLL, id);
     const itemSnap = await getDoc(itemRef);
-    if (itemSnap.exists()) {
-      const item = itemSnap.data();
-      await deleteImage(item.image);
+    if (!itemSnap.exists()) throw new Error("Item not found");
+
+    const existingItem = itemSnap.data();
+
+    // Process image if it's being updated
+    let imageData = existingItem.image;
+    if (updates.image !== undefined) {
+      imageData = await processImage(updates.image);
     }
+
+    const updatedItem = {
+      ...existingItem,
+      ...updates,
+      image: imageData,
+      userId: uid,
+      id: id // Ensure ID doesn't change
+    };
+
+    await setDoc(itemRef, updatedItem);
+    return updatedItem;
+  },
+
+  deleteItem: async (id) => {
+    const itemRef = doc(db, ITEMS_COLL, id);
     await deleteDoc(itemRef);
   },
 
   seed: async () => {
     // No automatic seeding for cloud storage to avoid clutter
-    // But we could implement if needed
   }
 };
 

@@ -4,6 +4,8 @@ import { BoxList } from './components/BoxList';
 import { ItemList } from './components/ItemList';
 import { AddBoxModal } from './components/AddBoxModal';
 import { AddItemModal } from './components/AddItemModal';
+import { EditBoxModal } from './components/EditBoxModal';
+import { EditItemModal } from './components/EditItemModal';
 import { SearchBar } from './components/SearchBar';
 import { AuthModal } from './components/AuthModal';
 import { ArrowLeft, PackageOpen, LogOut, User } from 'lucide-react';
@@ -14,7 +16,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [view, setView] = useState('boxes'); // 'boxes' | 'items'
+  const [view, setView] = useState('boxes'); // 'boxes' | 'items' | 'allItems'
   const [currentBox, setCurrentBox] = useState(null);
   const [boxes, setBoxes] = useState([]);
   const [items, setItems] = useState([]);
@@ -22,6 +24,8 @@ function App() {
 
   const [isAddBoxOpen, setIsAddBoxOpen] = useState(false);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
+  const [editingBox, setEditingBox] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
 
   // Auth Listener
   useEffect(() => {
@@ -188,6 +192,66 @@ function App() {
     }
   };
 
+  // Handle Editing Box
+  const handleEditBox = (box) => {
+    setEditingBox(box);
+  };
+
+  const handleUpdateBox = async (updates) => {
+    if (!editingBox) return;
+
+    try {
+      // Optimistic update
+      setBoxes(prev => prev.map(b =>
+        b.id === editingBox.id ? { ...b, ...updates } : b
+      ));
+
+      // Persist to Firebase
+      const updatedBox = await firebaseStorage.updateBox(editingBox.id, updates);
+
+      // Update with server data
+      setBoxes(prev => prev.map(b =>
+        b.id === editingBox.id ? updatedBox : b
+      ));
+
+      setEditingBox(null);
+    } catch (err) {
+      console.error('Failed to update box', err);
+      refreshData(); // Revert on error
+      alert('Failed to update box: ' + err.message);
+    }
+  };
+
+  // Handle Editing Item
+  const handleEditItem = (item) => {
+    setEditingItem(item);
+  };
+
+  const handleUpdateItem = async (updates) => {
+    if (!editingItem) return;
+
+    try {
+      // Optimistic update
+      setItems(prev => prev.map(i =>
+        i.id === editingItem.id ? { ...i, ...updates } : i
+      ));
+
+      // Persist to Firebase
+      const updatedItem = await firebaseStorage.updateItem(editingItem.id, updates);
+
+      // Update with server data
+      setItems(prev => prev.map(i =>
+        i.id === editingItem.id ? updatedItem : i
+      ));
+
+      setEditingItem(null);
+    } catch (err) {
+      console.error('Failed to update item', err);
+      refreshData(); // Revert on error
+      alert('Failed to update item: ' + err.message);
+    }
+  };
+
   // Handle Sign Out
   const handleSignOut = async () => {
     try {
@@ -235,7 +299,16 @@ function App() {
     }
   };
 
-  const displayItems = view === 'items' ? filteredItems : globalSearchResults;
+  // Handle List All Items
+  const handleListAllItems = async () => {
+    setCurrentBox(null);
+    const allItems = await firebaseStorage.getAllItems();
+    setItems(allItems);
+    setView('allItems');
+    setSearchQuery('');
+  };
+
+  const displayItems = (view === 'items' || view === 'allItems') ? filteredItems : globalSearchResults;
   const isSearchingGlobal = view === 'boxes' && searchQuery.length > 0;
 
   if (authLoading) {
@@ -251,26 +324,46 @@ function App() {
       <AuthModal isOpen={!user} onClose={() => { }} />
 
       {/* Header */}
+      {/* Header */}
       <header className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-white/5">
+        {/* Top Bar - User Info */}
+        {user && (
+          <div className="bg-slate-950/50 border-b border-white/5 py-1.5 px-4">
+            <div className="container flex justify-end items-center gap-4">
+              <span className="text-xs text-slate-400">Signed in as <span className="text-white font-medium ml-1">{user.email}</span></span>
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-1 text-xs text-slate-400 hover:text-red-400 transition-colors"
+              >
+                <LogOut size={12} /> Sign Out
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="container py-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              {view === 'items' && (
+              {(view === 'items' || view === 'allItems') && (
                 <button onClick={handleBack} className="btn-icon btn-ghost text-slate-400 hover:text-white">
                   <ArrowLeft size={24} />
                 </button>
               )}
-              <div className="flex items-center gap-2">
+              <div
+                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={handleBack}
+                title="Go to Home"
+              >
                 <div className="p-2 bg-primary/10 rounded-lg text-primary">
                   <PackageOpen size={24} />
                 </div>
                 <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-                  {view === 'items' ? currentBox?.name : 'StorageBox'}
+                  {view === 'items' ? currentBox?.name : (view === 'allItems' ? 'All Items' : 'StorageBox')}
                 </h1>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 w-full md:w-auto">
+            <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="w-full md:w-auto md:min-w-[300px]">
                 <SearchBar
                   value={searchQuery}
@@ -279,20 +372,13 @@ function App() {
                 />
               </div>
 
-              {user && (
-                <div className="flex items-center gap-2 pl-4 border-l border-white/10">
-                  <div className="hidden md:flex flex-col items-end mr-2">
-                    <span className="text-xs text-slate-400">Signed in as</span>
-                    <span className="text-sm font-medium text-white truncate max-w-[150px]">{user.email}</span>
-                  </div>
-                  <button
-                    onClick={handleSignOut}
-                    className="btn-icon btn-ghost text-slate-400 hover:text-red-400"
-                    title="Sign Out"
-                  >
-                    <LogOut size={20} />
-                  </button>
-                </div>
+              {view === 'boxes' && (
+                <button
+                  onClick={handleListAllItems}
+                  className="btn btn-secondary whitespace-nowrap text-white"
+                >
+                  List all items
+                </button>
               )}
             </div>
           </div>
@@ -314,6 +400,7 @@ function App() {
               onBoxClick={handleBoxClick}
               onAddClick={() => setIsAddBoxOpen(true)}
               onDeleteBox={handleDeleteBox}
+              onEditBox={handleEditBox}
             />
           </>
         )}
@@ -330,6 +417,7 @@ function App() {
                 items={displayItems}
                 onAddClick={() => { }}
                 onDeleteItem={handleDeleteItem}
+                onEditItem={handleEditItem}
                 onBoxClick={handleBoxClickFromSearch}
               />
             ) : (
@@ -340,17 +428,21 @@ function App() {
           </>
         )}
 
-        {/* Item List View (Inside Box) */}
-        {view === 'items' && (
+        {/* Item List View (Inside Box or All Items) */}
+        {(view === 'items' || view === 'allItems') && (
           <>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">Items</h2>
+              <h2 className="text-2xl font-bold text-white">
+                {view === 'allItems' ? 'All Items' : 'Items'}
+              </h2>
               <span className="text-slate-400 text-sm">{displayItems.length} items</span>
             </div>
             <ItemList
               items={displayItems}
-              onAddClick={() => setIsAddItemOpen(true)}
+              onAddClick={view === 'items' ? () => setIsAddItemOpen(true) : undefined}
               onDeleteItem={handleDeleteItem}
+              onEditItem={handleEditItem}
+              onBoxClick={view === 'allItems' ? handleBoxClickFromSearch : undefined}
             />
           </>
         )}
@@ -367,6 +459,20 @@ function App() {
         isOpen={isAddItemOpen}
         onClose={() => setIsAddItemOpen(false)}
         onAdd={handleAddItem}
+      />
+
+      <EditBoxModal
+        isOpen={!!editingBox}
+        onClose={() => setEditingBox(null)}
+        onSave={handleUpdateBox}
+        box={editingBox}
+      />
+
+      <EditItemModal
+        isOpen={!!editingItem}
+        onClose={() => setEditingItem(null)}
+        onSave={handleUpdateItem}
+        item={editingItem}
       />
     </div>
   );

@@ -58,7 +58,8 @@ export function AuthModal({ isOpen, onClose }) {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-slate-950 border border-slate-700 rounded-lg py-2.5 pl-10 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                                style={{ paddingTop: '14px', paddingBottom: '14px' }}
+                                className="w-full bg-slate-100 border border-slate-300 rounded-lg pl-10 pr-4 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 transition-all text-base"
                                 placeholder="you@example.com"
                             />
                         </div>
@@ -74,7 +75,8 @@ export function AuthModal({ isOpen, onClose }) {
                                 minLength={6}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-slate-950 border border-slate-700 rounded-lg py-2.5 pl-10 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                                style={{ paddingTop: '14px', paddingBottom: '14px' }}
+                                className="w-full bg-slate-100 border border-slate-300 rounded-lg pl-10 pr-4 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 transition-all text-base"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -98,7 +100,7 @@ export function AuthModal({ isOpen, onClose }) {
                         <button
                             type="button"
                             onClick={() => setIsSignUp(!isSignUp)}
-                            className="text-sm text-slate-400 hover:text-white transition-colors"
+                            className="text-sm text-slate-300 hover:text-primary transition-colors"
                         >
                             {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
                         </button>
