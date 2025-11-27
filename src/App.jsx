@@ -21,6 +21,7 @@ function App() {
   const [currentBox, setCurrentBox] = useState(null);
   const [boxes, setBoxes] = useState([]);
   const [items, setItems] = useState([]);
+  const [allItems, setAllItems] = useState([]); // All items for selection
   const [searchQuery, setSearchQuery] = useState('');
 
   const [isAddBoxOpen, setIsAddBoxOpen] = useState(false);
@@ -46,6 +47,7 @@ function App() {
     } else {
       setBoxes([]);
       setItems([]);
+      setAllItems([]);
     }
   }, [user]);
 
@@ -96,12 +98,16 @@ function App() {
     if (!user) return;
     const loadedBoxes = await firebaseStorage.getBoxes();
     setBoxes(loadedBoxes);
+
+    // Always load all items for selection purposes
+    const allItemsData = await firebaseStorage.getAllItems();
+    setAllItems(allItemsData);
+
     if (currentBox) {
       const loadedItems = await firebaseStorage.getItems(currentBox.id);
       setItems(loadedItems);
     } else {
-      const allItems = await firebaseStorage.getAllItems();
-      setItems(allItems);
+      setItems(allItemsData);
     }
   };
 
@@ -571,7 +577,7 @@ function App() {
         onAdd={handleAddItem}
         boxes={boxes}
         initialBoxId={currentBox?.id}
-        availableItems={items}
+        availableItems={allItems}
         onSelectExisting={handleSelectExistingItem}
       />
 
