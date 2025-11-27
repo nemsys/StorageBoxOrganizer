@@ -190,9 +190,13 @@ function App() {
       previewImage = payload.image;
     }
 
+    // Use boxId from payload (if selected in modal) or fallback to currentBox
+    // If payload.boxId is explicitly empty string, it means "Unassigned"
+    const targetBoxId = payload.boxId !== undefined ? payload.boxId : (currentBox?.id || '');
+
     const itemForState = {
       id,
-      boxId: currentBox.id,
+      boxId: targetBoxId,
       name: payload.name,
       description: payload.description,
       tags: payload.tags || [],
@@ -206,11 +210,18 @@ function App() {
     };
 
     try {
-      setItems(prev => [itemForState, ...prev]);
+      // Only add to state if we are in "All Items" view OR if the item is added to the current box
+      if (view === 'allItems' || (currentBox && targetBoxId === currentBox.id)) {
+        setItems(prev => [itemForState, ...prev]);
+      }
+
       const savedItem = await firebaseStorage.addItem(itemToStore);
+
+      // Update with real data if it's still in view
       setItems(prev => prev.map(i => i.id === id ? savedItem : i));
     } catch (err) {
       console.error('Failed to save item', err);
+      // Revert state on error
       setItems(prev => prev.filter(i => i.id !== id));
       if (previewImage && previewImage.startsWith('blob:')) URL.revokeObjectURL(previewImage);
       alert('Failed to save item: ' + err.message);
@@ -288,14 +299,21 @@ function App() {
 
     try {
       // Optimistic update
-      setItems(prev => prev.map(i =>
-        i.id === editingItem.id ? { ...i, ...updates } : i
-      ));
+      setItems(prev => {
+        // If boxId changed and we are in a specific box view, remove the item if it moved out
+        if (updates.boxId !== undefined && view === 'items' && currentBox && updates.boxId !== currentBox.id) {
+          return prev.filter(i => i.id !== editingItem.id);
+        }
+
+        return prev.map(i =>
+          i.id === editingItem.id ? { ...i, ...updates } : i
+        );
+      });
 
       // Persist to Firebase
       const updatedItem = await firebaseStorage.updateItem(editingItem.id, updates);
 
-      // Update with server data
+      // Update with server data (if still in list)
       setItems(prev => prev.map(i =>
         i.id === editingItem.id ? updatedItem : i
       ));
@@ -351,6 +369,7 @@ function App() {
     const results = fuse.search(searchQuery).map(result => result.item);
 
     return results.map(item => {
+      if (!item.boxId) return { ...item, boxName: 'Unassigned' };
       const box = boxes.find(b => b.id === item.boxId);
       return { ...item, boxName: box?.name || 'Unknown Box' };
     });
@@ -529,6 +548,8 @@ function App() {
         isOpen={isAddItemOpen}
         onClose={() => setIsAddItemOpen(false)}
         onAdd={handleAddItem}
+        boxes={boxes}
+        initialBoxId={currentBox?.id}
       />
 
       <EditBoxModal
@@ -543,6 +564,7 @@ function App() {
         onClose={() => setEditingItem(null)}
         onSave={handleUpdateItem}
         item={editingItem}
+        boxes={boxes}
       />
 
       <FullscreenImageModal

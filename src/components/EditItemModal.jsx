@@ -2,12 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { Modal } from './Modal';
 import { Upload, X } from 'lucide-react';
 
-export function EditItemModal({ isOpen, onClose, onSave, item }) {
+export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [] }) {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [image, setImage] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
     const [tags, setTags] = useState('');
+    const [selectedBoxId, setSelectedBoxId] = useState('');
     const fileInputRef = useRef(null);
 
     // Populate form when item changes
@@ -18,6 +19,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item }) {
             setImage(item.image || null);
             setImagePreview(item.image || '');
             setTags(item.tags ? item.tags.join(', ') : '');
+            setSelectedBoxId(item.boxId || '');
         }
     }, [item]);
 
@@ -59,7 +61,8 @@ export function EditItemModal({ isOpen, onClose, onSave, item }) {
             name,
             description,
             image,
-            tags: tags.split(',').map(t => t.trim()).filter(Boolean)
+            tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+            boxId: selectedBoxId
         });
         if (typeof onClose === 'function') onClose();
     };
@@ -77,6 +80,22 @@ export function EditItemModal({ isOpen, onClose, onSave, item }) {
                         className="input"
                         placeholder="e.g., Hammer"
                     />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Box</label>
+                    <select
+                        value={selectedBoxId}
+                        onChange={(e) => setSelectedBoxId(e.target.value)}
+                        className="input"
+                    >
+                        <option value="">Unassigned (No Box)</option>
+                        {boxes.map(box => (
+                            <option key={box.id} value={box.id}>
+                                {box.name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <div>

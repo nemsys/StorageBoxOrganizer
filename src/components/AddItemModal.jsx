@@ -2,12 +2,20 @@ import { useState, useRef, useEffect } from 'react';
 import { Modal } from './Modal';
 import { Upload, X } from 'lucide-react';
 
-export function AddItemModal({ isOpen, onClose, onAdd }) {
+export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId = '' }) {
 	const [name, setName] = useState('');
 	const [description, setDescription] = useState('');
 	const [image, setImage] = useState(null); // File | null
 	const [imagePreview, setImagePreview] = useState(''); // object URL
+	const [selectedBoxId, setSelectedBoxId] = useState(initialBoxId);
 	const fileInputRef = useRef(null);
+
+	// Reset selected box when initialBoxId changes or modal opens
+	useEffect(() => {
+		if (isOpen) {
+			setSelectedBoxId(initialBoxId || '');
+		}
+	}, [isOpen, initialBoxId]);
 
 	const handleFileChange = (e) => {
 		const file = e.target.files?.[0] || null;
@@ -42,7 +50,8 @@ export function AddItemModal({ isOpen, onClose, onAdd }) {
 			name,
 			description,
 			image, // File | null
-			tags: tags.split(',').map(t => t.trim()).filter(Boolean)
+			tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+			boxId: selectedBoxId
 		});
 		// reset
 		setName('');
@@ -51,6 +60,7 @@ export function AddItemModal({ isOpen, onClose, onAdd }) {
 		setImage(null);
 		setImagePreview('');
 		setTags('');
+		setSelectedBoxId('');
 		if (fileInputRef.current) fileInputRef.current.value = null;
 		if (typeof onClose === 'function') onClose();
 	};
@@ -68,6 +78,22 @@ export function AddItemModal({ isOpen, onClose, onAdd }) {
 						className="input"
 						placeholder="e.g., Hammer"
 					/>
+				</div>
+
+				<div>
+					<label className="block text-sm font-medium text-slate-300 mb-1">Box</label>
+					<select
+						value={selectedBoxId}
+						onChange={(e) => setSelectedBoxId(e.target.value)}
+						className="input"
+					>
+						<option value="">Unassigned (No Box)</option>
+						{boxes.map(box => (
+							<option key={box.id} value={box.id}>
+								{box.name}
+							</option>
+						))}
+					</select>
 				</div>
 
 				<div>
