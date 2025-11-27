@@ -488,6 +488,7 @@ function App() {
               onAddClick={() => setIsAddBoxOpen(true)}
               onDeleteBox={handleDeleteBox}
               onEditBox={handleEditBox}
+              onAddItemClick={() => setIsAddItemOpen(true)}
             />
           </>
         )}
