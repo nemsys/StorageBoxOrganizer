@@ -11,6 +11,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
     const [selectedBoxId, setSelectedBoxId] = useState(initialBoxId);
     const [tags, setTags] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedExistingId, setSelectedExistingId] = useState('');
     const fileInputRef = useRef(null);
 
     // Reset when modal opens
@@ -19,6 +20,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
             setMode('create');
             setSelectedBoxId(initialBoxId || '');
             setSearchQuery('');
+            setSelectedExistingId('');
         }
     }, [isOpen, initialBoxId]);
 
@@ -37,6 +39,20 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
             (item.tags || []).some(tag => tag.toLowerCase().includes(query))
         );
     }, [selectableItems, searchQuery]);
+
+    // Auto-select if search results in exactly one item
+    useEffect(() => {
+        if (searchQuery && filteredItems.length === 1) {
+            setSelectedExistingId(filteredItems[0].id);
+        } else if (filteredItems.length === 0) {
+            setSelectedExistingId('');
+        }
+        // Note: We don't auto-clear if multiple items match, to preserve selection while typing
+        // unless the selected item is no longer in the filtered list
+        if (selectedExistingId && !filteredItems.find(i => i.id === selectedExistingId)) {
+            setSelectedExistingId('');
+        }
+    }, [filteredItems, searchQuery, selectedExistingId]);
 
     const handleFileChange = (e) => {
         const file = e.target.files?.[0] || null;
@@ -82,13 +98,6 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
         if (typeof onClose === 'function') onClose();
     };
 
-    const handleSelectItem = (item) => {
-        if (onSelectExisting) {
-            onSelectExisting(item.id);
-            if (typeof onClose === 'function') onClose();
-        }
-    };
-
     const getBoxName = (boxId) => {
         if (!boxId) return 'Unassigned';
         const box = boxes.find(b => b.id === boxId);
@@ -103,8 +112,8 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     type="button"
                     onClick={() => setMode('create')}
                     className={`px-4 py-2 font-medium transition-colors ${mode === 'create'
-                        ? 'text-primary border-b-2 border-primary'
-                        : 'text-slate-400 hover:text-slate-200'
+                            ? 'text-primary border-b-2 border-primary'
+                            : 'text-slate-400 hover:text-slate-200'
                         }`}
                 >
                     Create New
@@ -113,8 +122,8 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     type="button"
                     onClick={() => setMode('select')}
                     className={`px-4 py-2 font-medium transition-colors ${mode === 'select'
-                        ? 'text-primary border-b-2 border-primary'
-                        : 'text-slate-400 hover:text-slate-200'
+                            ? 'text-primary border-b-2 border-primary'
+                            : 'text-slate-400 hover:text-slate-200'
                         }`}
                 >
                     Select Existing
@@ -233,15 +242,8 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                         <label className="block text-sm font-medium text-slate-300 mb-1">Select Item</label>
                         <select
                             className="input"
-                            onChange={(e) => {
-                                if (e.target.value) {
-                                    const item = selectableItems.find(i => i.id === e.target.value);
-                                    if (item) {
-                                        handleSelectItem(item);
-                                    }
-                                }
-                            }}
-                            defaultValue=""
+                            value={selectedExistingId}
+                            onChange={(e) => setSelectedExistingId(e.target.value)}
                         >
                             <option value="">Choose an item...</option>
                             {filteredItems.map(item => (
@@ -272,8 +274,22 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     <div className="text-xs text-slate-400 text-right">
                         Showing {filteredItems.length} of {selectableItems.length} items
                     </div>
-                    <div className="pt-4 flex justify-end">
+
+                    <div className="pt-4 flex justify-end gap-3">
                         <button type="button" onClick={onClose} className="btn btn-ghost">Cancel</button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (selectedExistingId) {
+                                    if (onSelectExisting) onSelectExisting(selectedExistingId);
+                                    if (typeof onClose === 'function') onClose();
+                                }
+                            }}
+                            disabled={!selectedExistingId}
+                            className="btn btn-primary"
+                        >
+                            Move Item
+                        </button>
                     </div>
                 </div>
             )}
