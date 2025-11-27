@@ -103,8 +103,8 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     type="button"
                     onClick={() => setMode('create')}
                     className={`px-4 py-2 font-medium transition-colors ${mode === 'create'
-                            ? 'text-primary border-b-2 border-primary'
-                            : 'text-slate-400 hover:text-slate-200'
+                        ? 'text-primary border-b-2 border-primary'
+                        : 'text-slate-400 hover:text-slate-200'
                         }`}
                 >
                     Create New
@@ -113,8 +113,8 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     type="button"
                     onClick={() => setMode('select')}
                     className={`px-4 py-2 font-medium transition-colors ${mode === 'select'
-                            ? 'text-primary border-b-2 border-primary'
-                            : 'text-slate-400 hover:text-slate-200'
+                        ? 'text-primary border-b-2 border-primary'
+                        : 'text-slate-400 hover:text-slate-200'
                         }`}
                 >
                     Select Existing
@@ -228,47 +228,48 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
             {/* Select Existing Mode */}
             {mode === 'select' && (
                 <div className="space-y-4">
-                    {/* Search Bar */}
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="input pl-10"
-                            placeholder="Search items..."
-                        />
-                    </div>
-
-                    {/* Items List */}
-                    <div className="max-h-96 overflow-y-auto space-y-2">
-                        {filteredItems.length === 0 ? (
-                            <p className="text-center text-slate-400 py-8">
-                                {searchQuery ? 'No items found' : 'No items available to select'}
+                    {/* Dropdown to select item */}
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Select Item</label>
+                        <select
+                            className="input"
+                            onChange={(e) => {
+                                if (e.target.value) {
+                                    const item = selectableItems.find(i => i.id === e.target.value);
+                                    if (item) {
+                                        handleSelectItem(item);
+                                    }
+                                }
+                            }}
+                            defaultValue=""
+                        >
+                            <option value="">Choose an item...</option>
+                            {filteredItems.map(item => (
+                                <option key={item.id} value={item.id}>
+                                    {item.name} - {getBoxName(item.boxId)}
+                                </option>
+                            ))}
+                        </select>
+                        {filteredItems.length === 0 && (
+                            <p className="text-xs text-slate-400 mt-1">
+                                {searchQuery ? 'No items match your search' : 'No items available to select'}
                             </p>
-                        ) : (
-                            filteredItems.map(item => (
-                                <div
-                                    key={item.id}
-                                    onClick={() => handleSelectItem(item)}
-                                    className="flex items-center gap-3 p-3 rounded-lg bg-slate-800 hover:bg-slate-700 cursor-pointer transition-colors border border-slate-700 hover:border-primary"
-                                >
-                                    {item.image ? (
-                                        <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
-                                    ) : (
-                                        <div className="w-16 h-16 flex items-center justify-center bg-slate-700 rounded text-slate-500">
-                                            <Upload size={24} />
-                                        </div>
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-white truncate">{item.name}</h4>
-                                        <p className="text-sm text-slate-400 truncate">{item.description || 'No description'}</p>
-                                        <p className="text-xs text-slate-500 mt-1">Currently in: {getBoxName(item.boxId)}</p>
-                                    </div>
-                                </div>
-                            ))
                         )}
                     </div>
+
+                    {/* Optional search to filter dropdown */}
+                    {selectableItems.length > 5 && (
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="input pl-10"
+                                placeholder="Filter items..."
+                            />
+                        </div>
+                    )}
 
                     <div className="pt-4 flex justify-end">
                         <button type="button" onClick={onClose} className="btn btn-ghost">Cancel</button>
