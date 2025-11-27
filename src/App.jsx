@@ -236,15 +236,36 @@ function App() {
 
   // Handle Deleting Item
   const handleDeleteItem = async (itemId) => {
-    if (confirm('Are you sure you want to delete this item?')) {
-      // Optimistic update
-      setItems(prev => prev.filter(i => i.id !== itemId));
-      try {
-        await firebaseStorage.deleteItem(itemId);
-      } catch (err) {
-        console.error('Failed to delete item', err);
-        refreshData(); // Revert on error
-        alert('Failed to delete item');
+    if (currentBox) {
+      // If in a box, just remove from box (unassign)
+      if (confirm('Remove this item from the box? (It will remain in "All Items")')) {
+        // Optimistic update - remove from current view
+        setItems(prev => prev.filter(i => i.id !== itemId));
+
+        try {
+          await firebaseStorage.updateItem(itemId, { boxId: '' });
+          // Update allItems to reflect the change
+          setAllItems(prev => prev.map(i => i.id === itemId ? { ...i, boxId: '' } : i));
+        } catch (err) {
+          console.error('Failed to remove item from box', err);
+          refreshData(); // Revert on error
+          alert('Failed to remove item from box');
+        }
+      }
+    } else {
+      // If in "All Items" or elsewhere, permanently delete
+      if (confirm('Are you sure you want to PERMANENTLY delete this item?')) {
+        // Optimistic update
+        setItems(prev => prev.filter(i => i.id !== itemId));
+        setAllItems(prev => prev.filter(i => i.id !== itemId));
+
+        try {
+          await firebaseStorage.deleteItem(itemId);
+        } catch (err) {
+          console.error('Failed to delete item', err);
+          refreshData(); // Revert on error
+          alert('Failed to delete item');
+        }
       }
     }
   };
