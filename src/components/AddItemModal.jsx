@@ -258,19 +258,20 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     </div>
 
                     {/* Optional search to filter dropdown */}
-                    {selectableItems.length > 5 && (
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="input pl-10"
-                                placeholder="Filter items..."
-                            />
-                        </div>
-                    )}
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="input pl-10"
+                            placeholder="Filter items..."
+                        />
+                    </div>
 
+                    <div className="text-xs text-slate-400 text-right">
+                        Showing {filteredItems.length} of {selectableItems.length} items
+                    </div>
                     <div className="pt-4 flex justify-end">
                         <button type="button" onClick={onClose} className="btn btn-ghost">Cancel</button>
                     </div>
