@@ -326,6 +326,26 @@ function App() {
     }
   };
 
+  // Handle Selecting Existing Item
+  const handleSelectExistingItem = async (itemId) => {
+    if (!currentBox) return;
+
+    try {
+      // Update the item's boxId to the current box
+      const updates = { boxId: currentBox.id };
+      await firebaseStorage.updateItem(itemId, updates);
+
+      // Refresh data to show the updated item in the current box
+      if (view === 'items') {
+        const boxItems = await firebaseStorage.getItems(currentBox.id);
+        setItems(boxItems);
+      }
+    } catch (err) {
+      console.error('Failed to move item', err);
+      alert('Failed to move item: ' + err.message);
+    }
+  };
+
   // Handle Sign Out
   const handleSignOut = async () => {
     try {
@@ -551,6 +571,8 @@ function App() {
         onAdd={handleAddItem}
         boxes={boxes}
         initialBoxId={currentBox?.id}
+        availableItems={items}
+        onSelectExisting={handleSelectExistingItem}
       />
 
       <EditBoxModal
