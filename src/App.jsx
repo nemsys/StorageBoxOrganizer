@@ -9,7 +9,7 @@ import { EditItemModal } from './components/EditItemModal';
 import { SearchBar } from './components/SearchBar';
 import { AuthModal } from './components/AuthModal';
 import { FullscreenImageModal } from './components/FullscreenImageModal';
-import { ArrowLeft, PackageOpen, LogOut, User } from 'lucide-react';
+import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -28,6 +28,9 @@ function App() {
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [editingBox, setEditingBox] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
+
+  const [boxFilterQuery, setBoxFilterQuery] = useState('');
+  const [boxSortOrder, setBoxSortOrder] = useState('name-asc'); // 'name-asc', 'name-desc', 'newest', 'oldest'
 
   const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, url: '', name: '' });
 
@@ -465,6 +468,33 @@ function App() {
     }
   };
 
+  // Box View Filtering and Sorting
+  const boxDisplayItems = useMemo(() => {
+    if (view !== 'items') return [];
+
+    let result = items;
+
+    // Filter
+    if (boxFilterQuery) {
+      const fuse = new Fuse(items, {
+        keys: ['name', 'description', 'tags'],
+        threshold: 0.3,
+      });
+      result = fuse.search(boxFilterQuery).map(r => r.item);
+    }
+
+    // Sort
+    return [...result].sort((a, b) => {
+      switch (boxSortOrder) {
+        case 'name-asc': return a.name.localeCompare(b.name);
+        case 'name-desc': return b.name.localeCompare(a.name);
+        case 'newest': return (b.createdAt || 0) - (a.createdAt || 0);
+        case 'oldest': return (a.createdAt || 0) - (b.createdAt || 0);
+        default: return 0;
+      }
+    });
+  }, [items, boxFilterQuery, boxSortOrder, view]);
+
   // Handle List All Items
   const handleListAllItems = async () => {
     setCurrentBox(null);
@@ -600,21 +630,83 @@ function App() {
           </>
         )}
 
-        {/* Item List View (Inside Box or All Items) */}
-        {(view === 'items' || view === 'allItems') && (
+        {/* Box View (Inside Box) */}
+        {view === 'items' && currentBox && (
+          <>
+            {/* Box Header */}
+            <div className="mb-8 animate-fade-in">
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                <div className="w-full md:w-48 aspect-square bg-slate-800 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-700 shadow-lg">
+                  {currentBox.image ? (
+                    <img src={currentBox.image} alt={currentBox.name} className="w-full h-full object-contain" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-600"><PackageOpen size={48} /></div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-4xl font-bold text-white mb-2">{currentBox.name}</h1>
+                  <p className="text-slate-300 text-lg leading-relaxed mb-4">{currentBox.description}</p>
+                  <div className="flex gap-4 text-sm text-slate-400">
+                    <span className="bg-slate-800 px-3 py-1 rounded-full">Created: {new Date(currentBox.createdAt).toLocaleDateString()}</span>
+                    <span className="bg-slate-800 px-3 py-1 rounded-full">{items.length} items</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Controls Row */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mb-6 bg-slate-900/50 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
+              <div className="relative w-full sm:w-72">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Filter items..."
+                  value={boxFilterQuery}
+                  onChange={(e) => setBoxFilterQuery(e.target.value)}
+                  className="w-full bg-slate-800 border-none rounded-lg pl-10 pr-4 py-2 text-white placeholder-slate-500 focus:ring-2 focus:ring-primary/50 transition-all"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-2 w-full sm:w-auto">
+                  <ArrowUpDown size={18} className="text-slate-400" />
+                  <select
+                    value={boxSortOrder}
+                    onChange={(e) => setBoxSortOrder(e.target.value)}
+                    className="bg-transparent border-none text-white focus:ring-0 cursor-pointer w-full sm:w-auto text-sm outline-none"
+                  >
+                    <option value="name-asc" className="bg-slate-800">Name (A-Z)</option>
+                    <option value="name-desc" className="bg-slate-800">Name (Z-A)</option>
+                    <option value="newest" className="bg-slate-800">Newest First</option>
+                    <option value="oldest" className="bg-slate-800">Oldest First</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Items Grid */}
+            <ItemList
+              items={boxDisplayItems}
+              onAddClick={() => setIsAddItemOpen(true)}
+              onDeleteItem={handleDeleteItem}
+              onEditItem={handleEditItem}
+              onImageClick={handleImageClick}
+            />
+          </>
+        )}
+
+        {/* All Items View */}
+        {view === 'allItems' && (
           <>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">
-                {view === 'allItems' ? 'All Items' : 'Items'}
-              </h2>
+              <h2 className="text-2xl font-bold text-white">All Items</h2>
               <span className="text-slate-400 text-sm">{displayItems.length} items</span>
             </div>
             <ItemList
               items={displayItems}
-              onAddClick={view === 'items' ? () => setIsAddItemOpen(true) : undefined}
               onDeleteItem={handleDeleteItem}
               onEditItem={handleEditItem}
-              onBoxClick={view === 'allItems' ? handleBoxClickFromSearch : undefined}
+              onBoxClick={handleBoxClickFromSearch}
               onImageClick={handleImageClick}
             />
           </>
