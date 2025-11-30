@@ -16,7 +16,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                     <img
                         src={item.image}
                         alt={item.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-600">
