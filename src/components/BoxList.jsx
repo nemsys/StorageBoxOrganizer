@@ -1,7 +1,7 @@
 import { BoxCard } from './BoxCard';
 import { Plus, Package } from 'lucide-react';
 
-export function BoxList({ boxes, onBoxClick, onAddClick, onDeleteBox, onEditBox, onAddItemClick }) {
+export function BoxList({ boxes, onBoxClick, onAddClick, onDeleteBox, onEditBox, onRemoveBox, onAddItemClick }) {
     return (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             <div
@@ -27,7 +27,14 @@ export function BoxList({ boxes, onBoxClick, onAddClick, onDeleteBox, onEditBox,
             )}
 
             {boxes.map(box => (
-                <BoxCard key={box.id} box={box} onClick={onBoxClick} onDelete={onDeleteBox} onEdit={onEditBox} />
+                <BoxCard
+                    key={box.id}
+                    box={box}
+                    onClick={onBoxClick}
+                    onDelete={onDeleteBox}
+                    onEdit={onEditBox}
+                    onRemove={onRemoveBox}
+                />
             ))}
         </div>
     );

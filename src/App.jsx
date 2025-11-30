@@ -286,6 +286,41 @@ function App() {
     }
   };
 
+  // Handle Removing Box (keep items)
+  async function handleRemoveBox(id) {
+    if (!confirm('Are you sure you want to remove this box? Items will be moved to "Unassigned".')) return;
+
+    // Optimistic update - remove box from list
+    setBoxes(prev => prev.filter(b => b.id !== id));
+
+    try {
+      // 1. Find all items in this box
+      const boxItems = await firebaseStorage.getItems(id);
+
+      // 2. Update all items to have no boxId
+      await Promise.all(boxItems.map(item =>
+        firebaseStorage.updateItem(item.id, { boxId: '' })
+      ));
+
+      // 3. Delete the box
+      // Note: firebaseStorage.deleteBox also deletes items in the box,
+      // but since we just moved them, it won't find any to delete.
+      await firebaseStorage.deleteBox(id);
+
+      // Update local items state if needed
+      // If we are viewing "All Items", we might need to update their boxId in the local state
+      setAllItems(prev => prev.map(i => i.boxId === id ? { ...i, boxId: '' } : i));
+
+      // Also update 'items' state if we happen to be viewing them (though we probably aren't if we just deleted the box)
+      setItems(prev => prev.map(i => i.boxId === id ? { ...i, boxId: '' } : i));
+
+    } catch (err) {
+      console.error('Failed to remove box', err);
+      refreshData(); // Revert
+      alert('Failed to remove box');
+    }
+  };
+
   // Handle Editing Box
   const handleEditBox = (box) => {
     setEditingBox(box);
@@ -535,6 +570,7 @@ function App() {
               onAddClick={() => setIsAddBoxOpen(true)}
               onDeleteBox={handleDeleteBox}
               onEditBox={handleEditBox}
+              onRemoveBox={handleRemoveBox}
               onAddItemClick={() => setIsAddItemOpen(true)}
             />
           </>

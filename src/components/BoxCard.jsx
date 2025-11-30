@@ -1,18 +1,38 @@
-import { Package, Pencil, Trash2 } from 'lucide-react';
+import { Package, MoreVertical, Pencil, Trash2, LogOut } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 
-export function BoxCard({ box, onClick, onDelete, onEdit }) {
+export function BoxCard({ box, onClick, onDelete, onEdit, onRemove }) {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setIsMenuOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [menuRef]);
+
     return (
         <div
             onClick={(e) => {
-                // if the click originated inside the delete or edit button, ignore and do not open the box
-                if (e.target && e.target.closest && (e.target.closest('[data-delete-button]') || e.target.closest('[data-edit-button]'))) {
+                // if the click originated inside the menu, ignore and do not open the box
+                if (e.target && e.target.closest && e.target.closest('[data-menu-container]')) {
                     return;
                 }
                 if (typeof onClick === 'function') onClick(box);
             }}
-            className="card group cursor-pointer flex flex-col h-full"
+            className={`card group cursor-pointer flex flex-col h-full relative ${isMenuOpen ? 'z-50' : 'z-0'}`}
+            style={{ overflow: 'visible' }}
         >
-            <div className="aspect-square w-full overflow-hidden bg-slate-800 relative">
+            <div
+                className="aspect-square w-full overflow-hidden bg-slate-800 relative"
+                style={{ borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)' }}
+            >
                 {box.image ? (
                     <img
                         src={box.image}
@@ -29,42 +49,65 @@ export function BoxCard({ box, onClick, onDelete, onEdit }) {
             <div className="p-4 flex-1 flex flex-col">
                 <div className="flex items-start justify-between gap-2 mb-1">
                     <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-white truncate">{box.name}</h3>
+                        <h3 className="text-lg font-bold text-white whitespace-normal break-words">{box.name}</h3>
                         <p className="text-sm text-slate-300 line-clamp-2">{box.description}</p>
                     </div>
 
-                    <div className="flex gap-1 flex-shrink-0">
-                        {onEdit && (
-                            <button
-                                type="button"
-                                data-edit-button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (typeof onEdit === 'function') onEdit(box);
-                                }}
-                                className="p-1.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
-                                title="Edit Box"
-                            >
-                                <Pencil size={16} />
-                            </button>
-                        )}
+                    <div className="relative" data-menu-container ref={menuRef}>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setIsMenuOpen(!isMenuOpen);
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                        >
+                            <MoreVertical size={20} />
+                        </button>
 
-                        {onDelete && (
-                            <button
-                                type="button"
-                                data-delete-button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    console.log('Delete button clicked for box:', box.id);
-                                    if (typeof onDelete === 'function') onDelete(box.id);
-                                }}
-                                className="p-1.5 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors"
-                                title="Delete Box"
-                            >
-                                <Trash2 size={16} />
-                            </button>
+                        {isMenuOpen && (
+                            <div className="absolute right-0 top-full mt-1 w-48 bg-slate-900 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                                {onEdit && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsMenuOpen(false);
+                                            onEdit(box);
+                                        }}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2 transition-colors"
+                                    >
+                                        <Pencil size={14} />
+                                        Edit box
+                                    </button>
+                                )}
+                                {onRemove && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsMenuOpen(false);
+                                            onRemove(box.id);
+                                        }}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2 transition-colors"
+                                    >
+                                        <LogOut size={14} />
+                                        Remove box
+                                    </button>
+                                )}
+                                {onDelete && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsMenuOpen(false);
+                                            onDelete(box.id);
+                                        }}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 flex items-center gap-2 transition-colors border-t border-slate-800"
+                                    >
+                                        <Trash2 size={14} />
+                                        Delete box
+                                    </button>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>
