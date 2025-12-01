@@ -701,45 +701,31 @@ function App() {
               {/* Left: Sort Dropdown */}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-slate-400">Sort by:</span>
-                <div className="relative">
-                  <select
-                    value={itemSortOrder}
-                    onChange={(e) => setItemSortOrder(e.target.value)}
-                    className="appearance-none bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 pr-8 text-white text-sm cursor-pointer hover:bg-slate-800 transition-colors outline-none focus:ring-2 focus:ring-primary/50"
-                  >
-                    <option value="newest" className="bg-slate-800">Newest</option>
-                    <option value="oldest" className="bg-slate-800">Oldest</option>
-                    <option value="name-asc" className="bg-slate-800">Name (A-Z)</option>
-                    <option value="name-desc" className="bg-slate-800">Name (Z-A)</option>
-                  </select>
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor">
-                      <path d="M4 6l4 4 4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                </div>
+                <select
+                  value={itemSortOrder}
+                  onChange={(e) => setItemSortOrder(e.target.value)}
+                  className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-sm cursor-pointer hover:bg-slate-800 transition-colors outline-none focus:ring-2 focus:ring-primary/50"
+                >
+                  <option value="newest" className="bg-slate-800">Newest</option>
+                  <option value="oldest" className="bg-slate-800">Oldest</option>
+                  <option value="name-asc" className="bg-slate-800">Name (A-Z)</option>
+                  <option value="name-desc" className="bg-slate-800">Name (Z-A)</option>
+                </select>
               </div>
 
               {/* Right: Filter Dropdown */}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-slate-400">Filter:</span>
-                <div className="relative">
-                  <select
-                    value={selectedTag}
-                    onChange={(e) => setSelectedTag(e.target.value)}
-                    className="appearance-none bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 pr-8 text-white text-sm cursor-pointer hover:bg-slate-800 transition-colors outline-none focus:ring-2 focus:ring-primary/50"
-                  >
-                    <option value="">All tags</option>
-                    {allTags.map(tag => (
-                      <option key={tag} value={tag}>{tag}</option>
-                    ))}
-                  </select>
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor">
-                      <path d="M4 6l4 4 4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                </div>
+                <select
+                  value={selectedTag}
+                  onChange={(e) => setSelectedTag(e.target.value)}
+                  className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-sm cursor-pointer hover:bg-slate-800 transition-colors outline-none focus:ring-2 focus:ring-primary/50"
+                >
+                  <option value="">All tags</option>
+                  {allTags.map(tag => (
+                    <option key={tag} value={tag}>{tag}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
