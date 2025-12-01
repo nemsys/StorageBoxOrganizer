@@ -29,8 +29,9 @@ function App() {
   const [editingBox, setEditingBox] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
 
-  const [boxFilterQuery, setBoxFilterQuery] = useState('');
-  const [boxSortOrder, setBoxSortOrder] = useState('name-asc'); // 'name-asc', 'name-desc', 'newest', 'oldest'
+  const [itemFilterQuery, setItemFilterQuery] = useState('');
+  const [itemSortOrder, setItemSortOrder] = useState('newest'); // 'name-asc', 'name-desc', 'newest', 'oldest'
+  const [selectedTag, setSelectedTag] = useState('');
 
   const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, url: '', name: '' });
 
@@ -135,6 +136,7 @@ function App() {
     setCurrentBox(null);
     setView('boxes');
     setSearchQuery('');
+    setSelectedTag('');
     refreshData();
 
     // Push to browser history
@@ -468,24 +470,42 @@ function App() {
     }
   };
 
-  // Box View Filtering and Sorting
-  const boxDisplayItems = useMemo(() => {
-    if (view !== 'items') return [];
+  // Compute all unique tags from items
+  const allTags = useMemo(() => {
+    const tagSet = new Set();
+    items.forEach(item => {
+      if (item.tags && Array.isArray(item.tags)) {
+        item.tags.forEach(tag => tagSet.add(tag));
+      }
+    });
+    return Array.from(tagSet).sort();
+  }, [items]);
+
+  // All Items View Filtering and Sorting
+  const allItemsDisplayItems = useMemo(() => {
+    if (view !== 'allItems') return [];
 
     let result = items;
 
-    // Filter
-    if (boxFilterQuery) {
-      const fuse = new Fuse(items, {
+    // Filter by tag
+    if (selectedTag) {
+      result = result.filter(item =>
+        item.tags && item.tags.includes(selectedTag)
+      );
+    }
+
+    // Filter by search query
+    if (itemFilterQuery) {
+      const fuse = new Fuse(result, {
         keys: ['name', 'description', 'tags'],
         threshold: 0.3,
       });
-      result = fuse.search(boxFilterQuery).map(r => r.item);
+      result = fuse.search(itemFilterQuery).map(r => r.item);
     }
 
     // Sort
     return [...result].sort((a, b) => {
-      switch (boxSortOrder) {
+      switch (itemSortOrder) {
         case 'name-asc': return a.name.localeCompare(b.name);
         case 'name-desc': return b.name.localeCompare(a.name);
         case 'newest': return (b.createdAt || 0) - (a.createdAt || 0);
@@ -493,7 +513,7 @@ function App() {
         default: return 0;
       }
     });
-  }, [items, boxFilterQuery, boxSortOrder, view]);
+  }, [items, selectedTag, itemFilterQuery, itemSortOrder, view]);
 
   // Handle List All Items
   const handleListAllItems = async () => {
@@ -502,6 +522,7 @@ function App() {
     setItems(allItems);
     setView('allItems');
     setSearchQuery('');
+    setSelectedTag('');
 
     // Push to browser history
     window.history.pushState({ view: 'allItems' }, '', '#all-items');
@@ -654,39 +675,11 @@ function App() {
               </div>
             </div>
 
-            {/* Controls Row */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mb-6 bg-slate-900/50 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
-              <div className="relative w-full sm:w-72">
-                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input
-                  type="text"
-                  placeholder="Filter items..."
-                  value={boxFilterQuery}
-                  onChange={(e) => setBoxFilterQuery(e.target.value)}
-                  className="w-full bg-slate-800 border-none rounded-lg pl-10 pr-4 py-2 text-white placeholder-slate-500 focus:ring-2 focus:ring-primary/50 transition-all"
-                />
-              </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <div className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-2 w-full sm:w-auto">
-                  <ArrowUpDown size={18} className="text-slate-400" />
-                  <select
-                    value={boxSortOrder}
-                    onChange={(e) => setBoxSortOrder(e.target.value)}
-                    className="bg-transparent border-none text-white focus:ring-0 cursor-pointer w-full sm:w-auto text-sm outline-none"
-                  >
-                    <option value="name-asc" className="bg-slate-800">Name (A-Z)</option>
-                    <option value="name-desc" className="bg-slate-800">Name (Z-A)</option>
-                    <option value="newest" className="bg-slate-800">Newest First</option>
-                    <option value="oldest" className="bg-slate-800">Oldest First</option>
-                  </select>
-                </div>
-              </div>
-            </div>
 
             {/* Items Grid */}
             <ItemList
-              items={boxDisplayItems}
+              items={items}
               onAddClick={() => setIsAddItemOpen(true)}
               onDeleteItem={handleDeleteItem}
               onEditItem={handleEditItem}
@@ -700,10 +693,58 @@ function App() {
           <>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">All Items</h2>
-              <span className="text-slate-400 text-sm">{displayItems.length} items</span>
+              <span className="text-slate-400 text-sm">{allItemsDisplayItems.length} items</span>
             </div>
+
+            {/* Controls Row - Horizontal Layout */}
+            <div className="flex items-center justify-between mb-6 bg-slate-900/50 p-3 rounded-xl border border-white/5 backdrop-blur-sm">
+              {/* Left: Sort Dropdown */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-400">Sort by:</span>
+                <div className="relative">
+                  <select
+                    value={itemSortOrder}
+                    onChange={(e) => setItemSortOrder(e.target.value)}
+                    className="appearance-none bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 pr-8 text-white text-sm cursor-pointer hover:bg-slate-800 transition-colors outline-none focus:ring-2 focus:ring-primary/50"
+                  >
+                    <option value="newest" className="bg-slate-800">Newest</option>
+                    <option value="oldest" className="bg-slate-800">Oldest</option>
+                    <option value="name-asc" className="bg-slate-800">Name (A-Z)</option>
+                    <option value="name-desc" className="bg-slate-800">Name (Z-A)</option>
+                  </select>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor">
+                      <path d="M4 6l4 4 4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Filter Dropdown */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-400">Filter:</span>
+                <div className="relative">
+                  <select
+                    value={selectedTag}
+                    onChange={(e) => setSelectedTag(e.target.value)}
+                    className="appearance-none bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 pr-8 text-white text-sm cursor-pointer hover:bg-slate-800 transition-colors outline-none focus:ring-2 focus:ring-primary/50"
+                  >
+                    <option value="">All tags</option>
+                    {allTags.map(tag => (
+                      <option key={tag} value={tag}>{tag}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor">
+                      <path d="M4 6l4 4 4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <ItemList
-              items={displayItems}
+              items={allItemsDisplayItems}
               onDeleteItem={handleDeleteItem}
               onEditItem={handleEditItem}
               onBoxClick={handleBoxClickFromSearch}
