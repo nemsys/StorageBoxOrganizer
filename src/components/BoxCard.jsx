@@ -44,23 +44,25 @@ export function BoxCard({ box, onClick, onDelete, onEdit, onRemove }) {
             style={{ overflow: 'visible' }}
         >
             {/* Image Area */}
-            <div className="aspect-square bg-slate-800 relative group overflow-visible"
+            <div className="w-full pt-[100%] relative bg-slate-800 group overflow-visible"
                 style={{ borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)' }}>
-                <ImageSlider
-                    images={displayImages}
-                    alt={box.name}
-                    className="w-full h-full"
-                    showNavigation={false}
-                    fit="cover"
-                />
-                {displayImages.length === 0 && (
-                    <div className="w-full h-full flex items-center justify-center text-slate-600">
-                        <Package size={48} />
-                    </div>
-                )}
+                <div className="absolute inset-0">
+                    <ImageSlider
+                        images={displayImages}
+                        alt={box.name}
+                        className="w-full h-full"
+                        showNavigation={false}
+                        fit="cover"
+                    />
+                    {displayImages.length === 0 && (
+                        <div className="w-full h-full flex items-center justify-center text-slate-600">
+                            <Package size={48} />
+                        </div>
+                    )}
 
-                {/* Overlay Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
+                    {/* Overlay Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60 pointer-events-none" />
+                </div>
             </div>
 
             <div className="p-4 flex flex-col h-24">
