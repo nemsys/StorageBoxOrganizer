@@ -9,6 +9,7 @@ import { EditItemModal } from './components/EditItemModal';
 import { SearchBar } from './components/SearchBar';
 import { AuthModal } from './components/AuthModal';
 import { FullscreenImageModal } from './components/FullscreenImageModal';
+import { ImageSlider } from './components/ImageSlider';
 import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
@@ -24,8 +25,8 @@ function App() {
   const [allItems, setAllItems] = useState([]); // All items for selection
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [isAddBoxOpen, setIsAddBoxOpen] = useState(false);
-  const [isAddItemOpen, setIsAddItemOpen] = useState(false);
+  const [isAddBoxModalOpen, setIsAddBoxModalOpen] = useState(false);
+  const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [editingBox, setEditingBox] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
 
@@ -144,100 +145,64 @@ function App() {
   };
 
   // Handle Adding Box
-  async function handleAddBox(payload) {
-    if (!user) return;
-    const id = Date.now().toString();
-    const createdAt = Date.now(); // Firestore prefers timestamps or numbers
-
-    // Optimistic UI update
-    let previewImage = '';
-    if (payload.image && (payload.image instanceof File || payload.image instanceof Blob)) {
-      previewImage = URL.createObjectURL(payload.image);
-    } else if (typeof payload.image === 'string') {
-      previewImage = payload.image;
-    }
-
-    const boxForState = {
-      id,
-      name: payload.name,
-      description: payload.description,
-      image: previewImage,
-      createdAt
-    };
-
-    const boxToStore = {
-      ...boxForState,
-      image: payload.image // File will be uploaded by service
-    };
-
+  // Handle Adding Box
+  const handleAddBox = async (payload) => {
     try {
-      // Add to state immediately
-      setBoxes(prev => [boxForState, ...prev]);
-
-      // Persist
-      const savedBox = await firebaseStorage.addBox(boxToStore);
-
-      // Update state with real URL if it changed (e.g. from blob to firebase storage url)
-      setBoxes(prev => prev.map(b => b.id === id ? savedBox : b));
-    } catch (err) {
-      console.error('Failed to save box', err);
-      // Revert state on error
-      setBoxes(prev => prev.filter(b => b.id !== id));
-      if (previewImage && previewImage.startsWith('blob:')) URL.revokeObjectURL(previewImage);
-      alert('Failed to save box: ' + err.message);
-    }
-  }
-
-  // Handle Adding Item
-  async function handleAddItem(payload) {
-    if (!user) return;
-    const id = Date.now().toString();
-    const createdAt = Date.now();
-
-    let previewImage = '';
-    if (payload.image && (payload.image instanceof File || payload.image instanceof Blob)) {
-      previewImage = URL.createObjectURL(payload.image);
-    } else if (typeof payload.image === 'string') {
-      previewImage = payload.image;
-    }
-
-    // Use boxId from payload (if selected in modal) or fallback to currentBox
-    // If payload.boxId is explicitly empty string, it means "Unassigned"
-    const targetBoxId = payload.boxId !== undefined ? payload.boxId : (currentBox?.id || '');
-
-    const itemForState = {
-      id,
-      boxId: targetBoxId,
-      name: payload.name,
-      description: payload.description,
-      tags: payload.tags || [],
-      image: previewImage,
-      createdAt
-    };
-
-    const itemToStore = {
-      ...itemForState,
-      image: payload.image
-    };
-
-    try {
-      // Only add to state if we are in "All Items" view OR if the item is added to the current box
-      if (view === 'allItems' || (currentBox && targetBoxId === currentBox.id)) {
-        setItems(prev => [itemForState, ...prev]);
+      let imageUrls = [];
+      if (payload.images && payload.images.length > 0) {
+        // Upload all images
+        const uploadPromises = payload.images.map(image =>
+          firebaseStorage.uploadImage(image, 'boxes')
+        );
+        imageUrls = await Promise.all(uploadPromises);
       }
 
-      const savedItem = await firebaseStorage.addItem(itemToStore);
-
-      // Update with real data if it's still in view
-      setItems(prev => prev.map(i => i.id === id ? savedItem : i));
-    } catch (err) {
-      console.error('Failed to save item', err);
-      // Revert state on error
-      setItems(prev => prev.filter(i => i.id !== id));
-      if (previewImage && previewImage.startsWith('blob:')) URL.revokeObjectURL(previewImage);
-      alert('Failed to save item: ' + err.message);
+      const newBox = {
+        id: Date.now().toString(),
+        name: payload.name,
+        description: payload.description,
+        images: imageUrls,
+        image: imageUrls.length > 0 ? imageUrls[0] : null, // Backward compatibility
+        createdAt: Date.now()
+      };
+      setBoxes(prev => [newBox, ...prev]);
+      setIsAddBoxModalOpen(false);
+    } catch (error) {
+      console.error("Error adding box:", error);
+      alert("Failed to add box. Please try again.");
     }
-  }
+  };
+
+  // Handle Adding Item
+  // Handle Adding Item
+  const handleAddItem = async (payload) => {
+    try {
+      let imageUrls = [];
+      if (payload.images && payload.images.length > 0) {
+        // Upload all images
+        const uploadPromises = payload.images.map(image =>
+          firebaseStorage.uploadImage(image, 'items')
+        );
+        imageUrls = await Promise.all(uploadPromises);
+      }
+
+      const newItem = {
+        id: Date.now().toString(),
+        name: payload.name,
+        description: payload.description,
+        images: imageUrls,
+        image: imageUrls.length > 0 ? imageUrls[0] : null, // Backward compatibility
+        tags: payload.tags || [],
+        boxId: payload.boxId || '',
+        createdAt: Date.now()
+      };
+      setItems(prev => [newItem, ...prev]);
+      setIsAddItemModalOpen(false);
+    } catch (error) {
+      console.error("Error adding item:", error);
+      alert("Failed to add item. Please try again.");
+    }
+  };
 
   // Handle Deleting Item
   const handleDeleteItem = async (itemId) => {
@@ -361,35 +326,42 @@ function App() {
     setEditingItem(item);
   };
 
-  const handleUpdateItem = async (updates) => {
+  const handleUpdateItem = async (payload) => {
     if (!editingItem) return;
 
     try {
-      // Optimistic update
-      setItems(prev => {
-        // If boxId changed and we are in a specific box view, remove the item if it moved out
-        if (updates.boxId !== undefined && view === 'items' && currentBox && updates.boxId !== currentBox.id) {
-          return prev.filter(i => i.id !== editingItem.id);
+      let imageUrls = editingItem.images || (editingItem.image ? [editingItem.image] : []);
+
+      // If new images are provided (File objects), upload them
+      // Note: payload.images contains the final list of images (some might be URLs, some Files)
+      if (payload.images) {
+        const newImageUrls = [];
+        for (const img of payload.images) {
+          if (img instanceof File) {
+            const url = await firebaseStorage.uploadImage(img, 'items');
+            newImageUrls.push(url);
+          } else {
+            newImageUrls.push(img);
+          }
         }
+        imageUrls = newImageUrls;
+      }
 
-        return prev.map(i =>
-          i.id === editingItem.id ? { ...i, ...updates } : i
-        );
-      });
+      const updatedItem = {
+        ...editingItem,
+        name: payload.name,
+        description: payload.description,
+        images: imageUrls,
+        image: imageUrls.length > 0 ? imageUrls[0] : null, // Backward compatibility
+        tags: payload.tags || [],
+        boxId: payload.boxId || ''
+      };
 
-      // Persist to Firebase
-      const updatedItem = await firebaseStorage.updateItem(editingItem.id, updates);
-
-      // Update with server data (if still in list)
-      setItems(prev => prev.map(i =>
-        i.id === editingItem.id ? updatedItem : i
-      ));
-
+      setItems(prev => prev.map(item => item.id === editingItem.id ? updatedItem : item));
       setEditingItem(null);
-    } catch (err) {
-      console.error('Failed to update item', err);
-      refreshData(); // Revert on error
-      alert('Failed to update item: ' + err.message);
+    } catch (error) {
+      console.error("Error updating item:", error);
+      alert("Failed to update item. Please try again.");
     }
   };
 
@@ -618,11 +590,11 @@ function App() {
             <BoxList
               boxes={boxes}
               onBoxClick={handleBoxClick}
-              onAddClick={() => setIsAddBoxOpen(true)}
+              onAddClick={() => setIsAddBoxModalOpen(true)}
               onDeleteBox={handleDeleteBox}
               onEditBox={handleEditBox}
               onRemoveBox={handleRemoveBox}
-              onAddItemClick={() => setIsAddItemOpen(true)}
+              onAddItemClick={() => setIsAddItemModalOpen(true)}
             />
           </>
         )}
@@ -656,13 +628,20 @@ function App() {
           <>
             {/* Box Header */}
             <div className="mb-8 animate-fade-in">
-              <div className="flex flex-col md:flex-row gap-6 items-start">
-                <div className="w-full md:w-48 aspect-square bg-slate-800 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-700 shadow-lg">
-                  {currentBox.image ? (
-                    <img src={currentBox.image} alt={currentBox.name} className="w-full h-full object-contain" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-600"><PackageOpen size={48} /></div>
-                  )}
+              <div className="flex flex-col md:flex-row gap-8 mb-8">
+                <div className="w-full md:w-1/3 aspect-square relative">
+                  <div className="absolute inset-0 bg-slate-800 rounded-2xl shadow-2xl border border-slate-700/50">
+                    <ImageSlider
+                      images={currentBox.images && currentBox.images.length > 0 ? currentBox.images : (currentBox.image ? [currentBox.image] : [])}
+                      alt={currentBox.name}
+                      className="w-full h-full"
+                    />
+                    {(!currentBox.images || currentBox.images.length === 0) && !currentBox.image && (
+                      <div className="absolute inset-0 flex items-center justify-center text-slate-600">
+                        <Package size={64} />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex-1">
                   <h1 className="text-4xl font-bold text-white mb-2">{currentBox.name}</h1>
@@ -680,7 +659,7 @@ function App() {
             {/* Items Grid */}
             <ItemList
               items={items}
-              onAddClick={() => setIsAddItemOpen(true)}
+              onAddClick={() => setIsAddItemModalOpen(true)}
               onDeleteItem={handleDeleteItem}
               onEditItem={handleEditItem}
               onImageClick={handleImageClick}
@@ -742,14 +721,14 @@ function App() {
 
       {/* Modals */}
       <AddBoxModal
-        isOpen={isAddBoxOpen}
-        onClose={() => setIsAddBoxOpen(false)}
+        isOpen={isAddBoxModalOpen}
+        onClose={() => setIsAddBoxModalOpen(false)}
         onAdd={handleAddBox}
       />
 
       <AddItemModal
-        isOpen={isAddItemOpen}
-        onClose={() => setIsAddItemOpen(false)}
+        isOpen={isAddItemModalOpen}
+        onClose={() => setIsAddItemModalOpen(false)}
         onAdd={handleAddItem}
         boxes={boxes}
         initialBoxId={currentBox?.id}

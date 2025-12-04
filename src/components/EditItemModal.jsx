@@ -5,8 +5,8 @@ import { Upload, X } from 'lucide-react';
 export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], availableTags = [] }) {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [image, setImage] = useState(null);
-    const [imagePreview, setImagePreview] = useState('');
+    const [images, setImages] = useState([]);
+    const [imagePreviews, setImagePreviews] = useState([]);
     const [tags, setTags] = useState('');
     const [tagSuggestions, setTagSuggestions] = useState([]);
     const [selectedBoxId, setSelectedBoxId] = useState('');
@@ -17,42 +17,53 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
         if (item) {
             setName(item.name || '');
             setDescription(item.description || '');
-            setImage(item.image || null);
-            setImagePreview(item.image || '');
+
+            // Handle both new array format and old single image format
+            let initialImages = [];
+            if (item.images && Array.isArray(item.images)) {
+                initialImages = item.images;
+            } else if (item.image) {
+                initialImages = [item.image];
+            }
+
+            setImages(initialImages);
+            setImagePreviews(initialImages);
+
             setTags(item.tags ? item.tags.join(', ') : '');
             setSelectedBoxId(item.boxId || '');
         }
     }, [item]);
 
     const handleFileChange = (e) => {
-        const file = e.target.files?.[0] || null;
-        if (!file) return;
-        // Revoke previous preview to avoid leak
-        if (imagePreview && imagePreview.startsWith('blob:')) {
-            URL.revokeObjectURL(imagePreview);
-        }
-        const url = URL.createObjectURL(file);
-        setImage(file);
-        setImagePreview(url);
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        // Add new images to existing ones
+        const newPreviews = files.map(f => URL.createObjectURL(f));
+        setImages(prev => [...prev, ...files]);
+        setImagePreviews(prev => [...prev, ...newPreviews]);
+
         if (fileInputRef.current) fileInputRef.current.value = null;
     };
 
     useEffect(() => {
         return () => {
-            // Only revoke if it's a blob URL (not a data URL from Firebase)
-            if (imagePreview && imagePreview.startsWith('blob:')) {
-                URL.revokeObjectURL(imagePreview);
-            }
+            // Cleanup blob URLs
+            imagePreviews.forEach(url => {
+                if (url && typeof url === 'string' && url.startsWith('blob:')) {
+                    URL.revokeObjectURL(url);
+                }
+            });
         };
-    }, [imagePreview]);
+    }, [imagePreviews]);
 
-    const handleRemoveImage = () => {
-        if (imagePreview && imagePreview.startsWith('blob:')) {
-            URL.revokeObjectURL(imagePreview);
+    const handleRemoveImage = (index) => {
+        const urlToRemove = imagePreviews[index];
+        if (urlToRemove && typeof urlToRemove === 'string' && urlToRemove.startsWith('blob:')) {
+            URL.revokeObjectURL(urlToRemove);
         }
-        setImage(null);
-        setImagePreview('');
-        if (fileInputRef.current) fileInputRef.current.value = null;
+        setImages(prev => prev.filter((_, i) => i !== index));
+        setImagePreviews(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleSubmit = (e) => {
@@ -61,7 +72,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
         onSave({
             name,
             description,
-            image,
+            images,
             tags: tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
             boxId: selectedBoxId
         });
@@ -110,49 +121,48 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Image</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Images</label>
 
-                    {imagePreview ? (
-                        <div className="relative group">
-                            <img src={imagePreview} alt="Preview" className="preview-img" />
-                            <button
-                                type="button"
-                                onClick={handleRemoveImage}
-                                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
-                                title="Remove image"
-                            >
-                                <X size={16} />
-                            </button>
-                            <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-lg">
-                                <div className="text-center text-white">
-                                    <Upload size={24} className="mx-auto mb-1" />
-                                    <span className="text-xs">Click to change</span>
+                    {/* Image Previews Grid */}
+                    {imagePreviews.length > 0 && (
+                        <div className="grid grid-cols-3 gap-2 mb-3">
+                            {imagePreviews.map((preview, index) => (
+                                <div key={index} className="relative group aspect-square">
+                                    <img
+                                        src={preview}
+                                        alt={`Preview ${index + 1}`}
+                                        className="w-full h-full object-cover rounded-lg"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoveImage(index)}
+                                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        title="Remove image"
+                                    >
+                                        <X size={14} />
+                                    </button>
                                 </div>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    capture="environment"
-                                    onChange={handleFileChange}
-                                    ref={fileInputRef}
-                                    className="hidden"
-                                />
-                            </label>
+                            ))}
                         </div>
-                    ) : (
-                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-primary hover:bg-slate-800/50 transition-colors">
-                            <Upload size={32} className="text-slate-500 mb-2" />
-                            <span className="text-sm text-slate-400">Click to upload image</span>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                capture="environment"
-                                onChange={handleFileChange}
-                                ref={fileInputRef}
-                                className="hidden"
-                            />
-                        </label>
                     )}
-                    <p className="text-xs text-slate-500 mt-1">Upload an image or leave empty for a placeholder.</p>
+
+                    {/* Upload Button */}
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-primary hover:bg-slate-800/50 transition-colors">
+                        <Upload size={32} className="text-slate-500 mb-2" />
+                        <span className="text-sm text-slate-400">
+                            {imagePreviews.length > 0 ? 'Add more images' : 'Click to upload images'}
+                        </span>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            multiple
+                            onChange={handleFileChange}
+                            className="hidden"
+                            ref={fileInputRef}
+                        />
+                    </label>
+                    <p className="text-xs text-slate-500 mt-1">Upload one or more images</p>
                 </div>
 
                 <div>

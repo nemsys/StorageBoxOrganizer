@@ -1,14 +1,28 @@
-import { Package, MoreVertical, Pencil, Trash2, LogOut } from 'lucide-react';
+import { Package, MoreVertical, Edit, Trash2, LogOut } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { ImageSlider } from './ImageSlider';
 
 export function BoxCard({ box, onClick, onDelete, onEdit, onRemove }) {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showMenu, setShowMenu] = useState(false);
     const menuRef = useRef(null);
+
+    const handleMenuClick = (e) => {
+        e.stopPropagation();
+        setShowMenu(!showMenu);
+    };
+
+    // Prepare images array
+    let displayImages = [];
+    if (box.images && Array.isArray(box.images) && box.images.length > 0) {
+        displayImages = box.images;
+    } else if (box.image) {
+        displayImages = [box.image];
+    }
 
     useEffect(() => {
         function handleClickOutside(event) {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setIsMenuOpen(false);
+                setShowMenu(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -26,24 +40,26 @@ export function BoxCard({ box, onClick, onDelete, onEdit, onRemove }) {
                 }
                 if (typeof onClick === 'function') onClick(box);
             }}
-            className={`card group cursor-pointer flex flex-col h-full relative ${isMenuOpen ? 'z-50' : 'z-0'}`}
+            className={`card group cursor-pointer flex flex-col h-full relative ${showMenu ? 'z-50' : 'z-0'}`}
             style={{ overflow: 'visible' }}
         >
-            <div
-                className="aspect-square w-full overflow-hidden bg-slate-800 relative"
-                style={{ borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)' }}
-            >
-                {box.image ? (
-                    <img
-                        src={box.image}
-                        alt={box.name}
-                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
-                    />
-                ) : (
+            {/* Image Area */}
+            <div className="h-48 bg-slate-800 relative group overflow-visible"
+                style={{ borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)' }}>
+                <ImageSlider
+                    images={displayImages}
+                    alt={box.name}
+                    className="w-full h-full object-cover"
+                    showNavigation={false}
+                />
+                {displayImages.length === 0 && (
                     <div className="w-full h-full flex items-center justify-center text-slate-600">
                         <Package size={48} />
                     </div>
                 )}
+
+                {/* Overlay Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
             </div>
 
             <div className="p-4 flex-1 flex flex-col">
@@ -59,25 +75,25 @@ export function BoxCard({ box, onClick, onDelete, onEdit, onRemove }) {
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                setIsMenuOpen(!isMenuOpen);
+                                setShowMenu(!showMenu);
                             }}
                             className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                         >
                             <MoreVertical size={20} />
                         </button>
 
-                        {isMenuOpen && (
+                        {showMenu && (
                             <div className="absolute right-0 top-full mt-1 w-48 bg-slate-900 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
                                 {onEdit && (
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            setIsMenuOpen(false);
+                                            setShowMenu(false);
                                             onEdit(box);
                                         }}
                                         className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2 transition-colors"
                                     >
-                                        <Pencil size={14} />
+                                        <Edit size={14} />
                                         Edit box
                                     </button>
                                 )}
@@ -85,7 +101,7 @@ export function BoxCard({ box, onClick, onDelete, onEdit, onRemove }) {
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            setIsMenuOpen(false);
+                                            setShowMenu(false);
                                             onRemove(box.id);
                                         }}
                                         className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2 transition-colors"
@@ -98,7 +114,7 @@ export function BoxCard({ box, onClick, onDelete, onEdit, onRemove }) {
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            setIsMenuOpen(false);
+                                            setShowMenu(false);
                                             onDelete(box.id);
                                         }}
                                         className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 flex items-center gap-2 transition-colors border-t border-slate-800"

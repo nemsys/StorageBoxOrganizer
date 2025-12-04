@@ -1,28 +1,34 @@
-import { Tag, Package, Pencil, Trash2 } from 'lucide-react';
+import { Package, MoreVertical, Edit, Trash2, Box, Tag } from 'lucide-react';
+import { useState } from 'react';
+import { ImageSlider } from './ImageSlider';
 
 export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageClick }) {
+    // Prepare images array
+    let displayImages = [];
+    if (item.images && Array.isArray(item.images) && item.images.length > 0) {
+        displayImages = item.images;
+    } else if (item.image) {
+        displayImages = [item.image];
+    }
     return (
         <div className="card flex flex-col h-full relative group">
-            <div
-                className="aspect-video w-full overflow-hidden bg-slate-800 relative cursor-pointer"
-                onClick={() => {
-                    if (item.image && onImageClick) {
-                        onImageClick(item.image, item.name);
-                    }
-                }}
-                title={item.image ? "Click to view fullscreen" : ""}
-            >
-                {item.image ? (
-                    <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
-                    />
-                ) : (
+            {/* Image Area */}
+            <div className="h-48 bg-slate-800 relative group overflow-visible">
+                <ImageSlider
+                    images={displayImages}
+                    alt={item.name}
+                    onImageClick={onImageClick && displayImages.length > 0 ? () => onImageClick(displayImages[0], item.name) : undefined}
+                    className="w-full h-full object-cover"
+                    showNavigation={false}
+                />
+                {displayImages.length === 0 && (
                     <div className="w-full h-full flex items-center justify-center text-slate-600">
-                        <span className="text-4xl">📦</span>
+                        <Package size={48} />
                     </div>
                 )}
+
+                {/* Overlay Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
             </div>
 
             <div className="p-4 flex-1 flex flex-col">
@@ -52,7 +58,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                                 className="p-1.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
                                 title="Edit Item"
                             >
-                                <Pencil size={14} />
+                                <Edit size={14} />
                             </button>
                         )}
                         {onDelete && (

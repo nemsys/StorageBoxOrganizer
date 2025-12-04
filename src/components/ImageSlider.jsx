@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export function ImageSlider({ images, alt, onImageClick, className = '' }) {
+export function ImageSlider({ images, alt, onImageClick, className = '', showNavigation: showNavigationProp = true }) {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     if (!images || images.length === 0) {
@@ -32,11 +32,11 @@ export function ImageSlider({ images, alt, onImageClick, className = '' }) {
         }
     };
 
-    // Only show navigation if there's more than one image
-    const showNavigation = images.length > 1;
+    // Only show navigation if there's more than one image AND showNavigationProp is true
+    const showNavigation = images.length > 1 && showNavigationProp;
 
     return (
-        <div className={`relative w-full h-full group ${className}`}>
+        <div className={`relative w-full h-full ${className}`}>
             {/* Main Image */}
             <div
                 className="w-full h-full overflow-hidden rounded-lg bg-slate-800"
@@ -54,7 +54,8 @@ export function ImageSlider({ images, alt, onImageClick, className = '' }) {
                     {/* Previous Button */}
                     <button
                         onClick={goToPrevious}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/30 text-white rounded-full hover:bg-black/60 transition-all z-20"
+                        style={{ top: '50%', transform: 'translateY(-50%)' }}
+                        className="absolute left-2 p-2 bg-black/60 text-white rounded-full hover:bg-black/80 transition-all z-50 opacity-100 hover:scale-110"
                         aria-label="Previous image"
                     >
                         <ChevronLeft size={24} />
@@ -63,21 +64,22 @@ export function ImageSlider({ images, alt, onImageClick, className = '' }) {
                     {/* Next Button */}
                     <button
                         onClick={goToNext}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/30 text-white rounded-full hover:bg-black/60 transition-all z-20"
+                        style={{ top: '50%', transform: 'translateY(-50%)' }}
+                        className="absolute right-2 p-2 bg-black/60 text-white rounded-full hover:bg-black/80 transition-all z-50 opacity-100 hover:scale-110"
                         aria-label="Next image"
                     >
                         <ChevronRight size={24} />
                     </button>
 
                     {/* Dot Indicators */}
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 z-50">
                         {images.map((_, index) => (
                             <button
                                 key={index}
                                 onClick={(e) => goToSlide(index, e)}
                                 className={`rounded-full transition-all ${index === currentIndex
-                                        ? 'bg-white w-6 h-2.5'
-                                        : 'bg-white/50 hover:bg-white/75 w-2.5 h-2.5'
+                                    ? 'bg-white w-6 h-2.5'
+                                    : 'bg-white/50 hover:bg-white/75 w-2.5 h-2.5'
                                     }`}
                                 aria-label={`Go to image ${index + 1}`}
                             />
@@ -85,7 +87,7 @@ export function ImageSlider({ images, alt, onImageClick, className = '' }) {
                     </div>
 
                     {/* Image Counter */}
-                    <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full z-20">
+                    <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full z-50">
                         {currentIndex + 1} / {images.length}
                     </div>
                 </>

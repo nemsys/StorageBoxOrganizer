@@ -49,6 +49,11 @@ export const firebaseStorage = {
     }
   },
 
+  uploadImage: async (file, folder) => {
+    // Folder is unused in Base64 implementation but kept for API compatibility
+    return await processImage(file);
+  },
+
   getBox: async (id) => {
     try {
       const docRef = doc(db, BOXES_COLL, id);
