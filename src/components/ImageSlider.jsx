@@ -45,7 +45,7 @@ export function ImageSlider({ images, alt, onImageClick, className = '', showNav
                 <img
                     src={images[currentIndex]}
                     alt={`${alt} - ${currentIndex + 1}`}
-                    className="w-full h-full object-cover cursor-pointer"
+                    className="w-full h-full object-contain cursor-pointer"
                 />
             </div>
 

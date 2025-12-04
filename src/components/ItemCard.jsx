@@ -13,7 +13,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
     return (
         <div className="card flex flex-col h-full relative group">
             {/* Image Area */}
-            <div className="h-48 bg-slate-800 relative group overflow-visible">
+            <div className="aspect-square bg-slate-800 relative group overflow-visible">
                 <ImageSlider
                     images={displayImages}
                     alt={item.name}
