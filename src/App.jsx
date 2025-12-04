@@ -419,12 +419,14 @@ function App() {
   };
 
   // Handle Fullscreen Image
-  const handleImageClick = (imageUrl, itemName) => {
-    setFullscreenImage({ isOpen: true, url: imageUrl, name: itemName });
+  const handleImageClick = (images, itemName) => {
+    // If a single string is passed (legacy), wrap it in an array
+    const imageList = Array.isArray(images) ? images : [images];
+    setFullscreenImage({ isOpen: true, url: imageList[0], images: imageList, name: itemName });
   };
 
   const handleCloseFullscreenImage = () => {
-    setFullscreenImage({ isOpen: false, url: '', name: '' });
+    setFullscreenImage({ isOpen: false, url: '', images: [], name: '' });
   };
 
   // Fuzzy Search Logic
@@ -658,6 +660,7 @@ function App() {
                     <ImageSlider
                       images={currentBox.images && currentBox.images.length > 0 ? currentBox.images : (currentBox.image ? [currentBox.image] : [])}
                       alt={currentBox.name}
+                      onImageClick={handleImageClick}
                       className="w-full h-full"
                     />
                     {(!currentBox.images || currentBox.images.length === 0) && !currentBox.image && (
@@ -781,6 +784,7 @@ function App() {
         isOpen={fullscreenImage.isOpen}
         onClose={handleCloseFullscreenImage}
         imageUrl={fullscreenImage.url}
+        images={fullscreenImage.images}
         itemName={fullscreenImage.name}
       />
     </div>

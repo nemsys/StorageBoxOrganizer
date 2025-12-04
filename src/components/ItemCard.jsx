@@ -17,7 +17,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                 <ImageSlider
                     images={displayImages}
                     alt={item.name}
-                    onImageClick={onImageClick && displayImages.length > 0 ? () => onImageClick(displayImages[0], item.name) : undefined}
+                    onImageClick={onImageClick && displayImages.length > 0 ? () => onImageClick(displayImages, item.name) : undefined}
                     className="w-full h-full object-cover"
                     showNavigation={false}
                 />

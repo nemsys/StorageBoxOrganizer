@@ -28,7 +28,7 @@ export function ImageSlider({ images, alt, onImageClick, className = '', showNav
 
     const handleImageClick = () => {
         if (onImageClick) {
-            onImageClick(images[currentIndex], alt);
+            onImageClick(images, alt);
         }
     };
 
