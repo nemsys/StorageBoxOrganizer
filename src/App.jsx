@@ -304,13 +304,33 @@ function App() {
     if (!editingBox) return;
 
     try {
+      // Process images if they exist
+      let processedUpdates = { ...updates };
+
+      if (updates.images && Array.isArray(updates.images)) {
+        // Separate File objects from URLs
+        const imageUrls = [];
+        for (const img of updates.images) {
+          if (img instanceof File) {
+            // Upload new image
+            const url = await firebaseStorage.uploadImage(img, 'boxes');
+            imageUrls.push(url);
+          } else {
+            // Keep existing URL
+            imageUrls.push(img);
+          }
+        }
+        processedUpdates.images = imageUrls;
+        processedUpdates.image = imageUrls.length > 0 ? imageUrls[0] : null;
+      }
+
       // Optimistic update
       setBoxes(prev => prev.map(b =>
-        b.id === editingBox.id ? { ...b, ...updates } : b
+        b.id === editingBox.id ? { ...b, ...processedUpdates } : b
       ));
 
       // Persist to Firebase
-      const updatedBox = await firebaseStorage.updateBox(editingBox.id, updates);
+      const updatedBox = await firebaseStorage.updateBox(editingBox.id, processedUpdates);
 
       // Update with server data
       setBoxes(prev => prev.map(b =>
