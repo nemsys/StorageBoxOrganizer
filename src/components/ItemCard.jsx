@@ -31,7 +31,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
             </div>
 
-            <div className="p-4 flex-1 flex flex-col">
+            <div className="p-4 flex flex-col h-28">
                 {boxName && (
                     <button
                         onClick={(e) => {
@@ -47,8 +47,8 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
 
                 <div className="flex items-start justify-between gap-2 mb-1">
                     <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-white">{item.name}</h3>
-                        <p className="text-sm text-slate-300 mb-3">{item.description}</p>
+                        <h3 className="text-lg font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
+                        <p className="text-sm text-slate-300 mb-3 line-clamp-1">{item.description}</p>
                     </div>
 
                     <div className="flex gap-1 flex-shrink-0">

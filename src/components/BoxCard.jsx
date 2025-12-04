@@ -62,14 +62,14 @@ export function BoxCard({ box, onClick, onDelete, onEdit, onRemove }) {
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
             </div>
 
-            <div className="p-4 flex-1 flex flex-col">
+            <div className="p-4 flex flex-col h-24">
                 <div className="flex items-start justify-between gap-2 mb-1">
                     <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-white whitespace-normal break-words">{box.name}</h3>
-                        <p className="text-sm text-slate-300 line-clamp-2">{box.description}</p>
+                        <h3 className="text-lg font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis">{box.name}</h3>
+                        <p className="text-sm text-slate-300 line-clamp-1">{box.description}</p>
                     </div>
 
-                    <div className="relative" data-menu-container ref={menuRef}>
+                    <div className="relative flex-shrink-0" data-menu-container ref={menuRef}>
                         <button
                             type="button"
                             onClick={(e) => {
