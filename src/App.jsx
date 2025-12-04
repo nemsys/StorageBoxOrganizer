@@ -655,7 +655,7 @@ function App() {
             {/* Box Header */}
             <div className="mb-8 animate-fade-in">
               <div className="flex flex-col md:flex-row gap-8 mb-8 items-start">
-                <div className="w-full md:w-1/3 md:max-w-sm flex-shrink-0 aspect-square relative">
+                <div className="w-full md:w-80 flex-shrink-0 aspect-square relative">
                   <div className="absolute inset-0 bg-slate-800 rounded-2xl shadow-2xl border border-slate-700/50">
                     <ImageSlider
                       images={currentBox.images && currentBox.images.length > 0 ? currentBox.images : (currentBox.image ? [currentBox.image] : [])}
