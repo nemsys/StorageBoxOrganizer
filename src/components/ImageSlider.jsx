@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export function ImageSlider({ images, alt, onImageClick, className = '', showNavigation: showNavigationProp = true }) {
+export function ImageSlider({ images, alt, onImageClick, className = '', showNavigation: showNavigationProp = true, fit = 'contain' }) {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     if (!images || images.length === 0) {
@@ -45,7 +45,7 @@ export function ImageSlider({ images, alt, onImageClick, className = '', showNav
                 <img
                     src={images[currentIndex]}
                     alt={`${alt} - ${currentIndex + 1}`}
-                    className="w-full h-full object-contain cursor-pointer"
+                    className={`w-full h-full cursor-pointer object-${fit}`}
                 />
             </div>
 

@@ -49,8 +49,9 @@ export function BoxCard({ box, onClick, onDelete, onEdit, onRemove }) {
                 <ImageSlider
                     images={displayImages}
                     alt={box.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full"
                     showNavigation={false}
+                    fit="cover"
                 />
                 {displayImages.length === 0 && (
                     <div className="w-full h-full flex items-center justify-center text-slate-600">

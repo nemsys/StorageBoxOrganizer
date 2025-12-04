@@ -18,8 +18,9 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                     images={displayImages}
                     alt={item.name}
                     onImageClick={onImageClick && displayImages.length > 0 ? () => onImageClick(displayImages, item.name) : undefined}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full"
                     showNavigation={showNavigation}
+                    fit="cover"
                 />
                 {displayImages.length === 0 && (
                     <div className="w-full h-full flex items-center justify-center text-slate-600">
