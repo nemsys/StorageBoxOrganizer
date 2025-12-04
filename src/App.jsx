@@ -29,7 +29,7 @@ function App() {
   const [editingBox, setEditingBox] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
 
-  const [itemFilterQuery, setItemFilterQuery] = useState('');
+
   const [itemSortOrder, setItemSortOrder] = useState('newest'); // 'name-asc', 'name-desc', 'newest', 'oldest'
   const [selectedTag, setSelectedTag] = useState('');
 
@@ -495,12 +495,12 @@ function App() {
     }
 
     // Filter by search query
-    if (itemFilterQuery) {
+    if (searchQuery) {
       const fuse = new Fuse(result, {
         keys: ['name', 'description', 'tags'],
         threshold: 0.3,
       });
-      result = fuse.search(itemFilterQuery).map(r => r.item);
+      result = fuse.search(searchQuery).map(r => r.item);
     }
 
     // Sort
@@ -513,7 +513,7 @@ function App() {
         default: return 0;
       }
     });
-  }, [items, selectedTag, itemFilterQuery, itemSortOrder, view]);
+  }, [items, selectedTag, searchQuery, itemSortOrder, view]);
 
   // Handle List All Items
   const handleListAllItems = async () => {
@@ -754,6 +754,7 @@ function App() {
         boxes={boxes}
         initialBoxId={currentBox?.id}
         availableItems={allItems}
+        availableTags={allTags}
         onSelectExisting={handleSelectExistingItem}
       />
 
@@ -770,6 +771,7 @@ function App() {
         onSave={handleUpdateItem}
         item={editingItem}
         boxes={boxes}
+        availableTags={allTags}
       />
 
       <FullscreenImageModal

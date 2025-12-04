@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Modal } from './Modal';
 import { Upload, X, Search } from 'lucide-react';
 
-export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId = '', availableItems = [], onSelectExisting }) {
+export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId = '', availableItems = [], availableTags = [], onSelectExisting }) {
     const [mode, setMode] = useState('create'); // 'create' | 'select'
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -10,6 +10,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
     const [imagePreview, setImagePreview] = useState('');
     const [selectedBoxId, setSelectedBoxId] = useState(initialBoxId);
     const [tags, setTags] = useState('');
+    const [tagSuggestions, setTagSuggestions] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedExistingId, setSelectedExistingId] = useState('');
     const fileInputRef = useRef(null);
@@ -83,7 +84,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
             name,
             description,
             image,
-            tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+            tags: tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
             boxId: selectedBoxId
         });
         // reset
@@ -112,8 +113,8 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     type="button"
                     onClick={() => setMode('create')}
                     className={`px-4 py-2 font-medium transition-colors ${mode === 'create'
-                            ? 'text-primary border-b-2 border-primary'
-                            : 'text-slate-400 hover:text-slate-200'
+                        ? 'text-primary border-b-2 border-primary'
+                        : 'text-slate-400 hover:text-slate-200'
                         }`}
                 >
                     Create New
@@ -122,8 +123,8 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     type="button"
                     onClick={() => setMode('select')}
                     className={`px-4 py-2 font-medium transition-colors ${mode === 'select'
-                            ? 'text-primary border-b-2 border-primary'
-                            : 'text-slate-400 hover:text-slate-200'
+                        ? 'text-primary border-b-2 border-primary'
+                        : 'text-slate-400 hover:text-slate-200'
                         }`}
                 >
                     Select Existing
@@ -218,13 +219,52 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
 
                     <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">Tags (comma separated)</label>
-                        <input
-                            type="text"
-                            value={tags}
-                            onChange={(e) => setTags(e.target.value)}
-                            className="input"
-                            placeholder="tool, heavy, metal"
-                        />
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={tags}
+                                onChange={(e) => {
+                                    setTags(e.target.value);
+                                    // Show suggestions if typing the last tag
+                                    const lastTag = e.target.value.split(',').pop().trim().toLowerCase();
+                                    if (lastTag) {
+                                        // Filter available tags
+                                        const matches = availableTags.filter(t =>
+                                            t.toLowerCase().startsWith(lastTag) &&
+                                            !tags.toLowerCase().includes(t.toLowerCase()) // Exclude already added
+                                        );
+                                        setTagSuggestions(matches);
+                                    } else {
+                                        setTagSuggestions([]);
+                                    }
+                                }}
+                                onBlur={() => setTimeout(() => setTagSuggestions([]), 200)} // Delay to allow click
+                                className="input"
+                                placeholder="tool, heavy, metal"
+                            />
+                            {tagSuggestions.length > 0 && (
+                                <div className="absolute z-10 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                                    {tagSuggestions.map(suggestion => (
+                                        <button
+                                            key={suggestion}
+                                            type="button"
+                                            className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                                            onClick={() => {
+                                                const currentTags = tags.split(',').map(t => t.trim()).filter(Boolean);
+                                                // Remove the partial tag being typed
+                                                currentTags.pop();
+                                                // Add the suggestion
+                                                currentTags.push(suggestion);
+                                                setTags(currentTags.join(', ') + ', ');
+                                                setTagSuggestions([]);
+                                            }}
+                                        >
+                                            {suggestion}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="pt-4 flex justify-end gap-3">

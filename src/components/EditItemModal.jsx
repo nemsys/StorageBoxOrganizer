@@ -2,12 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { Modal } from './Modal';
 import { Upload, X } from 'lucide-react';
 
-export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [] }) {
+export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], availableTags = [] }) {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [image, setImage] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
     const [tags, setTags] = useState('');
+    const [tagSuggestions, setTagSuggestions] = useState([]);
     const [selectedBoxId, setSelectedBoxId] = useState('');
     const fileInputRef = useRef(null);
 
@@ -61,7 +62,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [] }) {
             name,
             description,
             image,
-            tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+            tags: tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
             boxId: selectedBoxId
         });
         if (typeof onClose === 'function') onClose();
@@ -156,13 +157,52 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [] }) {
 
                 <div>
                     <label className="block text-sm font-medium text-slate-300 mb-1">Tags (comma separated)</label>
-                    <input
-                        type="text"
-                        value={tags}
-                        onChange={(e) => setTags(e.target.value)}
-                        className="input"
-                        placeholder="tool, heavy, metal"
-                    />
+                    <div className="relative">
+                        <input
+                            type="text"
+                            value={tags}
+                            onChange={(e) => {
+                                setTags(e.target.value);
+                                // Show suggestions if typing the last tag
+                                const lastTag = e.target.value.split(',').pop().trim().toLowerCase();
+                                if (lastTag) {
+                                    // Filter available tags
+                                    const matches = availableTags.filter(t =>
+                                        t.toLowerCase().startsWith(lastTag) &&
+                                        !tags.toLowerCase().includes(t.toLowerCase()) // Exclude already added
+                                    );
+                                    setTagSuggestions(matches);
+                                } else {
+                                    setTagSuggestions([]);
+                                }
+                            }}
+                            onBlur={() => setTimeout(() => setTagSuggestions([]), 200)} // Delay to allow click
+                            className="input"
+                            placeholder="tool, heavy, metal"
+                        />
+                        {tagSuggestions.length > 0 && (
+                            <div className="absolute z-10 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                                {tagSuggestions.map(suggestion => (
+                                    <button
+                                        key={suggestion}
+                                        type="button"
+                                        className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                                        onClick={() => {
+                                            const currentTags = tags.split(',').map(t => t.trim()).filter(Boolean);
+                                            // Remove the partial tag being typed
+                                            currentTags.pop();
+                                            // Add the suggestion
+                                            currentTags.push(suggestion);
+                                            setTags(currentTags.join(', ') + ', ');
+                                            setTagSuggestions([]);
+                                        }}
+                                    >
+                                        {suggestion}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="pt-4 flex justify-end gap-3">
