@@ -10,7 +10,7 @@ import { SearchBar } from './components/SearchBar';
 import { AuthModal } from './components/AuthModal';
 import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { ImageSlider } from './components/ImageSlider';
-import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown } from 'lucide-react';
+import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
