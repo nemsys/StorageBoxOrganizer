@@ -174,7 +174,6 @@ function App() {
   };
 
   // Handle Adding Item
-  // Handle Adding Item
   const handleAddItem = async (payload) => {
     try {
       let imageUrls = [];
@@ -196,6 +195,11 @@ function App() {
         boxId: payload.boxId || '',
         createdAt: Date.now()
       };
+
+      // Persist to Firebase
+      await firebaseStorage.addItem(newItem);
+
+      // Update local state
       setItems(prev => [newItem, ...prev]);
       setIsAddItemModalOpen(false);
     } catch (error) {
