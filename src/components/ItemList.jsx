@@ -1,7 +1,7 @@
 import { ItemCard } from './ItemCard';
 import { Plus } from 'lucide-react';
 
-export function ItemList({ items, onAddClick, onDeleteItem, onEditItem, onBoxClick, onImageClick }) {
+export function ItemList({ items, onAddClick, onDeleteItem, onEditItem, onBoxClick, onImageClick, showItemNavigation = false }) {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {onAddClick && (
@@ -25,6 +25,7 @@ export function ItemList({ items, onAddClick, onDeleteItem, onEditItem, onBoxCli
                     boxName={item.boxName}
                     onBoxClick={onBoxClick}
                     onImageClick={onImageClick}
+                    showNavigation={showItemNavigation}
                 />
             ))}
 

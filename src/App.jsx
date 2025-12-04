@@ -690,6 +690,7 @@ function App() {
               onDeleteItem={handleDeleteItem}
               onEditItem={handleEditItem}
               onImageClick={handleImageClick}
+              showItemNavigation={true}
             />
           </>
         )}

@@ -2,7 +2,7 @@ import { Package, MoreVertical, Edit, Trash2, Box, Tag } from 'lucide-react';
 import { useState } from 'react';
 import { ImageSlider } from './ImageSlider';
 
-export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageClick }) {
+export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageClick, showNavigation = false }) {
     // Prepare images array
     let displayImages = [];
     if (item.images && Array.isArray(item.images) && item.images.length > 0) {
@@ -19,7 +19,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                     alt={item.name}
                     onImageClick={onImageClick && displayImages.length > 0 ? () => onImageClick(displayImages, item.name) : undefined}
                     className="w-full h-full object-cover"
-                    showNavigation={false}
+                    showNavigation={showNavigation}
                 />
                 {displayImages.length === 0 && (
                     <div className="w-full h-full flex items-center justify-center text-slate-600">
