@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Modal } from './Modal';
 import { Upload, X } from 'lucide-react';
+import { resizeImage } from '../utils/imageUtils';
 
 export function AddBoxModal({ isOpen, onClose, onAdd }) {
     const [name, setName] = useState('');
@@ -9,26 +10,25 @@ export function AddBoxModal({ isOpen, onClose, onAdd }) {
     const [imagePreviews, setImagePreviews] = useState([]);
     const fileInputRef = useRef(null);
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const files = Array.from(e.target.files || []);
         if (files.length === 0) return;
 
-        // Add new images to existing ones
-        const newPreviews = files.map(f => URL.createObjectURL(f));
-        setImages(prev => [...prev, ...files]);
-        setImagePreviews(prev => [...prev, ...newPreviews]);
+        // Resize and get base64 for each file
+        const newImages = await Promise.all(
+            files.map(file => resizeImage(file))
+        );
+
+        // Add new images to existing ones (keeping them as base64 strings)
+        setImages(prev => [...prev, ...newImages]);
+        setImagePreviews(prev => [...prev, ...newImages]);
 
         if (fileInputRef.current) fileInputRef.current.value = null;
     };
 
-    useEffect(() => {
-        return () => {
-            imagePreviews.forEach(url => URL.revokeObjectURL(url));
-        };
-    }, [imagePreviews]);
+    // No need for cleanup effect anymore as we are using base64 strings
 
     const handleRemoveImage = (index) => {
-        URL.revokeObjectURL(imagePreviews[index]);
         setImages(prev => prev.filter((_, i) => i !== index));
         setImagePreviews(prev => prev.filter((_, i) => i !== index));
         if (fileInputRef.current) fileInputRef.current.value = null;
@@ -36,11 +36,10 @@ export function AddBoxModal({ isOpen, onClose, onAdd }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // pass File[] to parent
+        // pass base64 strings to parent
         onAdd({ name, description, images });
         setName('');
         setDescription('');
-        imagePreviews.forEach(url => URL.revokeObjectURL(url));
         setImages([]);
         setImagePreviews([]);
         if (fileInputRef.current) fileInputRef.current.value = null;

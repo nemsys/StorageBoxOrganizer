@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Modal } from './Modal';
 import { Upload, X, Search } from 'lucide-react';
+import { resizeImage } from '../utils/imageUtils';
 
 export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId = '', availableItems = [], availableTags = [], onSelectExisting }) {
     const [mode, setMode] = useState('create'); // 'create' | 'select'
@@ -55,26 +56,25 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
         }
     }, [filteredItems, searchQuery, selectedExistingId]);
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const files = Array.from(e.target.files || []);
         if (files.length === 0) return;
 
+        // Resize and get base64 for each file
+        const newImages = await Promise.all(
+            files.map(file => resizeImage(file))
+        );
+
         // Add new images to existing ones
-        const newPreviews = files.map(f => URL.createObjectURL(f));
-        setImages(prev => [...prev, ...files]);
-        setImagePreviews(prev => [...prev, ...newPreviews]);
+        setImages(prev => [...prev, ...newImages]);
+        setImagePreviews(prev => [...prev, ...newImages]);
 
         if (fileInputRef.current) fileInputRef.current.value = null;
     };
 
-    useEffect(() => {
-        return () => {
-            imagePreviews.forEach(url => URL.revokeObjectURL(url));
-        };
-    }, [imagePreviews]);
+    // Removed cleanup effect for object URLs
 
     const handleRemoveImage = (index) => {
-        URL.revokeObjectURL(imagePreviews[index]);
         setImages(prev => prev.filter((_, i) => i !== index));
         setImagePreviews(prev => prev.filter((_, i) => i !== index));
         if (fileInputRef.current) fileInputRef.current.value = null;
@@ -90,9 +90,9 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
             boxId: selectedBoxId
         });
         // reset
+        // reset
         setName('');
         setDescription('');
-        imagePreviews.forEach(url => URL.revokeObjectURL(url));
         setImages([]);
         setImagePreviews([]);
         setTags('');

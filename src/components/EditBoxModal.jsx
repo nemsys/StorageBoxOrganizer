@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Modal } from './Modal';
 import { Upload, X } from 'lucide-react';
+import { resizeImage } from '../utils/imageUtils';
 
 export function EditBoxModal({ isOpen, onClose, onSave, box }) {
     const [name, setName] = useState('');
@@ -29,34 +30,26 @@ export function EditBoxModal({ isOpen, onClose, onSave, box }) {
         }
     }, [box]);
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const files = Array.from(e.target.files || []);
         if (files.length === 0) return;
 
+        // Resize and get base64 for each file
+        const newImages = await Promise.all(
+            files.map(file => resizeImage(file))
+        );
+
         // Add new images to existing ones
-        const newPreviews = files.map(f => URL.createObjectURL(f));
-        setImages(prev => [...prev, ...files]);
-        setImagePreviews(prev => [...prev, ...newPreviews]);
+        setImages(prev => [...prev, ...newImages]);
+        setImagePreviews(prev => [...prev, ...newImages]);
 
         if (fileInputRef.current) fileInputRef.current.value = null;
     };
 
-    useEffect(() => {
-        return () => {
-            // Cleanup blob URLs
-            imagePreviews.forEach(url => {
-                if (url && typeof url === 'string' && url.startsWith('blob:')) {
-                    URL.revokeObjectURL(url);
-                }
-            });
-        };
-    }, [imagePreviews]);
+    // Removed cleanup effect as we don't use blob URLs for new images anymore
+    // Existing URLs are strings and don't need revocation
 
     const handleRemoveImage = (index) => {
-        const urlToRemove = imagePreviews[index];
-        if (urlToRemove && typeof urlToRemove === 'string' && urlToRemove.startsWith('blob:')) {
-            URL.revokeObjectURL(urlToRemove);
-        }
         setImages(prev => prev.filter((_, i) => i !== index));
         setImagePreviews(prev => prev.filter((_, i) => i !== index));
     };

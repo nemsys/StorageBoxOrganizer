@@ -165,7 +165,10 @@ function App() {
         image: imageUrls.length > 0 ? imageUrls[0] : null, // Backward compatibility
         createdAt: Date.now()
       };
-      setBoxes(prev => [newBox, ...prev]);
+      // Persist to Firebase
+      const savedBox = await firebaseStorage.addBox(newBox);
+
+      setBoxes(prev => [savedBox, ...prev]);
       setIsAddBoxModalOpen(false);
     } catch (error) {
       console.error("Error adding box:", error);
@@ -381,7 +384,18 @@ function App() {
         boxId: payload.boxId || ''
       };
 
-      setItems(prev => prev.map(item => item.id === editingItem.id ? updatedItem : item));
+      // Persist to Firebase
+      // We pass the fields that changed. internal logic in updateItem handles merging.
+      const persistedItem = await firebaseStorage.updateItem(editingItem.id, {
+        name: payload.name,
+        description: payload.description,
+        images: imageUrls,
+        image: imageUrls.length > 0 ? imageUrls[0] : null,
+        tags: payload.tags || [],
+        boxId: payload.boxId || ''
+      });
+
+      setItems(prev => prev.map(item => item.id === editingItem.id ? persistedItem : item));
       setEditingItem(null);
     } catch (error) {
       console.error("Error updating item:", error);
