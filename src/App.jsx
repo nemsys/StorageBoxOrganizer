@@ -204,6 +204,7 @@ function App() {
 
       // Update local state
       setItems(prev => [newItem, ...prev]);
+      setAllItems(prev => [newItem, ...prev]);
       setIsAddItemModalOpen(false);
     } catch (error) {
       console.error("Error adding item:", error);
@@ -396,6 +397,7 @@ function App() {
       });
 
       setItems(prev => prev.map(item => item.id === editingItem.id ? persistedItem : item));
+      setAllItems(prev => prev.map(item => item.id === editingItem.id ? persistedItem : item));
       setEditingItem(null);
     } catch (error) {
       console.error("Error updating item:", error);
@@ -482,16 +484,16 @@ function App() {
     }
   };
 
-  // Compute all unique tags from items
+  // Compute all unique tags from all items (global)
   const allTags = useMemo(() => {
     const tagSet = new Set();
-    items.forEach(item => {
+    allItems.forEach(item => {
       if (item.tags && Array.isArray(item.tags)) {
         item.tags.forEach(tag => tagSet.add(tag));
       }
     });
     return Array.from(tagSet).sort();
-  }, [items]);
+  }, [allItems]);
 
   // All Items View Filtering and Sorting
   const allItemsDisplayItems = useMemo(() => {
