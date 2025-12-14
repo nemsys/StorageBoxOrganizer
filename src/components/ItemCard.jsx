@@ -13,13 +13,16 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
     return (
         <div className="card flex flex-col h-full relative group">
             {/* Image Area */}
-            <div className="aspect-video bg-slate-800 relative group overflow-hidden">
+            <div
+                className="aspect-video w-full bg-slate-800 relative group overflow-hidden"
+            >
                 <ImageSlider
                     images={displayImages}
                     alt={item.name}
                     onImageClick={onImageClick && displayImages.length > 0 ? () => onImageClick(displayImages, item.name) : undefined}
                     className="w-full h-full"
                     showNavigation={showNavigation}
+                    fit="cover"
                 />
                 {displayImages.length === 0 && (
                     <div className="w-full h-full flex items-center justify-center text-slate-600">

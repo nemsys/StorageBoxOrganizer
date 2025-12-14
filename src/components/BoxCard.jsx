@@ -44,8 +44,10 @@ export function BoxCard({ box, onClick, onDelete, onEdit, onRemove }) {
             style={{ overflow: 'visible' }}
         >
             {/* Image Area */}
-            <div className="aspect-square bg-slate-800 relative group overflow-visible"
-                style={{ borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)' }}>
+            <div
+                className="w-full bg-slate-800 relative group overflow-hidden"
+                style={{ height: '192px', borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)' }}
+            >
                 <ImageSlider
                     images={displayImages}
                     alt={box.name}
