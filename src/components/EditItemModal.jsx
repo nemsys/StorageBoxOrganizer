@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Modal } from './Modal';
 import { Upload, X, Calendar, History } from 'lucide-react';
 import { resizeImage } from '../utils/imageUtils';
+import { formatDate, formatDateTime } from '../utils/dateUtils';
 
 export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], availableTags = [] }) {
     const [name, setName] = useState('');
@@ -210,12 +211,12 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                 <div className="pt-6 mt-2 border-t border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-[10px] uppercase tracking-wider font-bold text-slate-500">
                     <div className="flex items-center gap-1.5">
                         <Calendar size={12} className="text-slate-600" />
-                        <span>Created: {item?.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Unknown'}</span>
+                        <span>Created: {formatDate(item?.createdAt)}</span>
                     </div>
                     {item?.modifiedAt && (
                         <div className="flex items-center gap-1.5">
                             <History size={12} className="text-slate-600" />
-                            <span>Modified: {new Date(item.modifiedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+                            <span>Modified: {formatDateTime(item.modifiedAt)}</span>
                         </div>
                     )}
                 </div>

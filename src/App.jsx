@@ -14,6 +14,7 @@ import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package, Edi
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { formatDate } from './utils/dateUtils';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -738,7 +739,7 @@ function App() {
                   </div>
                   <p className="text-slate-300 text-lg leading-relaxed mb-6">{currentBox.description}</p>
                   <div className="flex gap-4 text-sm text-slate-400">
-                    <span className="bg-slate-800/50 px-3 py-1.5 rounded-full border border-white/5">Created: {new Date(currentBox.createdAt).toLocaleDateString()}</span>
+                    <span className="bg-slate-800/50 px-3 py-1.5 rounded-full border border-white/5">Created: {formatDate(currentBox.createdAt)}</span>
                     <span className="bg-slate-800/50 px-3 py-1.5 rounded-full border border-white/5">{items.length} items</span>
                   </div>
                 </div>
