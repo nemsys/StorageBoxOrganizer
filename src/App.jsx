@@ -10,7 +10,7 @@ import { SearchBar } from './components/SearchBar';
 import { AuthModal } from './components/AuthModal';
 import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { ImageSlider } from './components/ImageSlider';
-import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package, Edit, Trash2, Calendar } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -693,54 +693,63 @@ function App() {
           <>
             {/* Box Header */}
             <div className="mb-8 animate-fade-in">
-              <div className="flex flex-col md:flex-row gap-8 mb-8 items-start">
-                <div className="w-40 h-40 md:w-56 md:h-56 flex-shrink-0 relative">
-                  <div className="w-full h-full bg-slate-800 rounded-2xl shadow-2xl border border-slate-700/50 overflow-hidden">
-                    <ImageSlider
-                      images={currentBox.images && currentBox.images.length > 0 ? currentBox.images : (currentBox.image ? [currentBox.image] : [])}
-                      alt={currentBox.name}
-                      onImageClick={handleImageClick}
-                      className="w-full h-full"
-                      fit="cover"
-                    />
-                    {(!currentBox.images || currentBox.images.length === 0) && !currentBox.image && (
-                      <div className="absolute inset-0 flex items-center justify-center text-slate-600">
-                        <Package size={64} />
-                      </div>
-                    )}
+              {/* Image Banner */}
+              <div className="w-full h-48 md:h-64 bg-slate-800 rounded-3xl shadow-2xl border border-slate-700/50 overflow-hidden relative mb-6 group">
+                <ImageSlider
+                  images={currentBox.images && currentBox.images.length > 0 ? currentBox.images : (currentBox.image ? [currentBox.image] : [])}
+                  alt={currentBox.name}
+                  onImageClick={handleImageClick}
+                  className="w-full h-full"
+                  fit="cover"
+                />
+                {(!currentBox.images || currentBox.images.length === 0) && !currentBox.image && (
+                  <div className="absolute inset-0 flex items-center justify-center text-slate-600">
+                    <Package size={64} />
                   </div>
-                </div>
+                )}
+                {/* Visual gradient overlay to make the banner feel more integrated */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+
+              {/* Box Info Row */}
+              <div className="flex flex-col md:flex-row gap-6 items-start">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-4 mb-2">
-                    <h1 className="text-4xl font-bold text-white">{currentBox.name}</h1>
-                    <div className="flex gap-2">
+                    <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">{currentBox.name}</h1>
+                    <div className="flex gap-2 shrink-0">
                       <button
                         onClick={() => handleEditBox(currentBox)}
-                        className="p-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-colors"
+                        className="p-2.5 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-all hover:scale-105 active:scale-95"
                         title="Edit Box"
                       >
                         <Edit size={20} />
                       </button>
                       <button
                         onClick={() => handleRemoveBox(currentBox.id)}
-                        className="p-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-colors"
+                        className="p-2.5 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-all hover:scale-105 active:scale-95"
                         title="Remove Box (keep items)"
                       >
                         <LogOut size={20} />
                       </button>
                       <button
                         onClick={() => handleDeleteBox(currentBox.id)}
-                        className="p-2 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 hover:text-red-300 transition-colors"
+                        className="p-2.5 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 hover:text-red-300 transition-all hover:scale-105 active:scale-95"
                         title="Delete Box and Items"
                       >
                         <Trash2 size={20} />
                       </button>
                     </div>
                   </div>
-                  <p className="text-slate-300 text-lg leading-relaxed mb-6">{currentBox.description}</p>
-                  <div className="flex gap-4 text-sm text-slate-400">
-                    <span className="bg-slate-800/50 px-3 py-1.5 rounded-full border border-white/5">Created: {formatDate(currentBox.createdAt)}</span>
-                    <span className="bg-slate-800/50 px-3 py-1.5 rounded-full border border-white/5">{items.length} items</span>
+                  <p className="text-slate-300 text-lg leading-relaxed mb-6 max-w-3xl">{currentBox.description}</p>
+                  <div className="flex flex-wrap gap-4 text-sm text-slate-400">
+                    <span className="bg-slate-800/50 px-3 py-1.5 rounded-full border border-white/5 flex items-center gap-1.5">
+                      <Calendar size={14} className="opacity-60" />
+                      Created: {formatDate(currentBox.createdAt)}
+                    </span>
+                    <span className="bg-slate-800/50 px-3 py-1.5 rounded-full border border-white/5 flex items-center gap-1.5">
+                      <Package size={14} className="opacity-60" />
+                      {items.length} items
+                    </span>
                   </div>
                 </div>
               </div>
