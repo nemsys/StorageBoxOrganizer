@@ -10,7 +10,7 @@ import { SearchBar } from './components/SearchBar';
 import { AuthModal } from './components/AuthModal';
 import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { ImageSlider } from './components/ImageSlider';
-import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package } from 'lucide-react';
+import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package, Edit, Trash2 } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -248,12 +248,17 @@ function App() {
     }
   };
 
-  // Handle Deleting Box
   async function handleDeleteBox(id) {
     if (!confirm('Are you sure you want to delete this box and all its items?')) return;
 
     // Optimistic update
     setBoxes(prev => prev.filter(b => b.id !== id));
+    setItems(prev => prev.filter(i => i.boxId !== id));
+    setAllItems(prev => prev.filter(i => i.boxId !== id));
+
+    if (currentBox?.id === id) {
+      handleBack();
+    }
 
     try {
       await firebaseStorage.deleteBox(id);
@@ -264,12 +269,17 @@ function App() {
     }
   };
 
-  // Handle Removing Box (keep items)
   async function handleRemoveBox(id) {
     if (!confirm('Are you sure you want to remove this box? Items will be moved to "Unassigned".')) return;
 
-    // Optimistic update - remove box from list
+    // Optimistic update - remove box from list and unassign items
     setBoxes(prev => prev.filter(b => b.id !== id));
+    setItems(prev => prev.map(i => i.boxId === id ? { ...i, boxId: '' } : i));
+    setAllItems(prev => prev.map(i => i.boxId === id ? { ...i, boxId: '' } : i));
+
+    if (currentBox?.id === id) {
+      handleBack();
+    }
 
     try {
       // 1. Find all items in this box
@@ -281,16 +291,7 @@ function App() {
       ));
 
       // 3. Delete the box
-      // Note: firebaseStorage.deleteBox also deletes items in the box,
-      // but since we just moved them, it won't find any to delete.
       await firebaseStorage.deleteBox(id);
-
-      // Update local items state if needed
-      // If we are viewing "All Items", we might need to update their boxId in the local state
-      setAllItems(prev => prev.map(i => i.boxId === id ? { ...i, boxId: '' } : i));
-
-      // Also update 'items' state if we happen to be viewing them (though we probably aren't if we just deleted the box)
-      setItems(prev => prev.map(i => i.boxId === id ? { ...i, boxId: '' } : i));
 
     } catch (err) {
       console.error('Failed to remove box', err);
@@ -688,11 +689,36 @@ function App() {
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-4xl font-bold text-white mb-2">{currentBox.name}</h1>
-                  <p className="text-slate-300 text-lg leading-relaxed mb-4">{currentBox.description}</p>
+                  <div className="flex items-start justify-between gap-4 mb-2">
+                    <h1 className="text-4xl font-bold text-white">{currentBox.name}</h1>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditBox(currentBox)}
+                        className="p-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-colors"
+                        title="Edit Box"
+                      >
+                        <Edit size={20} />
+                      </button>
+                      <button
+                        onClick={() => handleRemoveBox(currentBox.id)}
+                        className="p-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-colors"
+                        title="Remove Box (keep items)"
+                      >
+                        <LogOut size={20} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBox(currentBox.id)}
+                        className="p-2 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 hover:text-red-300 transition-colors"
+                        title="Delete Box and Items"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-slate-300 text-lg leading-relaxed mb-6">{currentBox.description}</p>
                   <div className="flex gap-4 text-sm text-slate-400">
-                    <span className="bg-slate-800 px-3 py-1 rounded-full">Created: {new Date(currentBox.createdAt).toLocaleDateString()}</span>
-                    <span className="bg-slate-800 px-3 py-1 rounded-full">{items.length} items</span>
+                    <span className="bg-slate-800/50 px-3 py-1.5 rounded-full border border-white/5">Created: {new Date(currentBox.createdAt).toLocaleDateString()}</span>
+                    <span className="bg-slate-800/50 px-3 py-1.5 rounded-full border border-white/5">{items.length} items</span>
                   </div>
                 </div>
               </div>

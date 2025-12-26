@@ -42,7 +42,7 @@ export const firebaseStorage = {
         orderBy("createdAt", "desc")
       );
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => doc.data());
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
       console.error("Error fetching boxes:", e);
       return [];
@@ -58,7 +58,7 @@ export const firebaseStorage = {
     try {
       const docRef = doc(db, BOXES_COLL, id);
       const docSnap = await getDoc(docRef);
-      return docSnap.exists() ? docSnap.data() : null;
+      return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
     } catch (e) {
       console.error("Error fetching box:", e);
       return null;
@@ -113,23 +113,26 @@ export const firebaseStorage = {
     await deleteDoc(boxRef);
 
     // Delete items in box
-    const q = query(collection(db, ITEMS_COLL), where("boxId", "==", id));
+    const uid = getUserId();
+    const q = query(collection(db, ITEMS_COLL), where("userId", "==", uid), where("boxId", "==", id));
     const snapshot = await getDocs(q);
     const deletePromises = snapshot.docs.map((d) => {
-      return deleteDoc(doc(db, ITEMS_COLL, d.data().id));
+      return deleteDoc(doc(db, ITEMS_COLL, d.id));
     });
     await Promise.all(deletePromises);
   },
 
   getItems: async (boxId) => {
     try {
+      const uid = getUserId();
       const q = query(
         collection(db, ITEMS_COLL),
+        where("userId", "==", uid),
         where("boxId", "==", boxId),
         orderBy("createdAt", "desc")
       );
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => doc.data());
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
       console.error("Error fetching items:", e);
       return [];
@@ -144,7 +147,7 @@ export const firebaseStorage = {
         where("userId", "==", uid)
       );
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => doc.data());
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
       console.error("Error fetching all items:", e);
       return [];
