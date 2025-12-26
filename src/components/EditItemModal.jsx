@@ -208,7 +208,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                     </div>
                 </div>
 
-                <div className="pt-6 mt-2 border-t border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-[10px] uppercase tracking-wider font-bold text-slate-500">
+                <div className="pt-6 mt-2 border-t border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-slate-500">
                     <div className="flex items-center gap-1.5">
                         <Calendar size={12} className="text-slate-600" />
                         <span>Created: {formatDate(item?.createdAt)}</span>
