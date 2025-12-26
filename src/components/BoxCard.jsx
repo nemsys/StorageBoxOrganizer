@@ -19,12 +19,16 @@ export function BoxCard({ box, onClick, itemCount = 0 }) {
         >
             {/* Image Area */}
             <div
-                className="w-full bg-slate-800 relative overflow-hidden aspect-[4/3] sm:aspect-video"
+                className="w-full bg-slate-800 relative overflow-hidden"
+                style={{
+                    aspectRatio: '16 / 10',
+                    height: 'auto'
+                }}
             >
                 <ImageSlider
                     images={displayImages}
                     alt={box.name}
-                    className="w-full h-full"
+                    className="absolute inset-0 w-full h-full"
                     showNavigation={false}
                     fit="cover"
                 />

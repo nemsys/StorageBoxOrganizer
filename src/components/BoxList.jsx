@@ -6,7 +6,7 @@ export function BoxList({ boxes, allItems = [], onBoxClick, onAddClick, onDelete
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             <div
                 onClick={onAddClick}
-                className="card border-dashed border-2 border-slate-700 bg-transparent flex flex-col items-center justify-center aspect-square cursor-pointer hover:border-primary hover:bg-slate-800/50 group"
+                className="card border-dashed border-2 border-slate-700 bg-transparent flex flex-col items-center justify-center min-h-[200px] h-full cursor-pointer hover:border-primary hover:bg-slate-800/50 group"
             >
                 <div className="p-4 rounded-lg bg-slate-800 group-hover:bg-primary/20 group-hover:text-primary transition-colors mb-2">
                     <Plus size={32} />
@@ -17,7 +17,7 @@ export function BoxList({ boxes, allItems = [], onBoxClick, onAddClick, onDelete
             {onAddItemClick && (
                 <div
                     onClick={onAddItemClick}
-                    className="card border-dashed border-2 border-slate-700 bg-transparent flex flex-col items-center justify-center aspect-square cursor-pointer hover:border-primary hover:bg-slate-800/50 group"
+                    className="card border-dashed border-2 border-slate-700 bg-transparent flex flex-col items-center justify-center min-h-[200px] h-full cursor-pointer hover:border-primary hover:bg-slate-800/50 group"
                 >
                     <div className="p-4 rounded-lg bg-slate-800 group-hover:bg-primary/20 group-hover:text-primary transition-colors mb-2">
                         <Package size={32} />
