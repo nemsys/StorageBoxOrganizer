@@ -41,7 +41,7 @@ export function BoxCard({ box, onClick, itemCount = 0 }) {
 
                 {/* Overlay Gradient */}
                 <div
-                    className="absolute inset-0 z-10"
+                    className="absolute inset-0 z-10 pointer-events-none"
                     style={{
                         background: 'linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.2) 50%, transparent 100%)'
                     }}

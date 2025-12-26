@@ -23,7 +23,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                 <ImageSlider
                     images={displayImages}
                     alt={item.name}
-                    onImageClick={onImageClick && displayImages.length > 0 ? () => onImageClick(displayImages, item.name) : undefined}
+                    onImageClick={onImageClick && displayImages.length > 0 ? () => onImageClick(displayImages, item.name, item) : undefined}
                     className="absolute inset-0 w-full h-full"
                     showNavigation={showNavigation}
                     fit="cover"
@@ -35,7 +35,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                 )}
 
                 {/* Overlay Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60 pointer-events-none" />
             </div>
 
             <div className="p-4 flex flex-col h-28">
