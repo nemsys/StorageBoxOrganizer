@@ -16,7 +16,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
             <div
                 className="w-full bg-slate-800 relative group overflow-hidden"
                 style={{
-                    aspectRatio: '16 / 10',
+                    aspectRatio: '4 / 3',
                     height: 'auto'
                 }}
             >

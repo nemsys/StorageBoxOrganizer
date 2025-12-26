@@ -21,7 +21,7 @@ export function BoxCard({ box, onClick, itemCount = 0 }) {
             <div
                 className="w-full bg-slate-800 relative overflow-hidden"
                 style={{
-                    aspectRatio: '16 / 10',
+                    aspectRatio: '1 / 1',
                     height: 'auto'
                 }}
             >

@@ -7,7 +7,7 @@ export function ItemList({ items, onAddClick, onDeleteItem, onEditItem, onBoxCli
             {onAddClick && (
                 <div
                     onClick={onAddClick}
-                    className="card border-dashed border-2 border-slate-700 bg-transparent flex items-center justify-center min-h-[200px] h-full cursor-pointer hover:border-primary hover:bg-slate-800/50 group"
+                    className="card border-dashed border-2 border-slate-700 bg-transparent flex items-center justify-center aspect-[4/3] cursor-pointer hover:border-primary hover:bg-slate-800/50 group"
                     title="Add New Item"
                 >
                     <div className="p-3 rounded-lg bg-slate-800 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
@@ -32,7 +32,7 @@ export function ItemList({ items, onAddClick, onDeleteItem, onEditItem, onBoxCli
             {onAddClick && items.length > 0 && (
                 <div
                     onClick={onAddClick}
-                    className="card border-dashed border-2 border-slate-700 bg-transparent flex items-center justify-center min-h-[200px] h-full cursor-pointer hover:border-primary hover:bg-slate-800/50 group"
+                    className="card border-dashed border-2 border-slate-700 bg-transparent flex items-center justify-center aspect-[4/3] cursor-pointer hover:border-primary hover:bg-slate-800/50 group"
                     title="Add New Item"
                 >
                     <div className="p-3 rounded-lg bg-slate-800 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
