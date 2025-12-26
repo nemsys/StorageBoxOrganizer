@@ -188,7 +188,8 @@ export const firebaseStorage = {
       ...updates,
       image: imageData,
       userId: uid,
-      id: id // Ensure ID doesn't change
+      id: id, // Ensure ID doesn't change
+      modifiedAt: Date.now()
     };
 
     await setDoc(itemRef, updatedItem);
