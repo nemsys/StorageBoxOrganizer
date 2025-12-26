@@ -15,12 +15,11 @@ export function BoxCard({ box, onClick, itemCount = 0 }) {
             onClick={(e) => {
                 if (typeof onClick === 'function') onClick(box);
             }}
-            className="card group cursor-pointer flex flex-col h-full relative overflow-hidden"
+            className="card group cursor-pointer flex flex-col h-full relative overflow-hidden bg-slate-900"
         >
             {/* Image Area */}
             <div
-                className="w-full bg-slate-800 relative group overflow-hidden"
-                style={{ height: '160px' }}
+                className="w-full bg-slate-800 relative overflow-hidden aspect-[4/3] sm:aspect-video"
             >
                 <ImageSlider
                     images={displayImages}
@@ -29,26 +28,27 @@ export function BoxCard({ box, onClick, itemCount = 0 }) {
                     showNavigation={false}
                     fit="cover"
                 />
+
                 {displayImages.length === 0 && (
-                    <div className="w-full h-full flex items-center justify-center text-slate-600">
-                        <Package size={42} />
+                    <div className="absolute inset-0 flex items-center justify-center text-slate-600">
+                        <Package size={48} />
                     </div>
                 )}
 
-                {/* Overlay Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+                {/* Overlay Gradient - Higher z-index to stay above ImageSlider wrapper */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/20 to-transparent z-10" />
 
-                {/* Item Count Badge */}
-                <div className="absolute bottom-2 right-2 px-2 py-1 bg-slate-900/80 backdrop-blur-md rounded-md border border-white/10 text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                {/* Item Count Badge - Higher z-index to stay on top */}
+                <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-primary text-slate-950 rounded-lg shadow-lg z-20 font-bold text-[10px] uppercase tracking-wider flex items-center justify-center min-w-[3rem]">
                     {itemCount} {itemCount === 1 ? 'item' : 'items'}
                 </div>
             </div>
 
-            <div className="p-3 flex flex-col flex-1 min-h-[80px]">
-                <h3 className="text-base font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis mb-0.5 group-hover:text-primary transition-colors">
+            <div className="p-4 flex flex-col flex-1">
+                <h3 className="text-lg font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis mb-1 group-hover:text-primary transition-colors">
                     {box.name}
                 </h3>
-                <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                <p className="text-sm text-slate-400 line-clamp-2 leading-relaxed">
                     {box.description || 'No description'}
                 </p>
             </div>
