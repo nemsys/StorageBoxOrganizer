@@ -128,8 +128,7 @@ export const firebaseStorage = {
       const q = query(
         collection(db, ITEMS_COLL),
         where("userId", "==", uid),
-        where("boxId", "==", boxId),
-        orderBy("createdAt", "desc")
+        where("boxId", "==", boxId)
       );
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));

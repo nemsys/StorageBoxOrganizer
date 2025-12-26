@@ -99,6 +99,22 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [user, boxes]);
 
+  // Handle Initial Hash on Load
+  useEffect(() => {
+    if (user && boxes.length > 0) {
+      const hash = window.location.hash;
+      if (hash.startsWith('#box/')) {
+        const boxId = hash.replace('#box/', '');
+        const box = boxes.find(b => b.id === boxId);
+        if (box) {
+          handleBoxClick(box);
+        }
+      } else if (hash === '#all-items') {
+        handleListAllItems();
+      }
+    }
+  }, [user, boxes.length]);
+
   const refreshData = async () => {
     if (!user) return;
     const loadedBoxes = await firebaseStorage.getBoxes();
@@ -106,13 +122,15 @@ function App() {
 
     // Always load all items for selection purposes
     const allItemsData = await firebaseStorage.getAllItems();
-    setAllItems(allItemsData);
+    const sortedAllItems = [...allItemsData].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    setAllItems(sortedAllItems);
 
     if (currentBox) {
       const loadedItems = await firebaseStorage.getItems(currentBox.id);
-      setItems(loadedItems);
+      const sortedItems = [...loadedItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      setItems(sortedItems);
     } else {
-      setItems(allItemsData);
+      setItems(sortedAllItems);
     }
   };
 
@@ -120,7 +138,8 @@ function App() {
   const handleBoxClick = async (box) => {
     setCurrentBox(box);
     const boxItems = await firebaseStorage.getItems(box.id);
-    setItems(boxItems);
+    const sortedItems = [...boxItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    setItems(sortedItems);
     setView('items');
     setSearchQuery('');
 
@@ -534,7 +553,8 @@ function App() {
   const handleListAllItems = async () => {
     setCurrentBox(null);
     const allItems = await firebaseStorage.getAllItems();
-    setItems(allItems);
+    const sortedItems = [...allItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    setItems(sortedItems);
     setView('allItems');
     setSearchQuery('');
     setSelectedTag('');
