@@ -35,11 +35,29 @@ export function BoxCard({ box, onClick, itemCount = 0 }) {
                     </div>
                 )}
 
-                {/* Overlay Gradient - Higher z-index to stay above ImageSlider wrapper */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/20 to-transparent z-10" />
+                {/* Overlay Gradient */}
+                <div
+                    className="absolute inset-0 z-10"
+                    style={{
+                        background: 'linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.2) 50%, transparent 100%)'
+                    }}
+                />
 
-                {/* Item Count Badge - Higher z-index to stay on top */}
-                <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-primary text-slate-950 rounded-lg shadow-lg z-20 font-bold text-[10px] uppercase tracking-wider flex items-center justify-center min-w-[3rem]">
+                {/* Item Count Badge */}
+                <div
+                    className="absolute z-20 font-bold uppercase tracking-wider flex items-center justify-center"
+                    style={{
+                        bottom: '12px',
+                        right: '12px',
+                        padding: '4px 10px',
+                        backgroundColor: 'var(--color-primary)',
+                        color: '#0f172a',
+                        borderRadius: '8px',
+                        fontSize: '10px',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+                        minWidth: '3.5rem'
+                    }}
+                >
                     {itemCount} {itemCount === 1 ? 'item' : 'items'}
                 </div>
             </div>
