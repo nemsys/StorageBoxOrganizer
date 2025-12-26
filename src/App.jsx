@@ -652,6 +652,7 @@ function App() {
             </div>
             <BoxList
               boxes={boxes}
+              allItems={allItems}
               onBoxClick={handleBoxClick}
               onAddClick={() => setIsAddBoxModalOpen(true)}
               onDeleteBox={handleDeleteBox}
