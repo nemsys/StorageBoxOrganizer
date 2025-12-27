@@ -10,7 +10,6 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
     const [images, setImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
     const [tags, setTags] = useState('');
-    const [tagSuggestions, setTagSuggestions] = useState([]);
     const [selectedBoxId, setSelectedBoxId] = useState('');
     const fileInputRef = useRef(null);
 
@@ -159,54 +158,62 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Tags (comma separated)</label>
-                    <div className="relative">
-                        <input
-                            type="text"
-                            value={tags}
-                            onChange={(e) => {
-                                setTags(e.target.value);
-                                // Show suggestions if typing the last tag
-                                const lastTag = e.target.value.split(',').pop().trim().toLowerCase();
-                                if (lastTag) {
-                                    // Filter available tags
-                                    const matches = availableTags.filter(t =>
-                                        t.toLowerCase().startsWith(lastTag) &&
-                                        !tags.toLowerCase().includes(t.toLowerCase()) // Exclude already added
-                                    );
-                                    setTagSuggestions(matches);
-                                } else {
-                                    setTagSuggestions([]);
-                                }
-                            }}
-                            onBlur={() => setTimeout(() => setTagSuggestions([]), 200)} // Delay to allow click
-                            className="input"
-                            placeholder="tool, heavy, metal"
-                        />
-                        {tagSuggestions.length > 0 && (
-                            <div className="absolute z-10 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                                {tagSuggestions.map(suggestion => (
+                    <div className="flex justify-between items-end mb-1">
+                        <label className="block text-sm font-medium text-slate-300">Tags</label>
+                        <span className="text-[10px] text-slate-500 uppercase tracking-wider">Tap chips to add</span>
+                    </div>
+
+                    {/* Tag Ribbon - Horizontal Scrollable Suggestions */}
+                    <div className="tag-ribbon">
+                        {availableTags
+                            .filter(t => {
+                                const lastTag = tags.split(',').pop().trim().toLowerCase();
+                                if (!lastTag) return true; // Show all if not typing
+                                return t.toLowerCase().includes(lastTag);
+                            })
+                            .map(suggestion => {
+                                const currentTags = tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+                                const isActive = currentTags.includes(suggestion.toLowerCase());
+
+                                return (
                                     <button
                                         key={suggestion}
                                         type="button"
-                                        className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                                        className={`tag-chip ${isActive ? 'active' : ''}`}
                                         onClick={() => {
-                                            const currentTags = tags.split(',').map(t => t.trim()).filter(Boolean);
-                                            // Remove the partial tag being typed
-                                            currentTags.pop();
-                                            // Add the suggestion
-                                            currentTags.push(suggestion);
-                                            setTags(currentTags.join(', ') + ', ');
-                                            setTagSuggestions([]);
+                                            const parts = tags.split(',').map(t => t.trim()).filter(Boolean);
+                                            const lowerSuggestion = suggestion.toLowerCase();
+
+                                            if (isActive) {
+                                                // Remove tag
+                                                setTags(parts.filter(p => p.toLowerCase() !== lowerSuggestion).join(', ') + (parts.length > 1 ? ', ' : ' '));
+                                            } else {
+                                                // Add tag - replace the last partial tag if it matches
+                                                const lastPartial = parts[parts.length - 1] || '';
+                                                if (suggestion.toLowerCase().startsWith(lastPartial.toLowerCase())) {
+                                                    parts.pop();
+                                                }
+                                                parts.push(suggestion);
+                                                setTags(parts.join(', ') + ', ');
+                                            }
                                         }}
                                     >
                                         {suggestion}
                                     </button>
-                                ))}
-                            </div>
-                        )}
+                                );
+                            })
+                        }
                     </div>
+
+                    <input
+                        type="text"
+                        value={tags}
+                        onChange={(e) => setTags(e.target.value)}
+                        className="input"
+                        placeholder="tool, heavy, metal..."
+                    />
                 </div>
+
 
                 <div className="pt-6 mt-2 border-t border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-slate-500">
                     <div className="flex items-center gap-1.5">
