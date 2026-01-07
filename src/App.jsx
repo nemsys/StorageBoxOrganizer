@@ -354,6 +354,10 @@ function App() {
         b.id === editingBox.id ? { ...b, ...processedUpdates } : b
       ));
 
+      if (currentBox?.id === editingBox.id) {
+        setCurrentBox(prev => ({ ...prev, ...processedUpdates }));
+      }
+
       // Persist to Firebase
       const updatedBox = await firebaseStorage.updateBox(editingBox.id, processedUpdates);
 
@@ -361,6 +365,10 @@ function App() {
       setBoxes(prev => prev.map(b =>
         b.id === editingBox.id ? updatedBox : b
       ));
+
+      if (currentBox?.id === editingBox.id) {
+        setCurrentBox(updatedBox);
+      }
 
       setEditingBox(null);
     } catch (err) {
