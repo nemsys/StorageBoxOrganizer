@@ -47,12 +47,10 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport }) => {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/5 text-slate-300 hover:text-white transition-all group"
-        title="Settings & Tools"
+        className="p-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/5 text-slate-300 hover:text-white transition-all group"
+        title="Settings"
       >
-        <Settings size={14} className={`transition-transform duration-500 ${isOpen ? 'text-primary' : ''}`} />
-        <span className="text-xs font-medium">Settings</span>
-        <ChevronDown size={12} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        <Settings size={18} className={`transition-transform duration-500 ${isOpen ? 'text-primary' : ''}`} />
       </button>
 
       <AnimatePresence>
@@ -64,9 +62,6 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport }) => {
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="absolute right-0 mt-2 w-48 py-2 bg-black/90 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden"
           >
-            <div className="px-3 py-2 border-b border-white/5 mb-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Storage Tools</span>
-            </div>
             {menuItems.map((item, index) => (
               <button
                 key={index}
