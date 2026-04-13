@@ -703,19 +703,18 @@ function App() {
                 <button
                   key={tab.id}
                   onClick={tab.onClick}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-semibold rounded-xl transition-colors duration-300 relative z-10 ${isActive ? 'text-slate-900' : 'text-slate-400 hover:text-white/90'}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-bold rounded-xl transition-colors duration-300 relative ${isActive ? 'text-primary' : 'text-slate-400 hover:text-white/90'}`}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="activeTabPill"
-                      className="absolute inset-0 bg-primary rounded-xl shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.35)]"
+                      className="absolute inset-0 bg-primary/15 rounded-xl border border-primary/20 shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.2)]"
                       initial={false}
                       transition={{ type: "spring", stiffness: 450, damping: 30 }}
-                      style={{ zIndex: -1 }}
                     />
                   )}
-                  <Icon size={18} className={isActive ? 'text-slate-900' : 'text-slate-500'} />
-                  {tab.label}
+                  <Icon size={18} className={`relative z-10 ${isActive ? 'text-primary' : 'text-slate-500'}`} />
+                  <span className="relative z-10">{tab.label}</span>
                 </button>
               );
             })}
