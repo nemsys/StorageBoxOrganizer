@@ -188,6 +188,14 @@ textarea {
   justify-content: space-between;
 }
 
+.justify-end {
+  justify-content: flex-end;
+}
+
+.text-right {
+  text-align: right;
+}
+
 .flex-col {
   flex-direction: column;
 }

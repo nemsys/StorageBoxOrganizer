@@ -66,12 +66,12 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport }) => {
               <button
                 key={index}
                 onClick={item.onClick}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/10 transition-colors text-left group"
+                className="w-full flex items-center justify-end gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/10 transition-colors text-right group"
               >
+                <span>{item.label}</span>
                 <span className="text-slate-500 group-hover:text-primary transition-colors">
                   {item.icon}
                 </span>
-                <span>{item.label}</span>
               </button>
             ))}
           </motion.div>
