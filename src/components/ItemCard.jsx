@@ -1,5 +1,4 @@
-import { Package, MoreVertical, Edit, Trash2, Box, Tag } from 'lucide-react';
-import { useState } from 'react';
+import { Package, Edit, Trash2, Tag, ChevronRight } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 
 export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageClick, showNavigation = false }) {
@@ -36,22 +35,34 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
 
                 {/* Overlay Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60 pointer-events-none" />
+
+                {/* Option A — Pill Badge (in-box view: boxName present, no navigation) */}
+                {boxName && !onBoxClick && (
+                    <div
+                        className="absolute z-20 flex items-center gap-1"
+                        style={{
+                            bottom: '10px',
+                            left: '10px',
+                            padding: '4px 10px',
+                            backgroundColor: 'rgba(15, 23, 42, 0.82)',
+                            backdropFilter: 'blur(8px)',
+                            WebkitBackdropFilter: 'blur(8px)',
+                            border: '1px solid rgba(56, 189, 248, 0.25)',
+                            borderRadius: '8px',
+                            fontSize: '10px',
+                            color: 'var(--color-primary)',
+                            fontWeight: 600,
+                            letterSpacing: '0.02em',
+                            textTransform: 'uppercase',
+                        }}
+                    >
+                        <Package size={10} />
+                        <span>{boxName}</span>
+                    </div>
+                )}
             </div>
 
             <div className="p-4 flex flex-col h-28">
-                {boxName && (
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (onBoxClick) onBoxClick(item.boxId);
-                        }}
-                        className="flex items-center gap-1 mb-2 text-xs text-primary hover:text-primary-hover transition-colors cursor-pointer w-fit"
-                    >
-                        <Package size={12} />
-                        <span className="font-medium underline">{boxName}</span>
-                    </button>
-                )}
-
                 <div className="flex items-start justify-between gap-2 mb-1">
                     <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
@@ -90,6 +101,54 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                     </div>
                 )}
             </div>
+
+            {/* Option C — Footer Row (All Items / search view: boxName present + navigation available) */}
+            {boxName && onBoxClick && (
+                item.boxId ? (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onBoxClick(item.boxId);
+                        }}
+                        className="flex items-center gap-2 w-full text-left transition-colors"
+                        style={{
+                            padding: '8px 16px',
+                            borderTop: '1px solid rgba(255,255,255,0.06)',
+                            backgroundColor: 'rgba(30, 41, 59, 0.4)',
+                            color: '#94a3b8',
+                            minHeight: '38px',
+                        }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.backgroundColor = 'rgba(56, 189, 248, 0.08)';
+                            e.currentTarget.style.color = 'var(--color-primary)';
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.4)';
+                            e.currentTarget.style.color = '#94a3b8';
+                        }}
+                    >
+                        <Package size={12} className="shrink-0" />
+                        <span style={{ fontSize: '11px', fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {boxName}
+                        </span>
+                        <ChevronRight size={12} className="shrink-0" style={{ opacity: 0.5 }} />
+                    </button>
+                ) : (
+                    <div
+                        className="flex items-center gap-2 w-full"
+                        style={{
+                            padding: '8px 16px',
+                            borderTop: '1px solid rgba(255,255,255,0.06)',
+                            backgroundColor: 'rgba(30, 41, 59, 0.3)',
+                            color: '#475569',
+                            minHeight: '38px',
+                        }}
+                    >
+                        <Package size={12} className="shrink-0" />
+                        <span style={{ fontSize: '11px', fontWeight: 500 }}>Unassigned</span>
+                    </div>
+                )
+            )}
         </div>
     );
 }

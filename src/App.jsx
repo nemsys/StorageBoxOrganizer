@@ -566,7 +566,7 @@ function App() {
     }
 
     // Sort
-    return [...result].sort((a, b) => {
+    const sorted = [...result].sort((a, b) => {
       switch (itemSortOrder) {
         case 'name-asc': return a.name.localeCompare(b.name);
         case 'name-desc': return b.name.localeCompare(a.name);
@@ -575,7 +575,14 @@ function App() {
         default: return 0;
       }
     });
-  }, [items, selectedTag, searchQuery, itemSortOrder, view]);
+
+    // Enrich with boxName for the footer row (Option C)
+    return sorted.map(item => {
+      if (!item.boxId) return { ...item, boxName: 'Unassigned' };
+      const box = boxes.find(b => b.id === item.boxId);
+      return { ...item, boxName: box?.name || 'Unknown Box' };
+    });
+  }, [items, selectedTag, searchQuery, itemSortOrder, view, boxes]);
 
   // Handle List All Items
   const handleListAllItems = async () => {
@@ -660,7 +667,7 @@ function App() {
                     <button
                       key={tab.id}
                       onClick={tab.onClick}
-                      className={`flex-1 flex items-center justify-center py-2 px-3 text-base font-bold rounded-lg transition-colors duration-300 relative ${isActive ? 'text-primary' : 'text-slate-400 hover:text-white/90'}`}
+                      className={`flex-1 flex items-center justify-center py-2 px-3 text-lg font-bold rounded-lg transition-colors duration-300 relative ${isActive ? 'text-primary' : 'text-slate-400 hover:text-white/90'}`}
                     >
                       {isActive && (
                         <motion.div
@@ -794,7 +801,7 @@ function App() {
 
             {/* Items Grid */}
             <ItemList
-              items={items}
+              items={items.map(item => ({ ...item, boxName: currentBox?.name }))}
               onAddClick={() => setIsAddItemModalOpen(true)}
               onDeleteItem={handleDeleteItem}
               onEditItem={handleEditItem}
