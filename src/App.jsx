@@ -623,66 +623,72 @@ function App() {
           </div>
         )}
 
-        <div className="container py-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3 flex-1 flex-wrap">
-              {view === 'items' && (
-                <button onClick={handleBack} className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors mr-2">
-                  <ArrowLeft size={24} />
-                </button>
-              )}
-              <div
-                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={handleBack}
-                title="Go to Home"
-              >
-                <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
-                  <PackageOpen size={24} />
-                </div>
-                {view === 'items' && (
-                  <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 shrink-0">
-                    {currentBox?.name}
-                  </h1>
-                )}
+        <div className="container py-3">
+          <div className="flex items-center gap-4">
+            {/* Back button - only when inside a box */}
+            {view === 'items' && (
+              <button onClick={handleBack} className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors shrink-0">
+                <ArrowLeft size={22} />
+              </button>
+            )}
+
+            {/* Logo */}
+            <div
+              className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity shrink-0"
+              onClick={handleBack}
+              title="Go to Home"
+            >
+              <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                <PackageOpen size={22} />
               </div>
-
-              {/* Contextual Search Bars */}
-              {view === 'boxes' && (
-                <div className="flex flex-col md:flex-row items-center gap-3 ml-0 md:ml-4 flex-1 w-full md:w-auto mt-4 md:mt-0">
-                  <div className="w-full md:flex-1 md:max-w-[300px]">
-                    <SearchBar
-                      value={boxSearchQuery}
-                      onChange={setBoxSearchQuery}
-                      placeholder="Search your boxes..."
-                    />
-                  </div>
-                </div>
-              )}
-
-              {view === 'allItems' && (
-                <div className="flex flex-col md:flex-row items-center gap-3 ml-0 md:ml-4 flex-1 w-full md:w-auto mt-4 md:mt-0">
-                  <div className="w-full md:flex-1 md:max-w-[300px]">
-                    <SearchBar
-                      value={searchQuery}
-                      onChange={setSearchQuery}
-                      placeholder="Search all items..."
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3 w-full md:w-auto shrink-0 mt-4 md:mt-0">
               {view === 'items' && (
-                <div className="w-full md:w-auto md:min-w-[300px]">
-                  <SearchBar
-                    value={searchQuery}
-                    onChange={setSearchQuery}
-                    placeholder="Search in this box..."
-                  />
-                </div>
+                <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                  {currentBox?.name}
+                </h1>
               )}
             </div>
+
+            {/* Tab Switcher in header — only on top-level views */}
+            {!currentBox && (
+              <div className="flex bg-slate-900/40 p-1 rounded-xl flex-1 max-w-xs border border-white/10 backdrop-blur-xl shadow-lg ring-1 ring-white/5">
+                {[
+                  { id: 'boxes', label: 'Your Boxes', icon: PackageOpen, onClick: handleBack },
+                  { id: 'allItems', label: 'Your Items', icon: Filter, onClick: handleListAllItems }
+                ].map(tab => {
+                  const isActive = view === tab.id;
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={tab.onClick}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-sm font-bold rounded-lg transition-colors duration-300 relative ${isActive ? 'text-primary' : 'text-slate-400 hover:text-white/90'}`}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeTabPill"
+                          className="absolute inset-0 bg-primary/15 rounded-lg border border-primary/20 shadow-[0_0_12px_rgba(var(--color-primary-rgb),0.2)]"
+                          initial={false}
+                          transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                        />
+                      )}
+                      <Icon size={15} className={`relative z-10 ${isActive ? 'text-primary' : 'text-slate-500'}`} />
+                      <span className="relative z-10">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Search bar for inside-box view */}
+            {view === 'items' && (
+              <div className="flex-1 max-w-xs">
+                <SearchBar
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search in this box..."
+                />
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -690,43 +696,21 @@ function App() {
       {/* Main Content */}
       <main className="container py-8 animate-fade-in">
 
-        {/* Tab Navigation for Top-Level Views */}
-        {!currentBox && (
-          <div className="flex bg-slate-900/40 p-1.5 rounded-2xl mb-8 relative w-full md:max-w-[480px] mx-auto border border-white/10 backdrop-blur-xl shadow-2xl ring-1 ring-white/5">
-            {[
-              { id: 'boxes', label: 'Your Boxes', icon: PackageOpen, onClick: handleBack },
-              { id: 'allItems', label: 'Your Items', icon: Filter, onClick: handleListAllItems }
-            ].map(tab => {
-              const isActive = view === tab.id;
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={tab.onClick}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-bold rounded-xl transition-colors duration-300 relative ${isActive ? 'text-primary' : 'text-slate-400 hover:text-white/90'}`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeTabPill"
-                      className="absolute inset-0 bg-primary/15 rounded-xl border border-primary/20 shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.2)]"
-                      initial={false}
-                      transition={{ type: "spring", stiffness: 450, damping: 30 }}
-                    />
-                  )}
-                  <Icon size={18} className={`relative z-10 ${isActive ? 'text-primary' : 'text-slate-500'}`} />
-                  <span className="relative z-10">{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
         {/* Box List View */}
         {view === 'boxes' && (
           <>
-            <div className="flex items-center justify-between mb-6">
+            {/* Title + count */}
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold text-white">Your Boxes</h2>
               <span className="text-slate-400 text-sm">{filteredBoxes.length} boxes</span>
+            </div>
+            {/* Search */}
+            <div className="mb-6">
+              <SearchBar
+                value={boxSearchQuery}
+                onChange={setBoxSearchQuery}
+                placeholder="Search your boxes..."
+              />
             </div>
             <BoxList
               boxes={filteredBoxes}
@@ -825,9 +809,18 @@ function App() {
         {/* All Items View */}
         {view === 'allItems' && (
           <>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">All Items</h2>
+            {/* Title + count */}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-white">Your Items</h2>
               <span className="text-slate-400 text-sm">{allItemsDisplayItems.length} items</span>
+            </div>
+            {/* Search */}
+            <div className="mb-6">
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search all items..."
+              />
             </div>
 
             {/* Controls Row - Horizontal Layout */}
