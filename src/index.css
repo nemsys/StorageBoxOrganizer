@@ -586,6 +586,14 @@ textarea {
   background-color: #1e293b;
 }
 
+.bg-slate-900 {
+  background-color: #0f172a;
+}
+
+.bg-slate-950 {
+  background-color: #020617;
+}
+
 .bg-slate-800\/50 {
   background-color: rgba(30, 41, 59, 0.5);
 }

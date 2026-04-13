@@ -64,11 +64,11 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport }) => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute right-0 mt-2 w-64 py-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.1, ease: "easeOut" }}
+            className="absolute right-0 mt-3 w-64 py-2 bg-slate-950 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden"
           >
             {menuItems.map((item) => (
               item.isDivider ? (
