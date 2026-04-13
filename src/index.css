@@ -897,7 +897,16 @@ textarea {
   }
 }
 
+.py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
 /* Space Utilities */
+.space-y-1>*+* {
+  margin-top: 0.25rem;
+}
+
 .space-y-4>*+* {
   margin-top: 1rem;
 }
