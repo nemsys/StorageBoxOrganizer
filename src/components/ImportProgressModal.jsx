@@ -19,7 +19,7 @@ export const ImportProgressModal = ({ isOpen, progress, phase, current, total })
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-md bg-slate-900/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 shadow-2xl overflow-hidden"
+            className="relative w-full max-w-md bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 shadow-2xl overflow-hidden"
           >
             {/* Background Accent */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/0 via-primary to-primary/0" />

@@ -262,11 +262,12 @@ export const firebaseStorage = {
       }
     };
 
-    // Import boxes with fresh IDs to avoid collisions and permission issues
+    // Import boxes with deterministic namespaced IDs to prevent duplication
     if (boxes && Array.isArray(boxes)) {
       const boxPromises = boxes.map(async (box) => {
-        const newBoxId = uuidv4();
-        boxIdMap[box.id] = newBoxId; // Store mapping
+        // Namespace the ID with current UID to avoid clashing with other users
+        const newBoxId = `${uid}_${box.id}`;
+        boxIdMap[box.id] = newBoxId; // Store mapping: originalId -> namespacedId
         const docRef = doc(db, BOXES_COLL, newBoxId);
         await setDoc(docRef, { ...box, id: newBoxId, userId: uid });
         reportProgress(`Processing box: ${box.name}`);
@@ -274,12 +275,12 @@ export const firebaseStorage = {
       await Promise.all(boxPromises);
     }
 
-    // Import items with fresh IDs and updated boxId references
+    // Import items with deterministic namespaced IDs
     if (items && Array.isArray(items)) {
       const itemPromises = items.map(async (item) => {
-        const newItemId = uuidv4();
-        // Use the new box ID if it was part of the import, otherwise keep the old one (fallback)
-        const newBoxId = boxIdMap[item.boxId] || item.boxId;
+        const newItemId = `${uid}_${item.id}`;
+        // Use the new box ID if it was part of the import, otherwise generate its deterministic ID (fallback)
+        const newBoxId = boxIdMap[item.boxId] || (item.boxId ? `${uid}_${item.boxId}` : '');
         const docRef = doc(db, ITEMS_COLL, newItemId);
         await setDoc(docRef, { ...item, id: newItemId, boxId: newBoxId, userId: uid });
         reportProgress(`Processing item: ${item.name}`);
