@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import Fuse from 'fuse.js';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BoxList } from './components/BoxList';
 import { ItemList } from './components/ItemList';
 import { AddBoxModal } from './components/AddBoxModal';
