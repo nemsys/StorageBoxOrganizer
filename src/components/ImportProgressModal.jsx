@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, UploadCloud, CheckCircle2, Package, Boxes } from 'lucide-react';
+import { UploadCloud, CheckCircle2, Boxes } from 'lucide-react';
 
 export const ImportProgressModal = ({ isOpen, progress, phase, current, total }) => {
   return (
@@ -39,11 +39,6 @@ export const ImportProgressModal = ({ isOpen, progress, phase, current, total })
                     <CheckCircle2 size={32} className="text-green-400" />
                   )}
                 </div>
-                {progress < 100 && (
-                  <div className="absolute -top-1 -right-1">
-                    <Loader2 size={24} className="text-primary animate-spin" />
-                  </div>
-                )}
               </div>
 
               <div className="space-y-2 w-full">
