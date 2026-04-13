@@ -201,6 +201,38 @@ export const firebaseStorage = {
     await deleteDoc(itemRef);
   },
 
+  renameTag: async (oldName, newName) => {
+    const uid = getUserId();
+    const q = query(
+      collection(db, ITEMS_COLL),
+      where("userId", "==", uid),
+      where("tags", "array-contains", oldName)
+    );
+    const snapshot = await getDocs(q);
+    const updatePromises = snapshot.docs.map(docSnap => {
+      const data = docSnap.data();
+      const updatedTags = data.tags.map(t => t === oldName ? newName : t);
+      return setDoc(doc(db, ITEMS_COLL, docSnap.id), { ...data, tags: updatedTags, modifiedAt: Date.now() });
+    });
+    await Promise.all(updatePromises);
+  },
+
+  deleteTag: async (tagName) => {
+    const uid = getUserId();
+    const q = query(
+      collection(db, ITEMS_COLL),
+      where("userId", "==", uid),
+      where("tags", "array-contains", tagName)
+    );
+    const snapshot = await getDocs(q);
+    const updatePromises = snapshot.docs.map(docSnap => {
+      const data = docSnap.data();
+      const updatedTags = data.tags.filter(t => t !== tagName);
+      return setDoc(doc(db, ITEMS_COLL, docSnap.id), { ...data, tags: updatedTags, modifiedAt: Date.now() });
+    });
+    await Promise.all(updatePromises);
+  },
+
   seed: async () => {
     // No automatic seeding for cloud storage to avoid clutter
   }

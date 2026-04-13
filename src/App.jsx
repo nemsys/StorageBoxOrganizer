@@ -11,7 +11,8 @@ import { SearchBar } from './components/SearchBar';
 import { AuthModal } from './components/AuthModal';
 import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { ImageSlider } from './components/ImageSlider';
-import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package, Edit, Trash2, Calendar } from 'lucide-react';
+import { TagManagementModal } from './components/TagManagementModal';
+import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package, Edit, Trash2, Calendar, Tags } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -40,6 +41,7 @@ function App() {
   const [boxSortOrder, setBoxSortOrder] = useState('newest');
   const [selectedBoxTag, setSelectedBoxTag] = useState('');
 
+  const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, url: '', name: '' });
 
   // Auth Listener
@@ -444,7 +446,34 @@ function App() {
     }
   };
 
-  // Handle Selecting Existing Item
+  // Handle Tag Management
+  const handleRenameTag = async (oldName, newName) => {
+    await firebaseStorage.renameTag(oldName, newName);
+    // Update local state for all items
+    const updateItemTags = (item) => {
+      if (item.tags && item.tags.includes(oldName)) {
+        return { ...item, tags: item.tags.map(t => t === oldName ? newName : t) };
+      }
+      return item;
+    };
+    setAllItems(prev => prev.map(updateItemTags));
+    setItems(prev => prev.map(updateItemTags));
+  };
+
+  const handleDeleteTag = async (tagName) => {
+    await firebaseStorage.deleteTag(tagName);
+    // Update local state for all items
+    const removeItemTag = (item) => {
+      if (item.tags && item.tags.includes(tagName)) {
+        return { ...item, tags: item.tags.filter(t => t !== tagName) };
+      }
+      return item;
+    };
+    setAllItems(prev => prev.map(removeItemTag));
+    setItems(prev => prev.map(removeItemTag));
+  };
+
+  // Handle Select Existing Item
   const handleSelectExistingItem = async (itemId) => {
     if (!currentBox) return;
 
@@ -651,6 +680,14 @@ function App() {
                 className="flex items-center gap-1 text-xs text-slate-400 hover:text-red-400 transition-colors"
               >
                 <LogOut size={12} /> Sign Out
+              </button>
+              <div className="w-px h-3 bg-white/10 mx-1"></div>
+              <button
+                onClick={() => setIsTagManagementModalOpen(true)}
+                className="flex items-center gap-1 text-xs text-slate-400 hover:text-primary transition-colors"
+                title="Manage Tags"
+              >
+                <Tags size={12} /> Manage Tags
               </button>
             </div>
           </div>
@@ -972,6 +1009,13 @@ function App() {
         imageUrl={fullscreenImage.url}
         images={fullscreenImage.images}
         itemName={fullscreenImage.name}
+      />
+      <TagManagementModal 
+        isOpen={isTagManagementModalOpen} 
+        onClose={() => setIsTagManagementModalOpen(false)}
+        allItems={allItems}
+        onRenameTag={handleRenameTag}
+        onDeleteTag={handleDeleteTag}
       />
     </div>
   );
