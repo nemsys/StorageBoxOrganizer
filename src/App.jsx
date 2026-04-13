@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import Fuse from 'fuse.js';
+import { motion } from 'framer-motion';
 import { BoxList } from './components/BoxList';
 import { ItemList } from './components/ItemList';
 import { AddBoxModal } from './components/AddBoxModal';
@@ -691,19 +692,33 @@ function App() {
 
         {/* Tab Navigation for Top-Level Views */}
         {!currentBox && (
-          <div className="flex bg-slate-900/50 p-1.5 rounded-2xl mb-8 relative w-full md:max-w-md mx-auto border border-white/5 backdrop-blur-md">
-            <button
-              onClick={handleBack}
-              className={`flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all ${view === 'boxes' ? 'bg-primary text-slate-900 shadow-md transform scale-[1.02]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-            >
-              Your Boxes
-            </button>
-            <button
-              onClick={handleListAllItems}
-              className={`flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all ${view === 'allItems' ? 'bg-primary text-slate-900 shadow-md transform scale-[1.02]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-            >
-              Your Items
-            </button>
+          <div className="flex bg-slate-900/40 p-1.5 rounded-2xl mb-8 relative w-full md:max-w-[480px] mx-auto border border-white/10 backdrop-blur-xl shadow-2xl ring-1 ring-white/5">
+            {[
+              { id: 'boxes', label: 'Your Boxes', icon: PackageOpen, onClick: handleBack },
+              { id: 'allItems', label: 'Your Items', icon: Filter, onClick: handleListAllItems }
+            ].map(tab => {
+              const isActive = view === tab.id;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={tab.onClick}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-semibold rounded-xl transition-colors duration-300 relative z-10 ${isActive ? 'text-slate-900' : 'text-slate-400 hover:text-white/90'}`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeTabPill"
+                      className="absolute inset-0 bg-primary rounded-xl shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.35)]"
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                      style={{ zIndex: -1 }}
+                    />
+                  )}
+                  <Icon size={18} className={isActive ? 'text-slate-900' : 'text-slate-500'} />
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         )}
 
