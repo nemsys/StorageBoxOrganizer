@@ -592,7 +592,6 @@ function App() {
   };
 
   const displayItems = (view === 'items' || view === 'allItems') ? filteredItems : globalSearchResults;
-  const isSearchingGlobal = view === 'boxes' && searchQuery.length > 0;
 
   if (authLoading) {
     return (
@@ -606,7 +605,6 @@ function App() {
     <div className="min-h-screen pb-20">
       <AuthModal isOpen={!user} onClose={() => { }} />
 
-      {/* Header */}
       {/* Header */}
       <header className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-white/5">
         {/* Top Bar - User Info */}
@@ -627,7 +625,7 @@ function App() {
         <div className="container py-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-1 flex-wrap">
-              {(view === 'items' || view === 'allItems') && (
+              {view === 'items' && (
                 <button onClick={handleBack} className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors mr-2">
                   <ArrowLeft size={24} />
                 </button>
@@ -640,33 +638,32 @@ function App() {
                 <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
                   <PackageOpen size={24} />
                 </div>
-                {view !== 'boxes' && (
+                {view === 'items' && (
                   <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 shrink-0">
-                    {view === 'items' ? currentBox?.name : 'All Items'}
+                    {currentBox?.name}
                   </h1>
                 )}
               </div>
 
-              {/* New Search Bars for boxes view */}
+              {/* Contextual Search Bars */}
               {view === 'boxes' && (
                 <div className="flex flex-col md:flex-row items-center gap-3 ml-0 md:ml-4 flex-1 w-full md:w-auto mt-4 md:mt-0">
                   <div className="w-full md:flex-1 md:max-w-[300px]">
                     <SearchBar
                       value={boxSearchQuery}
-                      onChange={(query) => {
-                        setBoxSearchQuery(query);
-                        if (query) setSearchQuery('');
-                      }}
-                      placeholder="Search all boxes..."
+                      onChange={setBoxSearchQuery}
+                      placeholder="Search your boxes..."
                     />
                   </div>
+                </div>
+              )}
+
+              {view === 'allItems' && (
+                <div className="flex flex-col md:flex-row items-center gap-3 ml-0 md:ml-4 flex-1 w-full md:w-auto mt-4 md:mt-0">
                   <div className="w-full md:flex-1 md:max-w-[300px]">
                     <SearchBar
                       value={searchQuery}
-                      onChange={(query) => {
-                        setSearchQuery(query);
-                        if (query) setBoxSearchQuery('');
-                      }}
+                      onChange={setSearchQuery}
                       placeholder="Search all items..."
                     />
                   </div>
@@ -675,23 +672,14 @@ function App() {
             </div>
 
             <div className="flex items-center gap-3 w-full md:w-auto shrink-0 mt-4 md:mt-0">
-              {view !== 'boxes' && (
+              {view === 'items' && (
                 <div className="w-full md:w-auto md:min-w-[300px]">
                   <SearchBar
                     value={searchQuery}
                     onChange={setSearchQuery}
-                    placeholder={view === 'items' ? "Search in this box..." : "Search all items..."}
+                    placeholder="Search in this box..."
                   />
                 </div>
-              )}
-
-              {view === 'boxes' && (
-                <button
-                  onClick={handleListAllItems}
-                  className="btn btn-secondary whitespace-nowrap text-white w-full md:w-auto"
-                >
-                  List all items
-                </button>
               )}
             </div>
           </div>
@@ -701,8 +689,26 @@ function App() {
       {/* Main Content */}
       <main className="container py-8 animate-fade-in">
 
+        {/* Tab Navigation for Top-Level Views */}
+        {!currentBox && (
+          <div className="flex bg-slate-900/50 p-1.5 rounded-2xl mb-8 relative w-full md:max-w-md mx-auto border border-white/5 backdrop-blur-md">
+            <button
+              onClick={handleBack}
+              className={`flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all ${view === 'boxes' ? 'bg-primary text-slate-900 shadow-md transform scale-[1.02]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+            >
+              Your Boxes
+            </button>
+            <button
+              onClick={handleListAllItems}
+              className={`flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all ${view === 'allItems' ? 'bg-primary text-slate-900 shadow-md transform scale-[1.02]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+            >
+              Your Items
+            </button>
+          </div>
+        )}
+
         {/* Box List View */}
-        {view === 'boxes' && !isSearchingGlobal && (
+        {view === 'boxes' && (
           <>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">Your Boxes</h2>
@@ -718,30 +724,6 @@ function App() {
               onRemoveBox={handleRemoveBox}
               onAddItemClick={() => setIsAddItemModalOpen(true)}
             />
-          </>
-        )}
-
-        {/* Global Search Results View */}
-        {isSearchingGlobal && (
-          <>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">Search Results</h2>
-              <span className="text-slate-400 text-sm">{displayItems.length} items found</span>
-            </div>
-            {displayItems.length > 0 ? (
-              <ItemList
-                items={displayItems}
-                onAddClick={() => { }}
-                onDeleteItem={handleDeleteItem}
-                onEditItem={handleEditItem}
-                onBoxClick={handleBoxClickFromSearch}
-                onImageClick={handleImageClick}
-              />
-            ) : (
-              <div className="text-center py-20 text-slate-500">
-                <p className="text-lg">No items found matching "{searchQuery}"</p>
-              </div>
-            )}
           </>
         )}
 
