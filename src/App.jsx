@@ -36,6 +36,9 @@ function App() {
 
   const [itemSortOrder, setItemSortOrder] = useState('newest'); // 'name-asc', 'name-desc', 'newest', 'oldest'
   const [selectedTag, setSelectedTag] = useState('');
+  
+  const [boxSortOrder, setBoxSortOrder] = useState('newest');
+  const [selectedBoxTag, setSelectedBoxTag] = useState('');
 
   const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, url: '', name: '' });
 
@@ -495,15 +498,38 @@ function App() {
 
   // Box Search Logic
   const filteredBoxes = useMemo(() => {
-    if (!boxSearchQuery) return boxes;
+    let result = boxes;
 
-    const fuse = new Fuse(boxes, {
-      keys: ['name', 'description'],
-      threshold: 0.3,
+    // Filter by tag
+    if (selectedBoxTag) {
+      result = result.filter(box => {
+        // Find if this box has any items with the selected tag
+        return allItems.some(item => item.boxId === box.id && item.tags && item.tags.includes(selectedBoxTag));
+      });
+    }
+
+    // Filter by search query
+    if (boxSearchQuery) {
+      const fuse = new Fuse(result, {
+        keys: ['name', 'description'],
+        threshold: 0.3,
+      });
+      result = fuse.search(boxSearchQuery).map(r => r.item);
+    }
+
+    // Sort
+    const sorted = [...result].sort((a, b) => {
+      switch (boxSortOrder) {
+        case 'name-asc': return a.name.localeCompare(b.name);
+        case 'name-desc': return b.name.localeCompare(a.name);
+        case 'newest': return (b.createdAt || 0) - (a.createdAt || 0);
+        case 'oldest': return (a.createdAt || 0) - (b.createdAt || 0);
+        default: return 0;
+      }
     });
 
-    return fuse.search(boxSearchQuery).map(result => result.item);
-  }, [boxes, boxSearchQuery]);
+    return sorted;
+  }, [boxes, boxSearchQuery, selectedBoxTag, boxSortOrder, allItems]);
 
   // Global Search
   const globalSearchResults = useMemo(() => {
@@ -717,6 +743,40 @@ function App() {
                 placeholder="Search your boxes..."
               />
             </div>
+
+            {/* Controls Row - Horizontal Layout */}
+            <div className="flex items-center justify-between mb-6 bg-slate-900/50 p-3 rounded-xl border border-white/5 backdrop-blur-sm">
+              {/* Left: Sort Dropdown */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-400">Sort by:</span>
+                <select
+                  value={boxSortOrder}
+                  onChange={(e) => setBoxSortOrder(e.target.value)}
+                  className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-sm cursor-pointer hover:bg-slate-800 transition-colors outline-none focus:ring-2 focus:ring-primary/50"
+                >
+                  <option value="newest" className="bg-slate-800">Newest</option>
+                  <option value="oldest" className="bg-slate-800">Oldest</option>
+                  <option value="name-asc" className="bg-slate-800">Name (A-Z)</option>
+                  <option value="name-desc" className="bg-slate-800">Name (Z-A)</option>
+                </select>
+              </div>
+
+              {/* Right: Filter Dropdown */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-400">Filter:</span>
+                <select
+                  value={selectedBoxTag}
+                  onChange={(e) => setSelectedBoxTag(e.target.value)}
+                  className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-sm cursor-pointer hover:bg-slate-800 transition-colors outline-none focus:ring-2 focus:ring-primary/50"
+                >
+                  <option value="">All tags</option>
+                  {allTags.map(tag => (
+                    <option key={tag} value={tag}>{tag}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <BoxList
               boxes={filteredBoxes}
               allItems={allItems}
