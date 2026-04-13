@@ -25,6 +25,7 @@ function App() {
   const [items, setItems] = useState([]);
   const [allItems, setAllItems] = useState([]); // All items for selection
   const [searchQuery, setSearchQuery] = useState('');
+  const [boxSearchQuery, setBoxSearchQuery] = useState('');
 
   const [isAddBoxModalOpen, setIsAddBoxModalOpen] = useState(false);
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
@@ -67,6 +68,7 @@ function App() {
           setCurrentBox(null);
           setView('boxes');
           setSearchQuery('');
+          setBoxSearchQuery('');
           if (user) {
             const loadedBoxes = await firebaseStorage.getBoxes();
             setBoxes(loadedBoxes);
@@ -80,12 +82,14 @@ function App() {
           setItems(boxItems);
           setView('items');
           setSearchQuery('');
+          setBoxSearchQuery('');
         } else if (historyView === 'allItems') {
           setCurrentBox(null);
           const allItems = await firebaseStorage.getAllItems();
           setItems(allItems);
           setView('allItems');
           setSearchQuery('');
+          setBoxSearchQuery('');
         }
       }
     };
@@ -143,6 +147,7 @@ function App() {
     setItems(sortedItems);
     setView('items');
     setSearchQuery('');
+    setBoxSearchQuery('');
 
     // Push to browser history
     window.history.pushState(
@@ -157,6 +162,7 @@ function App() {
     setCurrentBox(null);
     setView('boxes');
     setSearchQuery('');
+    setBoxSearchQuery('');
     setSelectedTag('');
     refreshData();
 
@@ -486,6 +492,18 @@ function App() {
     return fuse.search(searchQuery).map(result => result.item);
   }, [items, searchQuery]);
 
+  // Box Search Logic
+  const filteredBoxes = useMemo(() => {
+    if (!boxSearchQuery) return boxes;
+
+    const fuse = new Fuse(boxes, {
+      keys: ['name', 'description'],
+      threshold: 0.3,
+    });
+
+    return fuse.search(boxSearchQuery).map(result => result.item);
+  }, [boxes, boxSearchQuery]);
+
   // Global Search
   const globalSearchResults = useMemo(() => {
     if (view !== 'boxes' || !searchQuery) return [];
@@ -566,6 +584,7 @@ function App() {
     setItems(sortedItems);
     setView('allItems');
     setSearchQuery('');
+    setBoxSearchQuery('');
     setSelectedTag('');
 
     // Push to browser history
@@ -607,7 +626,7 @@ function App() {
 
         <div className="container py-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-1 flex-wrap">
               {(view === 'items' || view === 'allItems') && (
                 <button onClick={handleBack} className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors mr-2">
                   <ArrowLeft size={24} />
@@ -618,28 +637,58 @@ function App() {
                 onClick={handleBack}
                 title="Go to Home"
               >
-                <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
                   <PackageOpen size={24} />
                 </div>
-                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-                  {view === 'items' ? currentBox?.name : (view === 'allItems' ? 'All Items' : 'StorageBox')}
-                </h1>
+                {view !== 'boxes' && (
+                  <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 shrink-0">
+                    {view === 'items' ? currentBox?.name : 'All Items'}
+                  </h1>
+                )}
               </div>
+
+              {/* New Search Bars for boxes view */}
+              {view === 'boxes' && (
+                <div className="flex flex-col md:flex-row items-center gap-3 ml-0 md:ml-4 flex-1 w-full md:w-auto mt-4 md:mt-0">
+                  <div className="w-full md:flex-1 md:max-w-[300px]">
+                    <SearchBar
+                      value={boxSearchQuery}
+                      onChange={(query) => {
+                        setBoxSearchQuery(query);
+                        if (query) setSearchQuery('');
+                      }}
+                      placeholder="Search all boxes..."
+                    />
+                  </div>
+                  <div className="w-full md:flex-1 md:max-w-[300px]">
+                    <SearchBar
+                      value={searchQuery}
+                      onChange={(query) => {
+                        setSearchQuery(query);
+                        if (query) setBoxSearchQuery('');
+                      }}
+                      placeholder="Search all items..."
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <div className="w-full md:w-auto md:min-w-[300px]">
-                <SearchBar
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  placeholder={view === 'items' ? "Search in this box..." : "Search all items..."}
-                />
-              </div>
+            <div className="flex items-center gap-3 w-full md:w-auto shrink-0 mt-4 md:mt-0">
+              {view !== 'boxes' && (
+                <div className="w-full md:w-auto md:min-w-[300px]">
+                  <SearchBar
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    placeholder={view === 'items' ? "Search in this box..." : "Search all items..."}
+                  />
+                </div>
+              )}
 
               {view === 'boxes' && (
                 <button
                   onClick={handleListAllItems}
-                  className="btn btn-secondary whitespace-nowrap text-white"
+                  className="btn btn-secondary whitespace-nowrap text-white w-full md:w-auto"
                 >
                   List all items
                 </button>
@@ -657,10 +706,10 @@ function App() {
           <>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">Your Boxes</h2>
-              <span className="text-slate-400 text-sm">{boxes.length} boxes</span>
+              <span className="text-slate-400 text-sm">{filteredBoxes.length} boxes</span>
             </div>
             <BoxList
-              boxes={boxes}
+              boxes={filteredBoxes}
               allItems={allItems}
               onBoxClick={handleBoxClick}
               onAddClick={() => setIsAddBoxModalOpen(true)}
