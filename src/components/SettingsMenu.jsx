@@ -68,7 +68,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute right-0 mt-2 w-52 py-2 bg-black/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden"
+            className="absolute right-0 mt-2 w-64 py-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden"
           >
             {menuItems.map((item) => (
               item.isDivider ? (
@@ -77,12 +77,12 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport }) => {
                 <button
                   key={item.id}
                   onClick={item.onClick}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/10 transition-colors text-left group"
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/10 transition-colors text-left group"
                 >
                   <span className="text-slate-500 group-hover:text-primary transition-colors">
                     {item.icon}
                   </span>
-                  <span>{item.label}</span>
+                  <span className="whitespace-nowrap font-medium">{item.label}</span>
                 </button>
               )
             ))}
