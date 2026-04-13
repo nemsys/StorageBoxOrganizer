@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Fuse from 'fuse.js';
 import { motion } from 'framer-motion';
 import { BoxList } from './components/BoxList';
@@ -12,7 +12,8 @@ import { AuthModal } from './components/AuthModal';
 import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { ImageSlider } from './components/ImageSlider';
 import { TagManagementModal } from './components/TagManagementModal';
-import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package, Edit, Trash2, Calendar, Tags } from 'lucide-react';
+import { SettingsMenu } from './components/SettingsMenu';
+import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package, Edit, Trash2, Calendar, Tags, Settings } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -43,6 +44,7 @@ function App() {
 
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, url: '', name: '' });
+  const fileInputRef = useRef(null);
 
   // Auth Listener
   useEffect(() => {
@@ -513,6 +515,66 @@ function App() {
     setFullscreenImage({ isOpen: false, url: '', images: [], name: '' });
   };
 
+  // Data Import/Export Handlers
+  const handleExportData = async () => {
+    try {
+      const boxesData = await firebaseStorage.getBoxes();
+      const itemsData = await firebaseStorage.getAllItems();
+      
+      const backupData = {
+        boxes: boxesData,
+        items: itemsData,
+        exportedAt: new Date().toISOString()
+      };
+
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `storage-box-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export failed:', err);
+      alert('Failed to export data');
+    }
+  };
+
+  const handleImportButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileImport = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!confirm('This will import data from the backup. Items with the same ID will be overwritten. Proceed?')) {
+      event.target.value = ''; // Reset input
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data.boxes || !data.items) {
+          throw new Error('Invalid backup format');
+        }
+
+        await firebaseStorage.importData(data);
+        alert('Data imported successfully!');
+        refreshData();
+      } catch (err) {
+        console.error('Import failed:', err);
+        alert('Failed to import data: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // Reset input
+  };
+
   // Fuzzy Search Logic
   const filteredItems = useMemo(() => {
     if (!searchQuery) return items;
@@ -682,13 +744,11 @@ function App() {
                 <LogOut size={12} /> Sign Out
               </button>
               <div className="w-px h-3 bg-white/10 mx-1"></div>
-              <button
-                onClick={() => setIsTagManagementModalOpen(true)}
-                className="flex items-center gap-1 text-xs text-slate-400 hover:text-primary transition-colors"
-                title="Manage Tags"
-              >
-                <Tags size={12} /> Manage Tags
-              </button>
+              <SettingsMenu 
+                onManageTags={() => setIsTagManagementModalOpen(true)}
+                onExport={handleExportData}
+                onImport={handleImportButtonClick}
+              />
             </div>
           </div>
         )}
@@ -1016,6 +1076,13 @@ function App() {
         allItems={allItems}
         onRenameTag={handleRenameTag}
         onDeleteTag={handleDeleteTag}
+      />
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileImport}
+        accept=".json"
+        className="hidden"
       />
     </div>
   );

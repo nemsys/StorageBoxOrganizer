@@ -235,6 +235,29 @@ export const firebaseStorage = {
 
   seed: async () => {
     // No automatic seeding for cloud storage to avoid clutter
+  },
+
+  importData: async (data) => {
+    const uid = getUserId();
+    const { boxes, items } = data;
+
+    // Import boxes
+    if (boxes && Array.isArray(boxes)) {
+      const boxPromises = boxes.map(box => {
+        const docRef = doc(db, BOXES_COLL, box.id);
+        return setDoc(docRef, { ...box, userId: uid });
+      });
+      await Promise.all(boxPromises);
+    }
+
+    // Import items
+    if (items && Array.isArray(items)) {
+      const itemPromises = items.map(item => {
+        const docRef = doc(db, ITEMS_COLL, item.id);
+        return setDoc(docRef, { ...item, userId: uid });
+      });
+      await Promise.all(itemPromises);
+    }
   }
 };
 
