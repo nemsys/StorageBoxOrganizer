@@ -242,30 +242,47 @@ export const firebaseStorage = {
     // No automatic seeding for cloud storage to avoid clutter
   },
 
-  importData: async (data) => {
+  importData: async (data, onProgress) => {
     const uid = getUserId();
     const { boxes, items } = data;
     const boxIdMap = {};
 
+    const totalSteps = (boxes?.length || 0) + (items?.length || 0);
+    let completedSteps = 0;
+
+    const reportProgress = (phase) => {
+      completedSteps++;
+      if (onProgress) {
+        onProgress({
+          progress: totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 100,
+          phase,
+          current: completedSteps,
+          total: totalSteps
+        });
+      }
+    };
+
     // Import boxes with fresh IDs to avoid collisions and permission issues
     if (boxes && Array.isArray(boxes)) {
-      const boxPromises = boxes.map(box => {
+      const boxPromises = boxes.map(async (box) => {
         const newBoxId = uuidv4();
         boxIdMap[box.id] = newBoxId; // Store mapping
         const docRef = doc(db, BOXES_COLL, newBoxId);
-        return setDoc(docRef, { ...box, id: newBoxId, userId: uid });
+        await setDoc(docRef, { ...box, id: newBoxId, userId: uid });
+        reportProgress(`Processing box: ${box.name}`);
       });
       await Promise.all(boxPromises);
     }
 
     // Import items with fresh IDs and updated boxId references
     if (items && Array.isArray(items)) {
-      const itemPromises = items.map(item => {
+      const itemPromises = items.map(async (item) => {
         const newItemId = uuidv4();
         // Use the new box ID if it was part of the import, otherwise keep the old one (fallback)
         const newBoxId = boxIdMap[item.boxId] || item.boxId;
         const docRef = doc(db, ITEMS_COLL, newItemId);
-        return setDoc(docRef, { ...item, id: newItemId, boxId: newBoxId, userId: uid });
+        await setDoc(docRef, { ...item, id: newItemId, boxId: newBoxId, userId: uid });
+        reportProgress(`Processing item: ${item.name}`);
       });
       await Promise.all(itemPromises);
     }

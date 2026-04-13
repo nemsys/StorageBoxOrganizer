@@ -13,6 +13,7 @@ import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { ImageSlider } from './components/ImageSlider';
 import { TagManagementModal } from './components/TagManagementModal';
 import { SettingsMenu } from './components/SettingsMenu';
+import { ImportProgressModal } from './components/ImportProgressModal';
 import { Toast } from './components/Toast';
 import { ConfirmationDialog } from './components/ConfirmationDialog';
 import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package, Edit, Trash2, Calendar, Tags, Settings } from 'lucide-react';
@@ -25,6 +26,13 @@ import { v4 as uuidv4 } from 'uuid';
 function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [importState, setImportState] = useState({ 
+    isImporting: false, 
+    progress: 0, 
+    phase: '', 
+    current: 0, 
+    total: 0 
+  });
   const [view, setView] = useState('boxes'); // 'boxes' | 'items' | 'allItems'
   const [currentBox, setCurrentBox] = useState(null);
   const [boxes, setBoxes] = useState([]);
@@ -612,9 +620,29 @@ function App() {
           throw new Error('Invalid backup format');
         }
 
-        await firebaseStorage.importData(data);
-        addToast('Data imported successfully!', "success");
-        refreshData();
+        setImportState({ 
+          isImporting: true, 
+          progress: 0, 
+          phase: 'Initializing...', 
+          current: 0, 
+          total: (data.boxes?.length || 0) + (data.items?.length || 0)
+        });
+
+        await firebaseStorage.importData(data, (p) => {
+          setImportState(prev => ({ 
+            ...prev, 
+            progress: p.progress, 
+            phase: p.phase,
+            current: p.current
+          }));
+        });
+        
+        // Brief delay to show 100% completion
+        setTimeout(() => {
+          setImportState(prev => ({ ...prev, isImporting: false }));
+          addToast('Data imported successfully!', "success");
+          refreshData();
+        }, 800);
       } catch (err) {
         console.error('Import failed:', err);
         addToast('Failed to import data: ' + err.message, "error");
@@ -1146,6 +1174,14 @@ function App() {
       />
 
       {/* Notifications and Dialogs */}
+      <ImportProgressModal 
+        isOpen={importState.isImporting}
+        progress={importState.progress}
+        phase={importState.phase}
+        current={importState.current}
+        total={importState.total}
+      />
+
       <AnimatePresence>
         {toasts.map(toast => (
           <Toast 
