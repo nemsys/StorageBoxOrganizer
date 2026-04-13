@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Modal } from './Modal';
 import { Tag, Edit2, Trash2, Check, X } from 'lucide-react';
 
-export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onDeleteTag }) {
+export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onDeleteTag, addToast, askConfirm }) {
     const [editingTag, setEditingTag] = useState(null); // { oldName, newName }
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -40,10 +40,11 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
         setIsProcessing(true);
         try {
             await onRenameTag(editingTag.oldName, editingTag.newName.trim());
+            addToast(`Tag renamed to "${editingTag.newName.trim()}"`, "success");
             setEditingTag(null);
         } catch (err) {
             console.error("Failed to rename tag:", err);
-            alert("Failed to rename tag. Please try again.");
+            addToast("Failed to rename tag. Please try again.", "error");
         } finally {
             setIsProcessing(false);
         }
@@ -54,17 +55,23 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
             ? `Are you sure you want to remove the tag "${tag}" from ${count} item(s)?`
             : `Are you sure you want to remove the tag "${tag}"?`;
 
-        if (confirm(message)) {
-            setIsProcessing(true);
-            try {
-                await onDeleteTag(tag);
-            } catch (err) {
-                console.error("Failed to delete tag:", err);
-                alert("Failed to delete tag. Please try again.");
-            } finally {
-                setIsProcessing(false);
+        askConfirm({
+            title: 'Delete Tag?',
+            message: message,
+            type: 'danger',
+            onConfirm: async () => {
+                setIsProcessing(true);
+                try {
+                    await onDeleteTag(tag);
+                    addToast(`Tag "${tag}" deleted`, "success");
+                } catch (err) {
+                    console.error("Failed to delete tag:", err);
+                    addToast("Failed to delete tag. Please try again.", "error");
+                } finally {
+                    setIsProcessing(false);
+                }
             }
-        }
+        });
     };
 
     return (

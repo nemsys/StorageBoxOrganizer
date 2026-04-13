@@ -13,6 +13,8 @@ import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { ImageSlider } from './components/ImageSlider';
 import { TagManagementModal } from './components/TagManagementModal';
 import { SettingsMenu } from './components/SettingsMenu';
+import { Toast } from './components/Toast';
+import { ConfirmationDialog } from './components/ConfirmationDialog';
 import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package, Edit, Trash2, Calendar, Tags, Settings } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
@@ -44,7 +46,35 @@ function App() {
 
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, url: '', name: '' });
+  const [toasts, setToasts] = useState([]);
+  const [confirmDialog, setConfirmDialog] = useState({ 
+    isOpen: false, 
+    title: '', 
+    message: '', 
+    onConfirm: () => {}, 
+    type: 'danger' 
+  });
   const fileInputRef = useRef(null);
+
+  // Notification Helpers
+  const addToast = (message, type = 'info') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+  };
+
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  const askConfirm = (options) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: options.title || 'Are you sure?',
+      message: options.message || '',
+      type: options.type || 'danger',
+      onConfirm: options.onConfirm
+    });
+  };
 
   // Auth Listener
   useEffect(() => {
@@ -206,7 +236,7 @@ function App() {
       setIsAddBoxModalOpen(false);
     } catch (error) {
       console.error("Error adding box:", error);
-      alert("Failed to add box. Please try again.");
+      addToast("Failed to add box. Please try again.", "error");
     }
   };
 
@@ -242,7 +272,7 @@ function App() {
       setIsAddItemModalOpen(false);
     } catch (error) {
       console.error("Error adding item:", error);
-      alert("Failed to add item. Please try again.");
+      addToast("Failed to add item. Please try again.", "error");
     }
   };
 
@@ -250,88 +280,111 @@ function App() {
   const handleDeleteItem = async (itemId) => {
     if (currentBox) {
       // If in a box, just remove from box (unassign)
-      if (confirm('Remove this item from the box? (It will remain in "All Items")')) {
-        // Optimistic update - remove from current view
-        setItems(prev => prev.filter(i => i.id !== itemId));
+      askConfirm({
+        title: 'Remove from Box?',
+        message: 'Remove this item from the box? (It will remain in "All Items")',
+        type: 'primary',
+        onConfirm: async () => {
+          // Optimistic update - remove from current view
+          setItems(prev => prev.filter(i => i.id !== itemId));
 
-        try {
-          await firebaseStorage.updateItem(itemId, { boxId: '' });
-          // Update allItems to reflect the change
-          setAllItems(prev => prev.map(i => i.id === itemId ? { ...i, boxId: '' } : i));
-        } catch (err) {
-          console.error('Failed to remove item from box', err);
-          refreshData(); // Revert on error
-          alert('Failed to remove item from box');
+          try {
+            await firebaseStorage.updateItem(itemId, { boxId: '' });
+            // Update allItems to reflect the change
+            setAllItems(prev => prev.map(i => i.id === itemId ? { ...i, boxId: '' } : i));
+            addToast("Item removed from box", "success");
+          } catch (err) {
+            console.error('Failed to remove item from box', err);
+            refreshData(); // Revert on error
+            addToast("Failed to remove item from box", "error");
+          }
         }
-      }
+      });
     } else {
       // If in "All Items" or elsewhere, permanently delete
-      if (confirm('Are you sure you want to PERMANENTLY delete this item?')) {
-        // Optimistic update
-        setItems(prev => prev.filter(i => i.id !== itemId));
-        setAllItems(prev => prev.filter(i => i.id !== itemId));
+      askConfirm({
+        title: 'Delete Item?',
+        message: 'Are you sure you want to PERMANENTLY delete this item?',
+        type: 'danger',
+        onConfirm: async () => {
+          // Optimistic update
+          setItems(prev => prev.filter(i => i.id !== itemId));
+          setAllItems(prev => prev.filter(i => i.id !== itemId));
 
-        try {
-          await firebaseStorage.deleteItem(itemId);
-        } catch (err) {
-          console.error('Failed to delete item', err);
-          refreshData(); // Revert on error
-          alert('Failed to delete item');
+          try {
+            await firebaseStorage.deleteItem(itemId);
+            addToast("Item deleted permanently", "success");
+          } catch (err) {
+            console.error('Failed to delete item', err);
+            refreshData(); // Revert on error
+            addToast("Failed to delete item", "error");
+          }
         }
-      }
+      });
     }
   };
 
   async function handleDeleteBox(id) {
-    if (!confirm('Are you sure you want to delete this box and all its items?')) return;
+    askConfirm({
+      title: 'Delete Box?',
+      message: 'Are you sure you want to delete this box and all its items?',
+      type: 'danger',
+      onConfirm: async () => {
+        // Optimistic update
+        setBoxes(prev => prev.filter(b => b.id !== id));
+        setItems(prev => prev.filter(i => i.boxId !== id));
+        setAllItems(prev => prev.filter(i => i.boxId !== id));
 
-    // Optimistic update
-    setBoxes(prev => prev.filter(b => b.id !== id));
-    setItems(prev => prev.filter(i => i.boxId !== id));
-    setAllItems(prev => prev.filter(i => i.boxId !== id));
+        if (currentBox?.id === id) {
+          handleBack();
+        }
 
-    if (currentBox?.id === id) {
-      handleBack();
-    }
-
-    try {
-      await firebaseStorage.deleteBox(id);
-    } catch (err) {
-      console.error('Failed to delete box', err);
-      refreshData(); // Revert
-      alert('Failed to delete box');
-    }
+        try {
+          await firebaseStorage.deleteBox(id);
+          addToast("Box and contents deleted", "success");
+        } catch (err) {
+          console.error('Failed to delete box', err);
+          refreshData(); // Revert
+          addToast("Failed to delete box", "error");
+        }
+      }
+    });
   };
 
   async function handleRemoveBox(id) {
-    if (!confirm('Are you sure you want to remove this box? Items will be moved to "Unassigned".')) return;
+    askConfirm({
+      title: 'Remove Box?',
+      message: 'Are you sure you want to remove this box? Items will be moved to "Unassigned".',
+      type: 'primary',
+      onConfirm: async () => {
+        // Optimistic update - remove box from list and unassign items
+        setBoxes(prev => prev.filter(b => b.id !== id));
+        setItems(prev => prev.map(i => i.boxId === id ? { ...i, boxId: '' } : i));
+        setAllItems(prev => prev.map(i => i.boxId === id ? { ...i, boxId: '' } : i));
 
-    // Optimistic update - remove box from list and unassign items
-    setBoxes(prev => prev.filter(b => b.id !== id));
-    setItems(prev => prev.map(i => i.boxId === id ? { ...i, boxId: '' } : i));
-    setAllItems(prev => prev.map(i => i.boxId === id ? { ...i, boxId: '' } : i));
+        if (currentBox?.id === id) {
+          handleBack();
+        }
 
-    if (currentBox?.id === id) {
-      handleBack();
-    }
+        try {
+          // 1. Find all items in this box
+          const boxItems = await firebaseStorage.getItems(id);
 
-    try {
-      // 1. Find all items in this box
-      const boxItems = await firebaseStorage.getItems(id);
+          // 2. Update all items to have no boxId
+          await Promise.all(boxItems.map(item =>
+            firebaseStorage.updateItem(item.id, { boxId: '' })
+          ));
 
-      // 2. Update all items to have no boxId
-      await Promise.all(boxItems.map(item =>
-        firebaseStorage.updateItem(item.id, { boxId: '' })
-      ));
-
-      // 3. Delete the box
-      await firebaseStorage.deleteBox(id);
-
-    } catch (err) {
-      console.error('Failed to remove box', err);
-      refreshData(); // Revert
-      alert('Failed to remove box');
-    }
+          // 3. Delete the box
+          await firebaseStorage.deleteBox(id);
+          addToast("Box removed; items unassigned", "success");
+        } catch (err) {
+          console.error('Failed to remove box', err);
+          refreshData(); // Revert
+          addToast("Failed to remove box", "error");
+        }
+      }
+    });
   };
 
   // Handle Editing Box
@@ -388,7 +441,7 @@ function App() {
     } catch (err) {
       console.error('Failed to update box', err);
       refreshData(); // Revert on error
-      alert('Failed to update box: ' + err.message);
+      addToast('Failed to update box: ' + err.message, "error");
     }
   };
 
@@ -444,7 +497,7 @@ function App() {
       setEditingItem(null);
     } catch (error) {
       console.error("Error updating item:", error);
-      alert("Failed to update item. Please try again.");
+      addToast("Failed to update item. Please try again.", "error");
     }
   };
 
@@ -491,7 +544,7 @@ function App() {
       }
     } catch (err) {
       console.error('Failed to move item', err);
-      alert('Failed to move item: ' + err.message);
+      addToast('Failed to move item: ' + err.message, "error");
     }
   };
 
@@ -538,7 +591,7 @@ function App() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Export failed:', err);
-      alert('Failed to export data');
+      addToast('Failed to export data', "error");
     }
   };
 
@@ -550,11 +603,6 @@ function App() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!confirm('This will import data from the backup. Items with the same ID will be overwritten. Proceed?')) {
-      event.target.value = ''; // Reset input
-      return;
-    }
-
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
@@ -564,14 +612,23 @@ function App() {
         }
 
         await firebaseStorage.importData(data);
-        alert('Data imported successfully!');
+        addToast('Data imported successfully!', "success");
         refreshData();
       } catch (err) {
         console.error('Import failed:', err);
-        alert('Failed to import data: ' + err.message);
+        addToast('Failed to import data: ' + err.message, "error");
       }
     };
-    reader.readAsText(file);
+
+    askConfirm({
+      title: 'Import Backup?',
+      message: 'This will import data from the backup. Items with the same ID will be overwritten. Proceed?',
+      type: 'danger',
+      onConfirm: () => {
+        reader.readAsText(file);
+      }
+    });
+
     event.target.value = ''; // Reset input
   };
 
@@ -1076,6 +1133,8 @@ function App() {
         allItems={allItems}
         onRenameTag={handleRenameTag}
         onDeleteTag={handleDeleteTag}
+        addToast={addToast}
+        askConfirm={askConfirm}
       />
       <input
         type="file"
@@ -1083,6 +1142,27 @@ function App() {
         onChange={handleFileImport}
         accept=".json"
         className="hidden"
+      />
+
+      {/* Notifications and Dialogs */}
+      <AnimatePresence>
+        {toasts.map(toast => (
+          <Toast 
+            key={toast.id} 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => removeToast(toast.id)} 
+          />
+        ))}
+      </AnimatePresence>
+
+      <ConfirmationDialog 
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        type={confirmDialog.type}
       />
     </div>
   );
