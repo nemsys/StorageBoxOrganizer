@@ -95,7 +95,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                              <select
                                 value={tagSortOrder}
                                 onChange={(e) => setTagSortOrder(e.target.value)}
-                                className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-2 py-1 text-xs text-slate-200 cursor-pointer hover:bg-slate-800 transition-colors outline-none focus:ring-1 focus:ring-primary/50"
+                                className="bg-slate-800 border border-slate-700/50 rounded-lg px-2 py-1 text-xs text-white cursor-pointer hover:bg-slate-700 transition-colors outline-none focus:ring-1 focus:ring-primary/50"
                              >
                                 <option value="alpha" className="bg-slate-900 text-white">Alphabetical</option>
                                 <option value="count" className="bg-slate-900 text-white">Item Count</option>
