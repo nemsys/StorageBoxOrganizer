@@ -652,16 +652,15 @@ function App() {
             {!currentBox && (
               <div className="flex bg-slate-900/40 p-1 rounded-xl flex-1 max-w-xs border border-white/10 backdrop-blur-xl shadow-lg ring-1 ring-white/5">
                 {[
-                  { id: 'boxes', label: 'Your Boxes', icon: PackageOpen, onClick: handleBack },
-                  { id: 'allItems', label: 'Your Items', icon: Filter, onClick: handleListAllItems }
+                  { id: 'boxes', label: 'Your Boxes', onClick: handleBack },
+                  { id: 'allItems', label: 'Your Items', onClick: handleListAllItems }
                 ].map(tab => {
                   const isActive = view === tab.id;
-                  const Icon = tab.icon;
                   return (
                     <button
                       key={tab.id}
                       onClick={tab.onClick}
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-sm font-bold rounded-lg transition-colors duration-300 relative ${isActive ? 'text-primary' : 'text-slate-400 hover:text-white/90'}`}
+                      className={`flex-1 flex items-center justify-center py-2 px-3 text-base font-bold rounded-lg transition-colors duration-300 relative ${isActive ? 'text-primary' : 'text-slate-400 hover:text-white/90'}`}
                     >
                       {isActive && (
                         <motion.div
@@ -671,7 +670,6 @@ function App() {
                           transition={{ type: "spring", stiffness: 450, damping: 30 }}
                         />
                       )}
-                      <Icon size={15} className={`relative z-10 ${isActive ? 'text-primary' : 'text-slate-500'}`} />
                       <span className="relative z-10">{tab.label}</span>
                     </button>
                   );
@@ -701,7 +699,7 @@ function App() {
           <>
             {/* Title + count */}
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-white">Your Boxes</h2>
+            <h2 className="text-lg font-semibold text-white">Your Boxes</h2>
               <span className="text-slate-400 text-sm">{filteredBoxes.length} boxes</span>
             </div>
             {/* Search */}
@@ -811,7 +809,7 @@ function App() {
           <>
             {/* Title + count */}
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-white">Your Items</h2>
+              <h2 className="text-lg font-semibold text-white">Your Items</h2>
               <span className="text-slate-400 text-sm">{allItemsDisplayItems.length} items</span>
             </div>
             {/* Search */}
