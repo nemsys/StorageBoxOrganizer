@@ -5,6 +5,7 @@ import { Tag, Edit2, Trash2, Check, X } from 'lucide-react';
 export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onDeleteTag, addToast, askConfirm }) {
     const [editingTag, setEditingTag] = useState(null); // { oldName, newName }
     const [isProcessing, setIsProcessing] = useState(false);
+    const [tagSortOrder, setTagSortOrder] = useState('alpha'); // 'alpha' | 'count'
 
     const tagCounts = useMemo(() => {
         const counts = {};
@@ -15,8 +16,15 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                 });
             }
         });
-        return Object.entries(counts).sort((a, b) => a[0].localeCompare(b[0]));
-    }, [allItems]);
+        return Object.entries(counts).sort((a, b) => {
+            if (tagSortOrder === 'alpha') {
+                return a[0].localeCompare(b[0]);
+            } else {
+                // Sort by count descending, then by name ascending for ties
+                return (b[1] - a[1]) || a[0].localeCompare(b[0]);
+            }
+        });
+    }, [allItems, tagSortOrder]);
 
     const handleStartRename = (tag) => {
         setEditingTag({ oldName: tag, newName: tag });
@@ -77,6 +85,25 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Manage Tags">
             <div className="space-y-4">
+                {tagCounts.length > 0 && (
+                    <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                        <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                            {tagCounts.length} {tagCounts.length === 1 ? 'tag' : 'tags'} found
+                        </span>
+                        <div className="flex items-center gap-2">
+                             <span className="text-xs text-slate-500">Sort by:</span>
+                             <select
+                                value={tagSortOrder}
+                                onChange={(e) => setTagSortOrder(e.target.value)}
+                                className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-2 py-1 text-xs text-slate-200 cursor-pointer hover:bg-slate-800 transition-colors outline-none focus:ring-1 focus:ring-primary/50"
+                             >
+                                <option value="alpha">Alphabetical</option>
+                                <option value="count">Item Count</option>
+                             </select>
+                        </div>
+                    </div>
+                )}
+
                 {tagCounts.length === 0 ? (
                     <div className="text-center py-12">
                         <div className="w-16 h-16 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/5">
