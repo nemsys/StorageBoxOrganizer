@@ -20,6 +20,7 @@ import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { formatDate } from './utils/dateUtils';
+import { v4 as uuidv4 } from 'uuid';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -222,7 +223,7 @@ function App() {
       }
 
       const newBox = {
-        id: Date.now().toString(),
+        id: uuidv4(),
         name: payload.name,
         description: payload.description,
         images: imageUrls,
@@ -253,7 +254,7 @@ function App() {
       }
 
       const newItem = {
-        id: Date.now().toString(),
+        id: uuidv4(),
         name: payload.name,
         description: payload.description,
         images: imageUrls,
@@ -622,8 +623,8 @@ function App() {
 
     askConfirm({
       title: 'Import Backup?',
-      message: 'This will import data from the backup. Items with the same ID will be overwritten. Proceed?',
-      type: 'danger',
+      message: 'This will import data from the backup. Fresh copies of all items and boxes will be created in your account. Proceed?',
+      type: 'primary',
       onConfirm: () => {
         reader.readAsText(file);
       }

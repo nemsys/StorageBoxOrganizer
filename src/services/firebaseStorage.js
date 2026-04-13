@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { db, auth } from '../firebase';
 import {
   collection,
@@ -68,14 +69,16 @@ export const firebaseStorage = {
   addBox: async (box) => {
     const uid = getUserId();
     const imageData = await processImage(box.image);
+    const id = box.id || uuidv4();
 
     const newBox = {
       ...box,
+      id,
       image: imageData,
       userId: uid
     };
 
-    await setDoc(doc(db, BOXES_COLL, box.id), newBox);
+    await setDoc(doc(db, BOXES_COLL, id), newBox);
     return newBox;
   },
 
@@ -156,14 +159,16 @@ export const firebaseStorage = {
   addItem: async (item) => {
     const uid = getUserId();
     const imageData = await processImage(item.image);
+    const id = item.id || uuidv4();
 
     const newItem = {
       ...item,
+      id,
       image: imageData,
       userId: uid
     };
 
-    await setDoc(doc(db, ITEMS_COLL, item.id), newItem);
+    await setDoc(doc(db, ITEMS_COLL, id), newItem);
     return newItem;
   },
 
@@ -240,21 +245,27 @@ export const firebaseStorage = {
   importData: async (data) => {
     const uid = getUserId();
     const { boxes, items } = data;
+    const boxIdMap = {};
 
-    // Import boxes
+    // Import boxes with fresh IDs to avoid collisions and permission issues
     if (boxes && Array.isArray(boxes)) {
       const boxPromises = boxes.map(box => {
-        const docRef = doc(db, BOXES_COLL, box.id);
-        return setDoc(docRef, { ...box, userId: uid });
+        const newBoxId = uuidv4();
+        boxIdMap[box.id] = newBoxId; // Store mapping
+        const docRef = doc(db, BOXES_COLL, newBoxId);
+        return setDoc(docRef, { ...box, id: newBoxId, userId: uid });
       });
       await Promise.all(boxPromises);
     }
 
-    // Import items
+    // Import items with fresh IDs and updated boxId references
     if (items && Array.isArray(items)) {
       const itemPromises = items.map(item => {
-        const docRef = doc(db, ITEMS_COLL, item.id);
-        return setDoc(docRef, { ...item, userId: uid });
+        const newItemId = uuidv4();
+        // Use the new box ID if it was part of the import, otherwise keep the old one (fallback)
+        const newBoxId = boxIdMap[item.boxId] || item.boxId;
+        const docRef = doc(db, ITEMS_COLL, newItemId);
+        return setDoc(docRef, { ...item, id: newItemId, boxId: newBoxId, userId: uid });
       });
       await Promise.all(itemPromises);
     }
