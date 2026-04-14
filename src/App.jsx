@@ -1030,7 +1030,7 @@ function App() {
                       </button>
                       <button
                         onClick={() => handleDeleteBox(currentBox.id)}
-                        className="p-2.5 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 hover:text-red-300 transition-all hover:scale-105 active:scale-95"
+                        className="p-2.5 text-red-400 rounded-xl hover:bg-red-500/20 hover:text-red-300 transition-all hover:scale-105 active:scale-95"
                         title="Delete Box and Items"
                       >
                         <Trash2 size={20} />
