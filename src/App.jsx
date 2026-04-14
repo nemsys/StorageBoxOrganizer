@@ -1016,14 +1016,14 @@ function App() {
                     <div className="flex gap-2 shrink-0">
                       <button
                         onClick={() => handleEditBox(currentBox)}
-                        className="p-2.5 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-all hover:scale-105 active:scale-95"
+                        className="p-2.5 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-all hover:scale-105 active:scale-95"
                         title="Edit Box"
                       >
                         <Edit size={20} />
                       </button>
                       <button
                         onClick={() => handleRemoveBox(currentBox.id)}
-                        className="p-2.5 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-all hover:scale-105 active:scale-95"
+                        className="p-2.5 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-all hover:scale-105 active:scale-95"
                         title="Remove Box (keep items)"
                       >
                         <LogOut size={20} />

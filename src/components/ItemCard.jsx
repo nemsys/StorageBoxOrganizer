@@ -73,7 +73,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                         {onEdit && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); onEdit(item); }}
-                                className="p-1.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
+                                className="p-1.5 text-primary rounded-lg hover:bg-primary/20 transition-colors"
                                 title="Edit Item"
                             >
                                 <Edit size={14} />
