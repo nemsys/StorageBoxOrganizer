@@ -187,7 +187,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
             </div>
             
             {isProcessing && (
-                <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[1px] flex items-center justify-center rounded-xl z-50 pointer-events-auto">
+                <div className="absolute inset-0 bg-slate-950 flex items-center justify-center rounded-xl z-50 pointer-events-auto">
                     <div className="bg-slate-900 border border-white/10 p-4 rounded-2xl shadow-2xl flex items-center gap-3">
                         <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
                         <span className="text-sm font-medium text-slate-200">Updating items...</span>

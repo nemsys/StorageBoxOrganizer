@@ -54,12 +54,12 @@ export function FullscreenImageModal({ isOpen, onClose, imageUrl, images, itemNa
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-fade-in"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black animate-fade-in"
             onClick={onClose}
         >
             <button
                 onClick={onClose}
-                className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-10"
+                className="absolute top-4 right-4 p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-full transition-colors z-10"
                 title="Close (Esc)"
             >
                 <X size={24} />
@@ -81,7 +81,7 @@ export function FullscreenImageModal({ isOpen, onClose, imageUrl, images, itemNa
                         <button
                             onClick={goToPrevious}
                             style={{ top: '50%', transform: 'translateY(-50%)' }}
-                            className="absolute -left-16 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all z-10"
+                            className="absolute -left-16 p-3 bg-slate-800 hover:bg-slate-700 text-white rounded-full transition-all z-10"
                             aria-label="Previous image"
                         >
                             <ChevronLeft size={32} />
@@ -91,21 +91,21 @@ export function FullscreenImageModal({ isOpen, onClose, imageUrl, images, itemNa
                         <button
                             onClick={goToNext}
                             style={{ top: '50%', transform: 'translateY(-50%)' }}
-                            className="absolute -right-16 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all z-10"
+                            className="absolute -right-16 p-3 bg-slate-800 hover:bg-slate-700 text-white rounded-full transition-all z-10"
                             aria-label="Next image"
                         >
                             <ChevronRight size={32} />
                         </button>
 
                         {/* Image Counter */}
-                        <div className="absolute top-4 left-4 bg-black/60 text-white text-sm px-3 py-1 rounded-full">
+                        <div className="absolute top-4 left-4 bg-slate-900 text-white text-sm px-3 py-1 rounded-full">
                             {currentIndex + 1} / {displayImages.length}
                         </div>
                     </>
                 )}
 
                 {itemName && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4 rounded-b-lg">
+                    <div className="absolute bottom-0 left-0 right-0 bg-slate-900 p-4 rounded-b-lg">
                         <p className="text-white text-lg font-semibold text-center">{itemName}</p>
                     </div>
                 )}

@@ -33,7 +33,7 @@ export function AuthModal({ isOpen, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black animate-fade-in">
             <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
                 <div className="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">

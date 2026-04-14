@@ -22,7 +22,7 @@
   --color-border: rgba(var(--color-border-rgb), 1);
   --color-danger: rgba(var(--color-danger-rgb), 1);
 
-  --color-glass-bg: rgba(var(--color-surface-rgb), 0.9);
+  --color-glass-bg: var(--color-surface);
   --color-glass-border: rgba(255, 255, 255, 0.1);
 
   --font-family: 'Inter', sans-serif;
@@ -49,7 +49,7 @@
   --color-border-rgb: 226, 232, 240;
   --color-danger-rgb: 239, 68, 68;
 
-  --color-glass-bg: rgba(var(--color-surface-rgb), 0.85);
+  --color-glass-bg: var(--color-surface);
   --color-glass-border: rgba(0, 0, 0, 0.1);
 
   --shadow-glow: 0 0 15px rgba(var(--color-primary-rgb), 0.2);
@@ -92,8 +92,6 @@ textarea {
 
 .glass-panel {
   background: var(--color-glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-glass-border);
   box-shadow: var(--shadow-lg);
 }
@@ -137,7 +135,7 @@ textarea {
 .input {
   width: 100%;
   padding: 0.75rem 1rem;
-  background-color: rgba(var(--color-bg-rgb), 0.9);
+  background-color: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text);
@@ -623,15 +621,15 @@ textarea {
 }
 
 .bg-slate-950 {
-  background-color: rgba(var(--color-bg-rgb), 0.6);
+  background-color: var(--color-bg);
 }
 
 .bg-slate-800\/50 {
-  background-color: rgba(var(--color-surface-rgb), 0.5);
+  background-color: var(--color-surface);
 }
 
 .bg-slate-900\/80 {
-  background-color: rgba(var(--color-bg-rgb), 0.8);
+  background-color: var(--color-bg);
 }
 
 .bg-primary\/10 {
@@ -639,15 +637,15 @@ textarea {
 }
 
 .bg-white\/5 {
-  background-color: rgba(var(--color-text-rgb), 0.05);
+  background-color: var(--color-surface-hover);
 }
 
 .bg-white\/10 {
-  background-color: rgba(var(--color-text-rgb), 0.1);
+  background-color: var(--color-surface-hover);
 }
 
 .bg-white\/20 {
-  background-color: rgba(var(--color-text-rgb), 0.2);
+  background-color: var(--color-surface-hover);
 }
 
 .border-white\/5 {

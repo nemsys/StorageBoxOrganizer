@@ -20,7 +20,7 @@ export const Toast = ({ message, type = 'info', onClose, duration = 3000 }) => {
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20, scale: 0.9 }}
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3 px-4 py-3 bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl min-w-[280px] max-w-[90vw]"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3 px-4 py-3 bg-slate-900 border border-white/10 rounded-xl shadow-2xl min-w-[280px] max-w-[90vw]"
     >
       <div className="shrink-0">{icons[type]}</div>
       <p className="text-sm text-white font-medium flex-1">{message}</p>
