@@ -26,6 +26,16 @@ import { v4 as uuidv4 } from 'uuid';
 function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
   const [importState, setImportState] = useState({ 
     isImporting: false, 
     progress: 0, 
@@ -834,6 +844,8 @@ function App() {
                 onManageTags={() => setIsTagManagementModalOpen(true)}
                 onExport={handleExportData}
                 onImport={handleImportButtonClick}
+                theme={theme}
+                onToggleTheme={toggleTheme}
               />
             </div>
           </div>

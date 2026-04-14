@@ -43,7 +43,7 @@ export function BoxCard({ box, onClick, itemCount = 0 }) {
                 <div
                     className="absolute inset-0 z-10 pointer-events-none"
                     style={{
-                        background: 'linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.2) 50%, transparent 100%)'
+                        background: 'linear-gradient(to top, rgba(var(--color-bg-rgb), 0.9) 0%, rgba(var(--color-bg-rgb), 0.2) 50%, transparent 100%)'
                     }}
                 />
 
@@ -55,7 +55,7 @@ export function BoxCard({ box, onClick, itemCount = 0 }) {
                         right: '12px',
                         padding: '4px 10px',
                         backgroundColor: 'var(--color-primary)',
-                        color: '#0f172a',
+                        color: 'var(--color-bg)',
                         borderRadius: '8px',
                         fontSize: '10px',
                         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',

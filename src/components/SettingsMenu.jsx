@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Tags, Download, Upload, ChevronDown } from 'lucide-react';
+import { Settings, Tags, Download, Upload, Sun, Moon } from 'lucide-react';
 
-export const SettingsMenu = ({ onManageTags, onExport, onImport }) => {
+export const SettingsMenu = ({ onManageTags, onExport, onImport, theme, onToggleTheme }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -18,6 +18,19 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport }) => {
 
   const menuItems = [
     {
+      id: 'theme',
+      label: theme === 'dark' ? 'Light Mode' : 'Dark Mode',
+      icon: theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />,
+      onClick: () => {
+        onToggleTheme();
+        setIsOpen(false);
+      }
+    },
+    {
+      id: 'divider-1',
+      isDivider: true
+    },
+    {
       id: 'tags',
       label: 'Manage Tags',
       icon: <Tags size={20} />,
@@ -27,7 +40,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport }) => {
       }
     },
     {
-      id: 'divider',
+      id: 'divider-2',
       isDivider: true
     },
     {

@@ -44,10 +44,10 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                             bottom: '10px',
                             left: '10px',
                             padding: '4px 10px',
-                            backgroundColor: 'rgba(15, 23, 42, 0.82)',
+                            backgroundColor: 'rgba(var(--color-bg-rgb), 0.82)',
                             backdropFilter: 'blur(8px)',
                             WebkitBackdropFilter: 'blur(8px)',
-                            border: '1px solid rgba(56, 189, 248, 0.25)',
+                            border: '1px solid rgba(var(--color-primary-rgb), 0.25)',
                             borderRadius: '8px',
                             fontSize: '10px',
                             color: 'var(--color-primary)',
@@ -113,18 +113,18 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                         className="flex items-center gap-2 w-full text-left transition-colors"
                         style={{
                             padding: '8px 16px',
-                            borderTop: '1px solid rgba(255,255,255,0.06)',
-                            backgroundColor: 'rgba(30, 41, 59, 0.4)',
-                            color: '#94a3b8',
+                            borderTop: '1px solid rgba(var(--color-text-rgb),0.06)',
+                            backgroundColor: 'rgba(var(--color-surface-rgb), 0.4)',
+                            color: 'var(--color-text-muted)',
                             minHeight: '38px',
                         }}
                         onMouseEnter={e => {
-                            e.currentTarget.style.backgroundColor = 'rgba(56, 189, 248, 0.08)';
+                            e.currentTarget.style.backgroundColor = 'rgba(var(--color-primary-rgb), 0.08)';
                             e.currentTarget.style.color = 'var(--color-primary)';
                         }}
                         onMouseLeave={e => {
-                            e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.4)';
-                            e.currentTarget.style.color = '#94a3b8';
+                            e.currentTarget.style.backgroundColor = 'rgba(var(--color-surface-rgb), 0.4)';
+                            e.currentTarget.style.color = 'var(--color-text-muted)';
                         }}
                     >
                         <Package size={12} className="shrink-0" />
@@ -138,9 +138,9 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                         className="flex items-center gap-2 w-full"
                         style={{
                             padding: '8px 16px',
-                            borderTop: '1px solid rgba(255,255,255,0.06)',
-                            backgroundColor: 'rgba(30, 41, 59, 0.3)',
-                            color: '#475569',
+                            borderTop: '1px solid rgba(var(--color-text-rgb),0.06)',
+                            backgroundColor: 'rgba(var(--color-surface-rgb), 0.3)',
+                            color: 'var(--color-text-muted)',
                             minHeight: '38px',
                         }}
                     >
