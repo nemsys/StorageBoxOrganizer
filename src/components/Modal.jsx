@@ -40,9 +40,9 @@ export function Modal({ isOpen, onClose, title, children }) {
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header - Fixed */}
-                <div className="flex items-center justify-between p-4 border-b border-white/10" style={{ flexShrink: 0 }}>
+                <div className="flex items-center justify-between p-4 border-b border-slate-700" style={{ flexShrink: 0 }}>
                     <h2 className="text-xl font-semibold text-white">{title}</h2>
-                    <button onClick={onClose} className="btn-icon btn-ghost text-white/70 hover:text-white">
+                    <button onClick={onClose} className="btn-icon btn-ghost text-slate-400 hover:text-white">
                         <X size={20} />
                     </button>
                 </div>
