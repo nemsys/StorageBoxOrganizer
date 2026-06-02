@@ -1,0 +1,29 @@
+{
+  "output": {
+    "filePath": "repomix-output.txt",
+    "style": "xml",
+    "parsable": true
+  },
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      ".backups",
+      ".backups/**",
+      ".firebase",
+      ".firebase/**",
+      ".secrets",
+      ".secrets/**",
+      "dist",
+      "dist/**",
+      "node_modules",
+      "node_modules/**",
+      "package-lock.json",
+      "sample_images",
+      "sample_images/**",
+      "temp_backup",
+      "temp_backup/**",
+      "repomix-output.*"
+    ]
+  }
+}

@@ -26,3 +26,8 @@ dist-ssr
 .firebase
 .secrets
 .backups
+
+# Repomix outputs
+repomix-output.txt
+repomix-output.xml
+repomix-output.*
