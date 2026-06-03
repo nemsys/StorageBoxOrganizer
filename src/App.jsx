@@ -23,6 +23,32 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { formatDate } from './utils/dateUtils';
 import { v4 as uuidv4 } from 'uuid';
 
+const MOCK_BOXES = [
+  {
+    id: "mock-box-1",
+    name: "Mock Box 1",
+    description: "A test storage box for visual inspection",
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%233b82f6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='10'>Box 1 Image</text></svg>",
+    images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%233b82f6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='10'>Box 1 Image</text></svg>"],
+    userId: "mock-user-123",
+    createdAt: Date.now()
+  }
+];
+
+const MOCK_ITEMS = [
+  {
+    id: "mock-item-1",
+    name: "Mock Item 1",
+    description: "A test item with an image",
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2310b981'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='10'>Item 1 Image</text></svg>",
+    images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2310b981'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='10'>Item 1 Image</text></svg>"],
+    boxId: "mock-box-1",
+    userId: "mock-user-123",
+    createdAt: Date.now(),
+    tags: ["test"]
+  }
+];
+
 function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -97,6 +123,13 @@ function App() {
 
   // Auth Listener
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mock-auth') === 'true') {
+      setUser({ uid: 'mock-user-123', email: 'mock@example.com' });
+      setAuthLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
@@ -155,7 +188,7 @@ function App() {
 
     // Initialize history state if not set
     if (!window.history.state) {
-      window.history.replaceState({ view: 'boxes' }, '', window.location.pathname);
+      window.history.replaceState({ view: 'boxes' }, '', window.location.pathname + window.location.search);
     }
 
     return () => window.removeEventListener('popstate', handlePopState);
@@ -179,6 +212,18 @@ function App() {
 
   const refreshData = async () => {
     if (!user) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mock-auth') === 'true') {
+      setBoxes(MOCK_BOXES);
+      setAllItems(MOCK_ITEMS);
+      if (currentBox) {
+        setItems(MOCK_ITEMS.filter(i => i.boxId === currentBox.id));
+      } else {
+        setItems(MOCK_ITEMS);
+      }
+      return;
+    }
+
     const loadedBoxes = await firebaseStorage.getBoxes();
     setBoxes(loadedBoxes);
 
@@ -199,7 +244,13 @@ function App() {
   // Handle Box Selection
   const handleBoxClick = async (box) => {
     setCurrentBox(box);
-    const boxItems = await firebaseStorage.getItems(box.id);
+    const params = new URLSearchParams(window.location.search);
+    let boxItems = [];
+    if (params.get('mock-auth') === 'true') {
+      boxItems = MOCK_ITEMS.filter(i => i.boxId === box.id);
+    } else {
+      boxItems = await firebaseStorage.getItems(box.id);
+    }
     const sortedItems = [...boxItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     setItems(sortedItems);
     setView('items');
