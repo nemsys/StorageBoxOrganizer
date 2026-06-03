@@ -1,7 +1,7 @@
 import { Package } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 
-export function BoxCard({ box, onClick, itemCount = 0 }) {
+export function BoxCard({ box, onClick, itemCount = 0, onImageClick }) {
     // Prepare images array
     let displayImages = [];
     if (box.images && Array.isArray(box.images) && box.images.length > 0) {
@@ -12,7 +12,7 @@ export function BoxCard({ box, onClick, itemCount = 0 }) {
 
     return (
         <div
-            onClick={(e) => {
+            onClick={() => {
                 if (typeof onClick === 'function') onClick(box);
             }}
             className="card group cursor-pointer flex flex-col h-full relative overflow-hidden bg-slate-900"
@@ -28,6 +28,7 @@ export function BoxCard({ box, onClick, itemCount = 0 }) {
                 <ImageSlider
                     images={displayImages}
                     alt={box.name}
+                    onImageClick={onImageClick && displayImages.length > 0 ? () => onImageClick(displayImages, box.name, box) : undefined}
                     className="absolute inset-0 w-full h-full"
                     showNavigation={false}
                     fit="cover"

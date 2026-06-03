@@ -26,8 +26,9 @@ export function ImageSlider({ images, alt, onImageClick, className = '', showNav
         setCurrentIndex(index);
     };
 
-    const handleImageClick = () => {
+    const handleImageClick = (e) => {
         if (onImageClick) {
+            e?.stopPropagation();
             onImageClick(images, alt);
         }
     };

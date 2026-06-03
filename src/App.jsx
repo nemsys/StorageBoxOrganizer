@@ -981,6 +981,7 @@ function App() {
               onEditBox={handleEditBox}
               onRemoveBox={handleRemoveBox}
               onAddItemClick={() => setIsAddItemModalOpen(true)}
+              onImageClick={handleImageClick}
             />
           </>
         )}
@@ -1060,7 +1061,7 @@ function App() {
               onAddClick={() => setIsAddItemModalOpen(true)}
               onDeleteItem={handleDeleteItem}
               onEditItem={handleEditItem}
-              onImageClick={(images, name, item) => handleEditItem(item)}
+              onImageClick={handleImageClick}
               showItemNavigation={true}
             />
           </>

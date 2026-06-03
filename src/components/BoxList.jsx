@@ -1,7 +1,7 @@
 import { BoxCard } from './BoxCard';
 import { Plus, Package } from 'lucide-react';
 
-export function BoxList({ boxes, allItems = [], onBoxClick, onAddClick, onDeleteBox, onEditBox, onRemoveBox, onAddItemClick }) {
+export function BoxList({ boxes, allItems = [], onBoxClick, onAddClick, onDeleteBox, onEditBox, onRemoveBox, onAddItemClick, onImageClick }) {
     return (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             <div
@@ -34,6 +34,7 @@ export function BoxList({ boxes, allItems = [], onBoxClick, onAddClick, onDelete
                         box={box}
                         itemCount={itemCount}
                         onClick={onBoxClick}
+                        onImageClick={onImageClick}
                     />
                 );
             })}
