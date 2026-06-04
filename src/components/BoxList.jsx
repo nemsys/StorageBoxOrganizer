@@ -34,7 +34,7 @@ export function BoxList({ boxes, allItems = [], onBoxClick, onAddClick, onDelete
                         box={box}
                         itemCount={itemCount}
                         onClick={onBoxClick}
-                        onImageClick={onImageClick}
+                        onImageClick={onImageClick}   // ← new
                     />
                 );
             })}

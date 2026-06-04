@@ -1,7 +1,7 @@
-import { Package } from 'lucide-react';
+import { Package, ZoomIn } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 
-export function BoxCard({ box, onClick, itemCount = 0, onImageClick }) {
+export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
     // Prepare images array
     let displayImages = [];
     if (box.images && Array.isArray(box.images) && box.images.length > 0) {
@@ -10,47 +10,63 @@ export function BoxCard({ box, onClick, itemCount = 0, onImageClick }) {
         displayImages = [box.image];
     }
 
+    const hasImages = displayImages.length > 0;
+
     return (
         <div
-            onClick={() => {
-                if (typeof onClick === 'function') onClick(box);
-            }}
+            onClick={() => { if (typeof onClick === 'function') onClick(box); }}
             className="card group cursor-pointer flex flex-col h-full relative overflow-hidden bg-slate-900"
         >
             {/* Image Area */}
             <div
                 className="w-full bg-slate-800 relative overflow-hidden"
-                style={{
-                    aspectRatio: '1 / 1',
-                    height: 'auto'
-                }}
+                style={{ aspectRatio: '1 / 1', height: 'auto' }}
             >
                 <ImageSlider
                     images={displayImages}
                     alt={box.name}
-                    onImageClick={onImageClick && displayImages.length > 0 ? () => onImageClick(displayImages, box.name, box) : undefined}
                     className="absolute inset-0 w-full h-full"
                     showNavigation={false}
                     fit="cover"
                 />
 
-                {displayImages.length === 0 && (
+                {!hasImages && (
                     <div className="absolute inset-0 flex items-center justify-center text-slate-600">
                         <Package size={48} />
                     </div>
                 )}
 
+                {/* Clickable zoom overlay — only when images exist */}
+                {hasImages && onImageClick && (
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation(); // prevent card navigation
+                            onImageClick(displayImages, box.name);
+                        }}
+                        className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: 'rgba(0,0,0,0.35)', cursor: 'zoom-in' }}
+                        title="View fullscreen"
+                        role="button"
+                        aria-label={`View ${box.name} image fullscreen`}
+                    >
+                        <div className="p-2 bg-slate-900/70 rounded-full backdrop-blur-sm">
+                            <ZoomIn size={22} className="text-white" />
+                        </div>
+                    </div>
+                )}
+
                 {/* Overlay Gradient */}
                 <div
-                    className="absolute inset-0 z-10 pointer-events-none"
+                    className="absolute inset-0 pointer-events-none"
                     style={{
+                        zIndex: hasImages && onImageClick ? 9 : 10, // sit below zoom overlay
                         background: 'linear-gradient(to top, rgba(var(--color-bg-rgb), 0.9) 0%, rgba(var(--color-bg-rgb), 0.2) 50%, transparent 100%)'
                     }}
                 />
 
                 {/* Item Count Badge */}
                 <div
-                    className="absolute z-20 font-bold uppercase tracking-wider flex items-center justify-center"
+                    className="absolute z-20 font-bold uppercase tracking-wider flex items-center justify-center pointer-events-none"
                     style={{
                         bottom: '12px',
                         right: '12px',
