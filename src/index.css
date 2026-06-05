@@ -751,3 +751,24 @@ textarea {
 .text-green-400 {
   color: #4ade80;
 }
+
+/* Floating Action Button (FAB) */
+.fab-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 50;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 9999px;
+  background-color: var(--color-primary);
+  color: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(var(--color-primary-rgb), 0.4);
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+

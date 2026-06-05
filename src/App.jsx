@@ -16,7 +16,7 @@ import { SettingsMenu } from './components/SettingsMenu';
 import { ImportProgressModal } from './components/ImportProgressModal';
 import { Toast } from './components/Toast';
 import { ConfirmationDialog } from './components/ConfirmationDialog';
-import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package, Edit, Trash2, Calendar, Tags, Settings } from 'lucide-react';
+import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package, Edit, Trash2, Calendar, Tags, Settings, Plus } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -1027,11 +1027,6 @@ function App() {
               boxes={filteredBoxes}
               allItems={allItems}
               onBoxClick={handleBoxClick}
-              onAddClick={() => setIsAddBoxModalOpen(true)}
-              onDeleteBox={handleDeleteBox}
-              onEditBox={handleEditBox}
-              onRemoveBox={handleRemoveBox}
-              onAddItemClick={() => setIsAddItemModalOpen(true)}
               onImageClick={handleImageClick}
             />
           </>
@@ -1255,6 +1250,32 @@ function App() {
             onClose={() => removeToast(toast.id)} 
           />
         ))}
+      </AnimatePresence>
+
+      {/* Floating Action Button (FAB) */}
+      <AnimatePresence>
+        {user && (view === 'boxes' || view === 'allItems') && (
+          <motion.button
+            key="fab"
+            initial={{ opacity: 0, scale: 0.5, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.5, y: 50 }}
+            whileHover={{ scale: 1.05, y: -4 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              if (view === 'boxes') {
+                setIsAddBoxModalOpen(true);
+              } else if (view === 'allItems') {
+                setIsAddItemModalOpen(true);
+              }
+            }}
+            className="fab-btn"
+            title={view === 'boxes' ? "Add Box" : "Add Item"}
+            aria-label={view === 'boxes' ? "Add Box" : "Add Item"}
+          >
+            <Plus size={28} />
+          </motion.button>
+        )}
       </AnimatePresence>
 
       <ConfirmationDialog 
