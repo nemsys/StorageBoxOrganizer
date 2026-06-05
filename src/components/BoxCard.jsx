@@ -68,26 +68,26 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
                 <div
                     className="absolute z-20 font-bold uppercase tracking-wider flex items-center justify-center pointer-events-none"
                     style={{
-                        bottom: '12px',
-                        right: '12px',
-                        padding: '4px 10px',
+                        bottom: '8px',
+                        right: '8px',
+                        padding: '3px 8px',
                         backgroundColor: 'var(--color-primary)',
                         color: 'var(--color-bg)',
-                        borderRadius: '8px',
-                        fontSize: '10px',
+                        borderRadius: '6px',
+                        fontSize: '9px',
                         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
-                        minWidth: '3.5rem'
+                        minWidth: '3rem'
                     }}
                 >
                     {itemCount} {itemCount === 1 ? 'item' : 'items'}
                 </div>
             </div>
 
-            <div className="p-4 flex flex-col flex-1">
-                <h3 className="text-lg font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis mb-1 group-hover:text-primary transition-colors">
+            <div className="p-3 flex flex-col flex-1">
+                <h3 className="text-base font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis mb-1 group-hover:text-primary transition-colors">
                     {box.name}
                 </h3>
-                <p className="text-sm text-slate-400 line-clamp-2 leading-relaxed">
+                <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
                     {box.description || 'No description'}
                 </p>
             </div>

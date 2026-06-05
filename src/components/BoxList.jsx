@@ -3,7 +3,7 @@ import { Plus, Package } from 'lucide-react';
 
 export function BoxList({ boxes, allItems = [], onBoxClick, onAddClick, onDeleteBox, onEditBox, onRemoveBox, onAddItemClick, onImageClick }) {
     return (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             <div
                 onClick={onAddClick}
                 className="card border-dashed border-2 border-slate-700 bg-transparent flex flex-col items-center justify-center aspect-square cursor-pointer hover:border-primary hover:bg-slate-800/50 group"
