@@ -5,14 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
 ## [1.1.0] - 2026-06-06
-### Added
-- Floating action button (FAB) for adding new boxes and items on respective pages.
-- Initial setup for the CHANGELOG.md file.
-
 ### Changed
+- Redesigned adding new boxes and items by adding Floating action button (FAB) to the bottom.
 - Redesigned the Sort & Filter bar and made it sticky at the top.
 - Updated box cards grid layout to be more compact on mobile screens.
 
