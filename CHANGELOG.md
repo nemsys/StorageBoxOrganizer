@@ -12,7 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated box cards grid layout to be more compact on mobile screens.
 
 ### Fixed
-- Wired the fullscreen image viewer consistently across all views.
 - Adjusted UI spacing (smaller grid gaps, decreased vertical margins for Sort/Filter row).
 - Corrected alignment by moving the Filter box to the right.
 
