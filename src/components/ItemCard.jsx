@@ -1,4 +1,4 @@
-import { Package, Edit, Trash2, Tag, ChevronRight } from 'lucide-react';
+import { Package, Edit, Trash2, Tag, ChevronRight, ZoomIn } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 
 export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageClick, showNavigation = false }) {
@@ -30,6 +30,25 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                 {displayImages.length === 0 && (
                     <div className="w-full h-full flex items-center justify-center text-slate-600">
                         <Package size={48} />
+                    </div>
+                )}
+
+                {/* Clickable zoom overlay — only when images exist */}
+                {displayImages.length > 0 && onImageClick && (
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onImageClick(displayImages, item.name);
+                        }}
+                        className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: 'rgba(0,0,0,0.35)', cursor: 'zoom-in' }}
+                        title="View fullscreen"
+                        role="button"
+                        aria-label={`View ${item.name} image fullscreen`}
+                    >
+                        <div className="p-2 bg-slate-900/70 rounded-full backdrop-blur-sm">
+                            <ZoomIn size={22} className="text-white" />
+                        </div>
                     </div>
                 )}
 
