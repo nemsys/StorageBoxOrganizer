@@ -807,7 +807,7 @@ textarea {
 .sfb {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
 }
 
 /* Pill wrapper – positions the dropdown */
