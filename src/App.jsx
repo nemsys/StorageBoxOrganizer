@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
 import Fuse from 'fuse.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BoxList } from './components/BoxList';
@@ -16,11 +16,12 @@ import { SettingsMenu } from './components/SettingsMenu';
 import { ImportProgressModal } from './components/ImportProgressModal';
 import { Toast } from './components/Toast';
 import { ConfirmationDialog } from './components/ConfirmationDialog';
-import { ArrowLeft, PackageOpen, LogOut, User, Filter, ArrowUpDown, Package, Edit, Trash2, Calendar, Tags, Settings, Plus } from 'lucide-react';
+import { ArrowLeft, PackageOpen, LogOut, Package, Edit, Trash2, Calendar, Plus } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { formatDate } from './utils/dateUtils';
+import { SortFilterBar } from './components/SortFilterBar';
 import { v4 as uuidv4 } from 'uuid';
 
 const MOCK_BOXES = [
@@ -62,12 +63,12 @@ function App() {
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
-  const [importState, setImportState] = useState({ 
-    isImporting: false, 
-    progress: 0, 
-    phase: '', 
-    current: 0, 
-    total: 0 
+  const [importState, setImportState] = useState({
+    isImporting: false,
+    progress: 0,
+    phase: '',
+    current: 0,
+    total: 0
   });
   const [view, setView] = useState('boxes'); // 'boxes' | 'items' | 'allItems'
   const [currentBox, setCurrentBox] = useState(null);
@@ -85,21 +86,34 @@ function App() {
 
   const [itemSortOrder, setItemSortOrder] = useState('newest'); // 'name-asc', 'name-desc', 'newest', 'oldest'
   const [selectedTag, setSelectedTag] = useState('');
-  
+
   const [boxSortOrder, setBoxSortOrder] = useState('newest');
   const [selectedBoxTag, setSelectedBoxTag] = useState('');
 
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, url: '', name: '' });
   const [toasts, setToasts] = useState([]);
-  const [confirmDialog, setConfirmDialog] = useState({ 
-    isOpen: false, 
-    title: '', 
-    message: '', 
-    onConfirm: () => {}, 
-    type: 'danger' 
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => { },
+    type: 'danger'
   });
   const fileInputRef = useRef(null);
+  const headerRef = useRef(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    setHeaderHeight(el.getBoundingClientRect().height);
+    const ro = new ResizeObserver(([entry]) =>
+      setHeaderHeight(entry.contentRect.height)
+    );
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Notification Helpers
   const addToast = (message, type = 'info') => {
@@ -643,7 +657,7 @@ function App() {
     try {
       const boxesData = await firebaseStorage.getBoxes();
       const itemsData = await firebaseStorage.getAllItems();
-      
+
       const backupData = {
         boxes: boxesData,
         items: itemsData,
@@ -681,23 +695,23 @@ function App() {
           throw new Error('Invalid backup format');
         }
 
-        setImportState({ 
-          isImporting: true, 
-          progress: 0, 
-          phase: 'Initializing...', 
-          current: 0, 
+        setImportState({
+          isImporting: true,
+          progress: 0,
+          phase: 'Initializing...',
+          current: 0,
           total: (data.boxes?.length || 0) + (data.items?.length || 0)
         });
 
         await firebaseStorage.importData(data, (p) => {
-          setImportState(prev => ({ 
-            ...prev, 
-            progress: p.progress, 
+          setImportState(prev => ({
+            ...prev,
+            progress: p.progress,
             phase: p.phase,
             current: p.current
           }));
         });
-        
+
         // Brief delay to show 100% completion
         setTimeout(() => {
           setImportState(prev => ({ ...prev, isImporting: false }));
@@ -878,7 +892,7 @@ function App() {
       <AuthModal isOpen={!user} onClose={() => { }} />
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-white/5">
+      <header ref={headerRef} className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-white/5">
         {/* Top Bar - User Info */}
         {user && (
           <div className="bg-slate-950/50 border-b border-white/5 py-1.5 px-4">
@@ -891,7 +905,7 @@ function App() {
                 <LogOut size={12} /> Sign Out
               </button>
               <div className="w-px h-3 bg-white/10 mx-1"></div>
-              <SettingsMenu 
+              <SettingsMenu
                 onManageTags={() => setIsTagManagementModalOpen(true)}
                 onExport={handleExportData}
                 onImport={handleImportButtonClick}
@@ -970,6 +984,21 @@ function App() {
         </div>
       </header>
 
+      {/* Sticky Sort / Filter bar – sticks just below the header */}
+      {user && (view === 'boxes' || view === 'allItems') && (
+        <div className="sfb-wrapper" style={{ top: headerHeight }}>
+          <div className="sfb-wrapper__inner">
+            <SortFilterBar
+              sortOrder={view === 'boxes' ? boxSortOrder : itemSortOrder}
+              onSortChange={view === 'boxes' ? setBoxSortOrder : setItemSortOrder}
+              selectedTag={view === 'boxes' ? selectedBoxTag : selectedTag}
+              onTagChange={view === 'boxes' ? setSelectedBoxTag : setSelectedTag}
+              tags={allTags}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <main className="container py-8 animate-fade-in">
 
@@ -978,7 +1007,7 @@ function App() {
           <>
             {/* Title + count */}
             <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Your Boxes</h2>
+              <h2 className="text-lg font-semibold text-white">Your Boxes</h2>
               <span className="text-slate-400 text-sm">{filteredBoxes.length} boxes</span>
             </div>
             {/* Search */}
@@ -988,39 +1017,6 @@ function App() {
                 onChange={setBoxSearchQuery}
                 placeholder="Search your boxes..."
               />
-            </div>
-
-            {/* Controls Row - Horizontal Layout */}
-            <div className="flex items-center justify-between mb-6 bg-slate-900/50 p-3 rounded-xl border border-white/5 backdrop-blur-sm">
-              {/* Left: Sort Dropdown */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-400">Sort by:</span>
-                <select
-                  value={boxSortOrder}
-                  onChange={(e) => setBoxSortOrder(e.target.value)}
-                  className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-sm cursor-pointer hover:bg-slate-800 transition-colors outline-none focus:ring-2 focus:ring-primary/50"
-                >
-                  <option value="newest" className="bg-slate-800">Newest</option>
-                  <option value="oldest" className="bg-slate-800">Oldest</option>
-                  <option value="name-asc" className="bg-slate-800">Name (A-Z)</option>
-                  <option value="name-desc" className="bg-slate-800">Name (Z-A)</option>
-                </select>
-              </div>
-
-              {/* Right: Filter Dropdown */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-400">Filter:</span>
-                <select
-                  value={selectedBoxTag}
-                  onChange={(e) => setSelectedBoxTag(e.target.value)}
-                  className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-sm cursor-pointer hover:bg-slate-800 transition-colors outline-none focus:ring-2 focus:ring-primary/50"
-                >
-                  <option value="">All tags</option>
-                  {allTags.map(tag => (
-                    <option key={tag} value={tag}>{tag}</option>
-                  ))}
-                </select>
-              </div>
             </div>
 
             <BoxList
@@ -1130,39 +1126,6 @@ function App() {
               />
             </div>
 
-            {/* Controls Row - Horizontal Layout */}
-            <div className="flex items-center justify-between mb-6 bg-slate-900/50 p-3 rounded-xl border border-white/5 backdrop-blur-sm">
-              {/* Left: Sort Dropdown */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-400">Sort by:</span>
-                <select
-                  value={itemSortOrder}
-                  onChange={(e) => setItemSortOrder(e.target.value)}
-                  className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-sm cursor-pointer hover:bg-slate-800 transition-colors outline-none focus:ring-2 focus:ring-primary/50"
-                >
-                  <option value="newest" className="bg-slate-800">Newest</option>
-                  <option value="oldest" className="bg-slate-800">Oldest</option>
-                  <option value="name-asc" className="bg-slate-800">Name (A-Z)</option>
-                  <option value="name-desc" className="bg-slate-800">Name (Z-A)</option>
-                </select>
-              </div>
-
-              {/* Right: Filter Dropdown */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-400">Filter:</span>
-                <select
-                  value={selectedTag}
-                  onChange={(e) => setSelectedTag(e.target.value)}
-                  className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-sm cursor-pointer hover:bg-slate-800 transition-colors outline-none focus:ring-2 focus:ring-primary/50"
-                >
-                  <option value="">All tags</option>
-                  {allTags.map(tag => (
-                    <option key={tag} value={tag}>{tag}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
             <ItemList
               items={allItemsDisplayItems}
               onDeleteItem={handleDeleteItem}
@@ -1215,8 +1178,8 @@ function App() {
         images={fullscreenImage.images}
         itemName={fullscreenImage.name}
       />
-      <TagManagementModal 
-        isOpen={isTagManagementModalOpen} 
+      <TagManagementModal
+        isOpen={isTagManagementModalOpen}
         onClose={() => setIsTagManagementModalOpen(false)}
         allItems={allItems}
         onRenameTag={handleRenameTag}
@@ -1233,7 +1196,7 @@ function App() {
       />
 
       {/* Notifications and Dialogs */}
-      <ImportProgressModal 
+      <ImportProgressModal
         isOpen={importState.isImporting}
         progress={importState.progress}
         phase={importState.phase}
@@ -1243,11 +1206,11 @@ function App() {
 
       <AnimatePresence>
         {toasts.map(toast => (
-          <Toast 
-            key={toast.id} 
-            message={toast.message} 
-            type={toast.type} 
-            onClose={() => removeToast(toast.id)} 
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            onClose={() => removeToast(toast.id)}
           />
         ))}
       </AnimatePresence>
@@ -1278,7 +1241,7 @@ function App() {
         )}
       </AnimatePresence>
 
-      <ConfirmationDialog 
+      <ConfirmationDialog
         isOpen={confirmDialog.isOpen}
         onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
         title={confirmDialog.title}
