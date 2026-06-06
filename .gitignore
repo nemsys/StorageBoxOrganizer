@@ -31,3 +31,5 @@ dist-ssr
 repomix-output.txt
 repomix-output.xml
 repomix-output.*
+
+.github_token
