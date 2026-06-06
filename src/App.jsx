@@ -891,113 +891,116 @@ function App() {
     <div className="min-h-screen pb-20">
       <AuthModal isOpen={!user} onClose={() => { }} />
 
-      {/* Header */}
-      <header ref={headerRef} className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-white/5">
-        {/* Top Bar - User Info */}
-        {user && (
-          <div className="bg-slate-950/50 border-b border-white/5 py-1.5 px-4">
-            <div className="container flex justify-end items-center gap-4">
-              <span className="text-xs text-slate-400">Signed in as <span className="text-white font-medium ml-1">{user.email}</span></span>
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-1 text-xs text-slate-400 hover:text-red-400 transition-colors"
+      {/* Global Navigation Wrap */}
+      <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-white/5">
+        {/* Header */}
+        <header ref={headerRef}>
+          {/* Top Bar - User Info */}
+          {user && (
+            <div className="bg-slate-950/50 border-b border-white/5 py-1.5 px-4">
+              <div className="container flex justify-end items-center gap-4">
+                <span className="text-xs text-slate-400">Signed in as <span className="text-white font-medium ml-1">{user.email}</span></span>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-1 text-xs text-slate-400 hover:text-red-400 transition-colors"
+                >
+                  <LogOut size={12} /> Sign Out
+                </button>
+                <div className="w-px h-3 bg-white/10 mx-1"></div>
+                <SettingsMenu
+                  onManageTags={() => setIsTagManagementModalOpen(true)}
+                  onExport={handleExportData}
+                  onImport={handleImportButtonClick}
+                  theme={theme}
+                  onToggleTheme={toggleTheme}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="container py-3">
+            <div className="flex items-center gap-4">
+              {/* Back button - only when inside a box */}
+              {view === 'items' && (
+                <button onClick={handleBack} className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors shrink-0">
+                  <ArrowLeft size={22} />
+                </button>
+              )}
+
+              {/* Logo */}
+              <div
+                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity shrink-0"
+                onClick={handleBack}
+                title="Go to Home"
               >
-                <LogOut size={12} /> Sign Out
-              </button>
-              <div className="w-px h-3 bg-white/10 mx-1"></div>
-              <SettingsMenu
-                onManageTags={() => setIsTagManagementModalOpen(true)}
-                onExport={handleExportData}
-                onImport={handleImportButtonClick}
-                theme={theme}
-                onToggleTheme={toggleTheme}
+                <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                  <PackageOpen size={22} />
+                </div>
+                {view === 'items' && (
+                  <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                    {currentBox?.name}
+                  </h1>
+                )}
+              </div>
+
+              {/* Tab Switcher in header — only on top-level views */}
+              {!currentBox && (
+                <div className="flex bg-slate-900/40 p-1 rounded-xl flex-1 max-w-xs border border-white/10 backdrop-blur-xl shadow-lg ring-1 ring-white/5">
+                  {[
+                    { id: 'boxes', label: 'Your Boxes', onClick: handleBack },
+                    { id: 'allItems', label: 'Your Items', onClick: handleListAllItems }
+                  ].map(tab => {
+                    const isActive = view === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={tab.onClick}
+                        className={`flex-1 flex items-center justify-center py-2 px-3 text-lg font-bold rounded-lg transition-colors duration-300 relative ${isActive ? 'text-primary' : 'text-slate-400 hover:text-white/90'}`}
+                      >
+                        {isActive && (
+                          <motion.div
+                            layoutId="activeTabPill"
+                            className="absolute inset-0 bg-primary/15 rounded-lg border border-primary/20 shadow-[0_0_12px_rgba(var(--color-primary-rgb),0.2)]"
+                            initial={false}
+                            transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                          />
+                        )}
+                        <span className="relative z-10">{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Search bar for inside-box view */}
+              {view === 'items' && (
+                <div className="flex-1 max-w-xs">
+                  <SearchBar
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    placeholder="Search in this box..."
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Sticky Sort / Filter bar */}
+        {user && (view === 'boxes' || view === 'allItems') && (
+          <div className="sfb-wrapper border-t border-white/5">
+            <div className="sfb-wrapper__inner">
+              <SortFilterBar
+                sortOrder={view === 'boxes' ? boxSortOrder : itemSortOrder}
+                onSortChange={view === 'boxes' ? setBoxSortOrder : setItemSortOrder}
+                selectedTag={view === 'boxes' ? selectedBoxTag : selectedTag}
+                onTagChange={view === 'boxes' ? setSelectedBoxTag : setSelectedTag}
+                tags={allTags}
               />
             </div>
           </div>
         )}
-
-        <div className="container py-3">
-          <div className="flex items-center gap-4">
-            {/* Back button - only when inside a box */}
-            {view === 'items' && (
-              <button onClick={handleBack} className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors shrink-0">
-                <ArrowLeft size={22} />
-              </button>
-            )}
-
-            {/* Logo */}
-            <div
-              className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity shrink-0"
-              onClick={handleBack}
-              title="Go to Home"
-            >
-              <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                <PackageOpen size={22} />
-              </div>
-              {view === 'items' && (
-                <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-                  {currentBox?.name}
-                </h1>
-              )}
-            </div>
-
-            {/* Tab Switcher in header — only on top-level views */}
-            {!currentBox && (
-              <div className="flex bg-slate-900/40 p-1 rounded-xl flex-1 max-w-xs border border-white/10 backdrop-blur-xl shadow-lg ring-1 ring-white/5">
-                {[
-                  { id: 'boxes', label: 'Your Boxes', onClick: handleBack },
-                  { id: 'allItems', label: 'Your Items', onClick: handleListAllItems }
-                ].map(tab => {
-                  const isActive = view === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={tab.onClick}
-                      className={`flex-1 flex items-center justify-center py-2 px-3 text-lg font-bold rounded-lg transition-colors duration-300 relative ${isActive ? 'text-primary' : 'text-slate-400 hover:text-white/90'}`}
-                    >
-                      {isActive && (
-                        <motion.div
-                          layoutId="activeTabPill"
-                          className="absolute inset-0 bg-primary/15 rounded-lg border border-primary/20 shadow-[0_0_12px_rgba(var(--color-primary-rgb),0.2)]"
-                          initial={false}
-                          transition={{ type: "spring", stiffness: 450, damping: 30 }}
-                        />
-                      )}
-                      <span className="relative z-10">{tab.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Search bar for inside-box view */}
-            {view === 'items' && (
-              <div className="flex-1 max-w-xs">
-                <SearchBar
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  placeholder="Search in this box..."
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Sticky Sort / Filter bar – sticks just below the header */}
-      {user && (view === 'boxes' || view === 'allItems') && (
-        <div className="sfb-wrapper" style={{ top: headerHeight }}>
-          <div className="sfb-wrapper__inner">
-            <SortFilterBar
-              sortOrder={view === 'boxes' ? boxSortOrder : itemSortOrder}
-              onSortChange={view === 'boxes' ? setBoxSortOrder : setItemSortOrder}
-              selectedTag={view === 'boxes' ? selectedBoxTag : selectedTag}
-              onTagChange={view === 'boxes' ? setSelectedBoxTag : setSelectedTag}
-              tags={allTags}
-            />
-          </div>
-        </div>
-      )}
+      </div>
 
       {/* Main Content */}
       <main className="container py-8 animate-fade-in">
@@ -1249,7 +1252,7 @@ function App() {
         onConfirm={confirmDialog.onConfirm}
         type={confirmDialog.type}
       />
-    </div>
+    </div >
   );
 }
 
