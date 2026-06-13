@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { Modal } from './Modal';
+import { CameraCaptureModal } from './CameraCaptureModal';
 import { Upload, Trash2, Camera } from 'lucide-react';
 import { resizeImage } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
@@ -10,7 +11,7 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
     const [images, setImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
     const fileInputRef = useRef(null);
-    const cameraInputRef = useRef(null);
+    const [cameraOpen, setCameraOpen] = useState(false);
 
     const draftKey = 'add-box';
 
@@ -51,6 +52,13 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
         setImagePreviews(prev => [...prev, ...newImages]);
 
         if (input) input.value = null;
+    };
+
+    // Append a photo captured by the in-app camera (already a resized base64 URL).
+    const handleCameraCapture = (dataUrl) => {
+        if (!dataUrl) return;
+        setImages(prev => [...prev, dataUrl]);
+        setImagePreviews(prev => [...prev, dataUrl]);
     };
 
     // No need for cleanup effect anymore as we are using base64 strings
@@ -141,21 +149,17 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
 
                     {/* Upload Buttons — split so the camera is always reachable. */}
                     <div className="flex gap-3">
-                        {/* Take Photo: capture launches the camera directly, even on
-                            devices whose OS picker hides it (e.g. ColorOS). Single shot,
-                            so no `multiple`. */}
-                        <label className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-primary hover:bg-slate-800/50 transition-colors">
+                        {/* Take Photo: opens the in-app camera so the page is never
+                            backgrounded — reliable even on low-RAM devices whose OS would
+                            otherwise discard the page during native capture. */}
+                        <button
+                            type="button"
+                            onClick={() => setCameraOpen(true)}
+                            className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-primary hover:bg-slate-800/50 transition-colors"
+                        >
                             <Camera size={28} className="text-slate-500 mb-2" />
                             <span className="text-sm text-slate-400">Take Photo</span>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                capture="environment"
-                                onChange={handleFileChange}
-                                className="hidden"
-                                ref={cameraInputRef}
-                            />
-                        </label>
+                        </button>
                         {/* Gallery: capture-free so the OS shows its lighter multi-select
                             picker (the intentional default — see draftStorage.js). */}
                         <label className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-primary hover:bg-slate-800/50 transition-colors">
@@ -174,6 +178,11 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
                         </label>
                     </div>
                     <p className="text-xs text-slate-500 mt-1">Take a photo or upload from your gallery</p>
+                    <CameraCaptureModal
+                        isOpen={cameraOpen}
+                        onClose={() => setCameraOpen(false)}
+                        onCapture={handleCameraCapture}
+                    />
                 </div>
 
                 <div className="pt-4 flex justify-end gap-3">
