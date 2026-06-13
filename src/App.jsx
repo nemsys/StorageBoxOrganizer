@@ -1075,7 +1075,7 @@ function App() {
 
               {/* Box Info Row */}
               <div className="flex flex-col md:flex-row gap-6 items-start">
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 w-full">
                   <div className="flex items-start justify-between gap-4 mb-6">
                     <div
                       onClick={() => handleEditBox(currentBox)}
