@@ -13,10 +13,11 @@ import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { ImageSlider } from './components/ImageSlider';
 import { TagManagementModal } from './components/TagManagementModal';
 import { SettingsMenu } from './components/SettingsMenu';
+import { OverflowMenu } from './components/OverflowMenu';
 import { ImportProgressModal } from './components/ImportProgressModal';
 import { Toast } from './components/Toast';
 import { ConfirmationDialog } from './components/ConfirmationDialog';
-import { ArrowLeft, PackageOpen, LogOut, Package, Trash2, Calendar, Plus } from 'lucide-react';
+import { ArrowLeft, PackageOpen, LogOut, Package, Edit, Trash2, Calendar, Plus } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -1070,26 +1071,32 @@ function App() {
                       <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">{currentBox.name}</h1>
                       <p className="text-slate-300 text-lg leading-relaxed mt-2 max-w-3xl">{currentBox.description}</p>
                     </div>
-                    <div className="flex gap-2 shrink-0 items-center">
-                      <button
-                        onClick={() => handleRemoveBox(currentBox.id)}
-                        className="flex items-center gap-1.5 px-3 py-2.5 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-all hover:scale-105 active:scale-95"
-                        title="Remove Box (keep items)"
-                        aria-label="Remove Box but keep its items"
-                      >
-                        <LogOut size={20} />
-                        <span className="text-sm font-medium whitespace-nowrap">Keep items</span>
-                      </button>
-                      {/* Divider: separates safe actions from the destructive Delete */}
-                      <div className="w-px h-7 bg-slate-700/70 mx-1" aria-hidden="true" />
-                      <button
-                        onClick={() => handleDeleteBox(currentBox.id)}
-                        className="p-2.5 text-red-400 rounded-xl hover:bg-red-500/20 hover:text-red-300 transition-all hover:scale-105 active:scale-95"
-                        title="Delete Box and Items"
-                        aria-label="Delete Box and its items"
-                      >
-                        <Trash2 size={20} />
-                      </button>
+                    <div className="shrink-0">
+                      <OverflowMenu
+                        label="Box actions"
+                        items={[
+                          {
+                            id: 'edit',
+                            label: 'Edit Box',
+                            icon: <Edit size={20} />,
+                            onClick: () => handleEditBox(currentBox),
+                          },
+                          {
+                            id: 'remove',
+                            label: 'Remove (keep items)',
+                            icon: <LogOut size={20} />,
+                            onClick: () => handleRemoveBox(currentBox.id),
+                          },
+                          { id: 'divider', isDivider: true },
+                          {
+                            id: 'delete',
+                            label: 'Delete Box & Items',
+                            icon: <Trash2 size={20} />,
+                            danger: true,
+                            onClick: () => handleDeleteBox(currentBox.id),
+                          },
+                        ]}
+                      />
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-4 text-sm text-slate-400">
