@@ -12,15 +12,16 @@ export const ConfirmationDialog = ({
 }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
-      <div className="space-y-6">
-        <p className="text-slate-300 text-lg leading-relaxed">
+      <div>
+        <p className="text-slate-300" style={{ lineHeight: 1.6 }}>
           {message}
         </p>
-        
-        <div className="flex gap-3 pt-2">
+
+        <div className="flex gap-3" style={{ marginTop: '1.5rem' }}>
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium transition-colors"
+            className="btn btn-ghost"
+            style={{ flex: 1 }}
           >
             {cancelLabel}
           </button>
@@ -29,11 +30,8 @@ export const ConfirmationDialog = ({
               onConfirm();
               onClose();
             }}
-            className={`flex-1 px-4 py-3 rounded-xl font-bold text-white shadow-lg transition-all active:scale-95 ${
-              type === 'danger' 
-                ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' 
-                : 'bg-primary hover:bg-primary-hover shadow-primary/20'
-            }`}
+            className={`btn ${type === 'danger' ? 'btn-danger' : 'btn-primary'}`}
+            style={{ flex: 1 }}
           >
             {confirmLabel}
           </button>

@@ -127,6 +127,15 @@ textarea {
   background-color: rgba(var(--color-text-rgb), 0.1);
 }
 
+.btn-danger {
+  background-color: var(--color-danger);
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background-color: rgba(var(--color-danger-rgb), 0.85);
+}
+
 .btn-icon {
   padding: 0.5rem;
   border-radius: 50%;
