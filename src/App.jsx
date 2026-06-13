@@ -16,7 +16,7 @@ import { SettingsMenu } from './components/SettingsMenu';
 import { ImportProgressModal } from './components/ImportProgressModal';
 import { Toast } from './components/Toast';
 import { ConfirmationDialog } from './components/ConfirmationDialog';
-import { ArrowLeft, PackageOpen, LogOut, Package, Edit, Trash2, Calendar, Plus } from 'lucide-react';
+import { ArrowLeft, PackageOpen, LogOut, Package, Trash2, Calendar, Plus } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -1057,17 +1057,20 @@ function App() {
               {/* Box Info Row */}
               <div className="flex flex-col md:flex-row gap-6 items-start">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4 mb-2">
-                    <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">{currentBox.name}</h1>
+                  <div className="flex items-start justify-between gap-4 mb-6">
+                    <div
+                      onClick={() => handleEditBox(currentBox)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleEditBox(currentBox); } }}
+                      role="button"
+                      tabIndex={0}
+                      className="flex-1 min-w-0 cursor-pointer rounded-2xl -mx-2 -mt-2 px-2 pt-2 hover:bg-primary/10 transition-colors"
+                      title="Edit Box"
+                      aria-label={`Edit ${currentBox.name}`}
+                    >
+                      <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">{currentBox.name}</h1>
+                      <p className="text-slate-300 text-lg leading-relaxed mt-2 max-w-3xl">{currentBox.description}</p>
+                    </div>
                     <div className="flex gap-2 shrink-0 items-center">
-                      <button
-                        onClick={() => handleEditBox(currentBox)}
-                        className="p-2.5 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-all hover:scale-105 active:scale-95"
-                        title="Edit Box"
-                        aria-label="Edit Box"
-                      >
-                        <Edit size={20} />
-                      </button>
                       <button
                         onClick={() => handleRemoveBox(currentBox.id)}
                         className="flex items-center gap-1.5 px-3 py-2.5 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-all hover:scale-105 active:scale-95"
@@ -1089,7 +1092,6 @@ function App() {
                       </button>
                     </div>
                   </div>
-                  <p className="text-slate-300 text-lg leading-relaxed mb-6 max-w-3xl">{currentBox.description}</p>
                   <div className="flex flex-wrap gap-4 text-sm text-slate-400">
                     <span className="bg-slate-800/50 px-3 py-1.5 rounded-full border border-white/5 flex items-center gap-1.5">
                       <Calendar size={14} className="opacity-60" />
