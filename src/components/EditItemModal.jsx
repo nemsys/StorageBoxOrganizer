@@ -166,7 +166,6 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                         <input
                             type="file"
                             accept="image/*"
-                            capture="environment"
                             multiple
                             onChange={handleFileChange}
                             className="hidden"

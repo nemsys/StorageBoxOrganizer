@@ -138,7 +138,6 @@ export function EditBoxModal({ isOpen, onClose, onSave, box }) {
                         <input
                             type="file"
                             accept="image/*"
-                            capture="environment"
                             multiple
                             onChange={handleFileChange}
                             className="hidden"
