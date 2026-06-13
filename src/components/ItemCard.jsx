@@ -1,5 +1,6 @@
-import { Package, Trash2, Tag, ChevronRight, ZoomIn } from 'lucide-react';
+import { Package, Edit, Trash2, Tag, ChevronRight, ZoomIn } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
+import { OverflowMenu } from './OverflowMenu';
 
 export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageClick, showNavigation = false }) {
     // Prepare images array
@@ -103,16 +104,18 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                         </div>
                     )}
 
-                    {onDelete && (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
-                            className="p-3 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors flex-shrink-0 flex items-center justify-center"
-                            style={{ minWidth: '44px', minHeight: '44px' }}
-                            title="Delete Item"
-                            aria-label="Delete Item"
-                        >
-                            <Trash2 size={16} />
-                        </button>
+                    {(onEdit || onDelete) && (
+                        <div className="flex-shrink-0">
+                            <OverflowMenu
+                                label="Item actions"
+                                buttonClassName="p-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center justify-center"
+                                items={[
+                                    onEdit && { id: 'edit', label: 'Edit Item', icon: <Edit size={18} />, onClick: () => onEdit(item) },
+                                    (onEdit && onDelete) && { id: 'divider', isDivider: true },
+                                    onDelete && { id: 'delete', label: 'Delete Item', icon: <Trash2 size={18} />, danger: true, onClick: () => onDelete(item.id) },
+                                ].filter(Boolean)}
+                            />
+                        </div>
                     )}
                 </div>
 
