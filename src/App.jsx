@@ -1134,14 +1134,30 @@ function App() {
 
 
             {/* Items Grid */}
-            <ItemList
-              items={items.map(item => ({ ...item, boxName: currentBox?.name }))}
-              onAddClick={() => setIsAddItemModalOpen(true)}
-              onDeleteItem={handleDeleteItem}
-              onEditItem={handleEditItem}
-              onImageClick={handleImageClick}
-              showItemNavigation={true}
-            />
+            {items.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center py-16 px-6">
+                <div className="p-4 rounded-full bg-slate-800/60 mb-4">
+                  <Package size={28} className="text-slate-400" />
+                </div>
+                <p className="text-slate-300 text-lg font-medium">No items in this box yet</p>
+                <p className="text-slate-500 text-sm mt-1 mb-5">Add your first item to start tracking what's inside.</p>
+                <button
+                  onClick={() => setIsAddItemModalOpen(true)}
+                  className="btn btn-primary"
+                >
+                  <Plus size={18} />
+                  Add item
+                </button>
+              </div>
+            ) : (
+              <ItemList
+                items={items.map(item => ({ ...item, boxName: currentBox?.name }))}
+                onDeleteItem={handleDeleteItem}
+                onEditItem={handleEditItem}
+                onImageClick={handleImageClick}
+                showItemNavigation={true}
+              />
+            )}
           </>
         )}
 
@@ -1257,7 +1273,7 @@ function App() {
 
       {/* Floating Action Button (FAB) */}
       <AnimatePresence>
-        {user && (view === 'boxes' || view === 'allItems') && (
+        {user && (view === 'boxes' || view === 'allItems' || (view === 'items' && items.length > 0)) && (
           <motion.button
             key="fab"
             initial={{ opacity: 0, scale: 0.5, y: 50 }}
@@ -1268,7 +1284,7 @@ function App() {
             onClick={() => {
               if (view === 'boxes') {
                 setIsAddBoxModalOpen(true);
-              } else if (view === 'allItems') {
+              } else {
                 setIsAddItemModalOpen(true);
               }
             }}
