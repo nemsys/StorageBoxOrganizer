@@ -1273,7 +1273,7 @@ function App() {
 
       {/* Floating Action Button (FAB) */}
       <AnimatePresence>
-        {user && (view === 'boxes' || view === 'allItems' || view === 'items') && (
+        {user && (view === 'boxes' || view === 'allItems' || (view === 'items' && items.length > 0)) && (
           <motion.button
             key="fab"
             initial={{ opacity: 0, scale: 0.5, y: 50 }}
