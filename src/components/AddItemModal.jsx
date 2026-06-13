@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Modal } from './Modal';
-import { Upload, X, Search } from 'lucide-react';
+import { Upload, Trash2, Search } from 'lucide-react';
 import { resizeImage } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
 
@@ -221,10 +221,11 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveImage(index)}
-                                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="absolute top-1.5 right-1.5 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 active:scale-95 transition-transform"
                                             title="Remove image"
+                                            aria-label="Remove image"
                                         >
-                                            <X size={14} />
+                                            <Trash2 size={16} />
                                         </button>
                                     </div>
                                 ))}
