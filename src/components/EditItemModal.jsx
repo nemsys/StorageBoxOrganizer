@@ -80,7 +80,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
         if (typeof askConfirm === 'function') {
             askConfirm({
                 title: 'Remove image?',
-                message: 'This image will be removed from the item. Your changes are not saved until you tap Save Changes.',
+                message: 'This image will be removed from the item.',
                 type: 'danger',
                 onConfirm: () => handleRemoveImage(index)
             });

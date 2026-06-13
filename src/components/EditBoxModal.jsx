@@ -74,7 +74,7 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
         if (typeof askConfirm === 'function') {
             askConfirm({
                 title: 'Remove image?',
-                message: 'This image will be removed from the box. Your changes are not saved until you tap Save Changes.',
+                message: 'This image will be removed from the box.',
                 type: 'danger',
                 onConfirm: () => handleRemoveImage(index)
             });
