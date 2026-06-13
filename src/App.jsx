@@ -24,6 +24,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { formatDate } from './utils/dateUtils';
 import { SortFilterBar } from './components/SortFilterBar';
 import { v4 as uuidv4 } from 'uuid';
+import { loadDraft, saveDraft, clearDraft } from './utils/draftStorage';
 
 const MOCK_BOXES = [
   {
@@ -79,10 +80,14 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [boxSearchQuery, setBoxSearchQuery] = useState('');
 
-  const [isAddBoxModalOpen, setIsAddBoxModalOpen] = useState(false);
-  const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
-  const [editingBox, setEditingBox] = useState(null);
-  const [editingItem, setEditingItem] = useState(null);
+  // Reopen whichever modal was open before a mobile camera-induced page reload.
+  // Initialized synchronously (not via effect) so it isn't clobbered by the
+  // persistence effect below on the first render.
+  const restoredModal = loadDraft('active_modal');
+  const [isAddBoxModalOpen, setIsAddBoxModalOpen] = useState(restoredModal?.kind === 'add-box');
+  const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(restoredModal?.kind === 'add-item');
+  const [editingBox, setEditingBox] = useState(restoredModal?.kind === 'edit-box' ? restoredModal.entity : null);
+  const [editingItem, setEditingItem] = useState(restoredModal?.kind === 'edit-item' ? restoredModal.entity : null);
 
 
   const [itemSortOrder, setItemSortOrder] = useState('newest'); // 'name-asc', 'name-desc', 'newest', 'oldest'
@@ -224,6 +229,19 @@ function App() {
       }
     }
   }, [user, boxes.length]);
+
+  // Persist which modal is open so a mobile camera-induced page reload can
+  // reopen it. The modal itself restores its own form draft (see useModalDraft).
+  useEffect(() => {
+    let descriptor = null;
+    if (isAddBoxModalOpen) descriptor = { kind: 'add-box' };
+    else if (isAddItemModalOpen) descriptor = { kind: 'add-item' };
+    else if (editingItem) descriptor = { kind: 'edit-item', entity: editingItem };
+    else if (editingBox) descriptor = { kind: 'edit-box', entity: editingBox };
+
+    if (descriptor) saveDraft('active_modal', descriptor);
+    else clearDraft('active_modal');
+  }, [isAddBoxModalOpen, isAddItemModalOpen, editingItem, editingBox]);
 
   const refreshData = async () => {
     if (!user) return;

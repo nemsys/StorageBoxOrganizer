@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Modal } from './Modal';
 import { Upload, X, Search } from 'lucide-react';
 import { resizeImage } from '../utils/imageUtils';
+import { useModalDraft, clearDraft } from '../utils/draftStorage';
 
 export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId = '', availableItems = [], availableTags = [], onSelectExisting }) {
     const [mode, setMode] = useState('create'); // 'create' | 'select'
@@ -15,15 +16,45 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
     const [selectedExistingId, setSelectedExistingId] = useState('');
     const fileInputRef = useRef(null);
 
-    // Reset when modal opens
+    const draftKey = 'add-item';
+
+    // Reset transient "select existing" UI when the modal opens. The create-mode
+    // fields (name/description/images/tags/box) are owned by useModalDraft below.
     useEffect(() => {
         if (isOpen) {
             setMode('create');
-            setSelectedBoxId(initialBoxId || '');
             setSearchQuery('');
             setSelectedExistingId('');
         }
-    }, [isOpen, initialBoxId]);
+    }, [isOpen]);
+
+    // Restore the in-progress item (and any captured image) after a mobile
+    // camera-induced page reload, otherwise start from a clean form.
+    useModalDraft(
+        draftKey,
+        isOpen,
+        { name, description, images, tags, selectedBoxId },
+        (draft) => {
+            setName(draft.name || '');
+            setDescription(draft.description || '');
+            setImages(draft.images || []);
+            setImagePreviews(draft.images || []);
+            setTags(draft.tags || '');
+            setSelectedBoxId(draft.selectedBoxId || '');
+        },
+        () => ({
+            name: '',
+            description: '',
+            images: [],
+            tags: '',
+            selectedBoxId: initialBoxId || ''
+        })
+    );
+
+    const handleClose = () => {
+        clearDraft(draftKey);
+        if (typeof onClose === 'function') onClose();
+    };
 
     // Filter items that can be selected (exclude items already in current box)
     const selectableItems = useMemo(() => {
@@ -97,6 +128,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
         setTags('');
         setSelectedBoxId('');
         if (fileInputRef.current) fileInputRef.current.value = null;
+        clearDraft(draftKey);
         if (typeof onClose === 'function') onClose();
     };
 
@@ -107,7 +139,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Add Item">
+        <Modal isOpen={isOpen} onClose={handleClose} title="Add Item">
             {/* Mode Tabs */}
             <div className="flex gap-2 mb-4 border-b border-slate-700">
                 <button
@@ -277,7 +309,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
 
 
                     <div className="pt-4 flex justify-end gap-3">
-                        <button type="button" onClick={onClose} className="btn btn-ghost">Cancel</button>
+                        <button type="button" onClick={handleClose} className="btn btn-ghost">Cancel</button>
                         <button type="submit" className="btn btn-primary">Add Item</button>
                     </div>
                 </form>
@@ -325,13 +357,13 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     </div>
 
                     <div className="pt-4 flex justify-end gap-3">
-                        <button type="button" onClick={onClose} className="btn btn-ghost">Cancel</button>
+                        <button type="button" onClick={handleClose} className="btn btn-ghost">Cancel</button>
                         <button
                             type="button"
                             onClick={() => {
                                 if (selectedExistingId) {
                                     if (onSelectExisting) onSelectExisting(selectedExistingId);
-                                    if (typeof onClose === 'function') onClose();
+                                    handleClose();
                                 }
                             }}
                             disabled={!selectedExistingId}

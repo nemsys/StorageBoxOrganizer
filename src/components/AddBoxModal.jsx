@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Modal } from './Modal';
 import { Upload, X } from 'lucide-react';
 import { resizeImage } from '../utils/imageUtils';
+import { useModalDraft, clearDraft } from '../utils/draftStorage';
 
 export function AddBoxModal({ isOpen, onClose, onAdd }) {
     const [name, setName] = useState('');
@@ -9,6 +10,28 @@ export function AddBoxModal({ isOpen, onClose, onAdd }) {
     const [images, setImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
     const fileInputRef = useRef(null);
+
+    const draftKey = 'add-box';
+
+    // Restore the in-progress box (and any captured image) after a mobile
+    // camera-induced page reload.
+    useModalDraft(
+        draftKey,
+        isOpen,
+        { name, description, images },
+        (draft) => {
+            setName(draft.name || '');
+            setDescription(draft.description || '');
+            setImages(draft.images || []);
+            setImagePreviews(draft.images || []);
+        },
+        () => ({ name: '', description: '', images: [] })
+    );
+
+    const handleClose = () => {
+        clearDraft(draftKey);
+        if (typeof onClose === 'function') onClose();
+    };
 
     const handleFileChange = async (e) => {
         const files = Array.from(e.target.files || []);
@@ -43,11 +66,12 @@ export function AddBoxModal({ isOpen, onClose, onAdd }) {
         setImages([]);
         setImagePreviews([]);
         if (fileInputRef.current) fileInputRef.current.value = null;
+        clearDraft(draftKey);
         if (typeof onClose === 'function') onClose();
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Add New Box">
+        <Modal isOpen={isOpen} onClose={handleClose} title="Add New Box">
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-slate-300 mb-1">Name</label>
@@ -117,7 +141,7 @@ export function AddBoxModal({ isOpen, onClose, onAdd }) {
                 </div>
 
                 <div className="pt-4 flex justify-end gap-3">
-                    <button type="button" onClick={onClose} className="btn btn-ghost">Cancel</button>
+                    <button type="button" onClick={handleClose} className="btn btn-ghost">Cancel</button>
                     <button type="submit" className="btn btn-primary">Create Box</button>
                 </div>
             </form>

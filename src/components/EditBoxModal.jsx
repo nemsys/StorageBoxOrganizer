@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Modal } from './Modal';
 import { Upload, X } from 'lucide-react';
 import { resizeImage } from '../utils/imageUtils';
+import { useModalDraft, clearDraft } from '../utils/draftStorage';
 
 export function EditBoxModal({ isOpen, onClose, onSave, box }) {
     const [name, setName] = useState('');
@@ -10,25 +11,40 @@ export function EditBoxModal({ isOpen, onClose, onSave, box }) {
     const [imagePreviews, setImagePreviews] = useState([]);
     const fileInputRef = useRef(null);
 
-    // Populate form when box changes
-    useEffect(() => {
-        if (box) {
-            setName(box.name || '');
-            setDescription(box.description || '');
+    const draftKey = `edit-box-${box?.id ?? 'unknown'}`;
 
+    // Restore a persisted draft (e.g. after a mobile camera-induced reload),
+    // otherwise populate from the box itself.
+    useModalDraft(
+        draftKey,
+        isOpen,
+        { name, description, images },
+        (draft) => {
+            setName(draft.name || '');
+            setDescription(draft.description || '');
+            setImages(draft.images || []);
+            setImagePreviews(draft.images || []);
+        },
+        () => {
             // Handle both new array format and old single image format
             let initialImages = [];
-            if (box.images && Array.isArray(box.images)) {
+            if (box?.images && Array.isArray(box.images)) {
                 initialImages = box.images;
-            } else if (box.image) {
+            } else if (box?.image) {
                 initialImages = [box.image];
             }
-
-            setImages(initialImages);
-            // For existing images (URLs), previews are just the URLs
-            setImagePreviews(initialImages);
+            return {
+                name: box?.name || '',
+                description: box?.description || '',
+                images: initialImages
+            };
         }
-    }, [box]);
+    );
+
+    const handleClose = () => {
+        clearDraft(draftKey);
+        if (typeof onClose === 'function') onClose();
+    };
 
     const handleFileChange = async (e) => {
         const files = Array.from(e.target.files || []);
@@ -58,11 +74,12 @@ export function EditBoxModal({ isOpen, onClose, onSave, box }) {
         e.preventDefault();
         // Pass updates to parent
         onSave({ name, description, images });
+        clearDraft(draftKey);
         if (typeof onClose === 'function') onClose();
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Edit Box">
+        <Modal isOpen={isOpen} onClose={handleClose} title="Edit Box">
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-slate-300 mb-1">Name</label>
@@ -132,7 +149,7 @@ export function EditBoxModal({ isOpen, onClose, onSave, box }) {
                 </div>
 
                 <div className="pt-4 flex justify-end gap-3">
-                    <button type="button" onClick={onClose} className="btn btn-ghost">Cancel</button>
+                    <button type="button" onClick={handleClose} className="btn btn-ghost">Cancel</button>
                     <button type="submit" className="btn btn-primary">Save Changes</button>
                 </div>
             </form>
