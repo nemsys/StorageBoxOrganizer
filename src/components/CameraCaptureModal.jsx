@@ -104,8 +104,11 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
 
     return createPortal(
         <div className="fixed inset-0 z-[60] bg-black flex flex-col">
-            {/* Top bar */}
-            <div className="flex items-center justify-between p-4 text-white">
+            {/* Top bar — keep clear of the status bar / notch */}
+            <div
+                className="flex items-center justify-between px-4 pb-4 text-white"
+                style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+            >
                 <button
                     type="button"
                     onClick={handleClose}
@@ -140,13 +143,16 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                 )}
             </div>
 
-            {/* Shutter */}
-            <div className="p-6 flex items-center justify-center">
+            {/* Shutter — reserve safe-area room so it clears the gesture nav bar */}
+            <div
+                className="flex items-center justify-center px-6 pt-4"
+                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.5rem)' }}
+            >
                 <button
                     type="button"
                     onClick={handleCapture}
                     disabled={!!error || busy}
-                    className="w-16 h-16 rounded-full bg-white border-4 border-slate-400 disabled:opacity-40 active:scale-95 transition-transform"
+                    className="w-16 h-16 rounded-full bg-white ring-4 ring-white/40 border-4 border-slate-900 disabled:opacity-40 active:scale-95 transition-transform"
                     aria-label="Capture photo"
                 />
             </div>
