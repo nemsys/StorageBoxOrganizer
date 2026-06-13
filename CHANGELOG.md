@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.1.3...v1.2.0) (2026-06-13)
+
+
+### Features
+
+* redesign edit/delete actions with overflow menus ([#2](https://github.com/nemsys/StorageBoxOrganizer/issues/2)) ([a4fb949](https://github.com/nemsys/StorageBoxOrganizer/commit/a4fb949af06c4e077e9df9a71ae96cc6f342c9b5))
+
 ### [1.1.3](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.1.2...v1.1.3) (2026-06-07)
 
 ### [1.1.2](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.1.1...v1.1.2) (2026-06-06)
