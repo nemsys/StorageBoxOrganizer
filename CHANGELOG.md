@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.2](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.2.1...v1.2.2) (2026-06-13)
+
+
+### Bug Fixes
+
+* streamline Box View add affordance (FAB + empty state) ([#4](https://github.com/nemsys/StorageBoxOrganizer/issues/4)) ([9de9cd7](https://github.com/nemsys/StorageBoxOrganizer/commit/9de9cd756a993133397e5151e4683b8588ed9587))
+
 ### [1.2.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.2.0...v1.2.1) (2026-06-13)
 
 ## [1.2.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.1.3...v1.2.0) (2026-06-13)
