@@ -114,7 +114,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
         if (typeof askConfirm === 'function') {
             askConfirm({
                 title: 'Remove image?',
-                message: 'This image will be removed from the item.',
+                message: 'Your changes are not saved until you tap Add Item.',
                 type: 'danger',
                 onConfirm: () => handleRemoveImage(index)
             });

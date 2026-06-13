@@ -61,7 +61,7 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
         if (typeof askConfirm === 'function') {
             askConfirm({
                 title: 'Remove image?',
-                message: 'This image will be removed from the box.',
+                message: 'Your changes are not saved until you tap Create Box.',
                 type: 'danger',
                 onConfirm: () => handleRemoveImage(index)
             });
