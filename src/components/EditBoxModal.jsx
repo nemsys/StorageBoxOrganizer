@@ -4,7 +4,7 @@ import { Upload, Trash2 } from 'lucide-react';
 import { resizeImage } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
 
-export function EditBoxModal({ isOpen, onClose, onSave, box }) {
+export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [images, setImages] = useState([]);
@@ -70,6 +70,19 @@ export function EditBoxModal({ isOpen, onClose, onSave, box }) {
         setImagePreviews(prev => prev.filter((_, i) => i !== index));
     };
 
+    const requestRemoveImage = (index) => {
+        if (typeof askConfirm === 'function') {
+            askConfirm({
+                title: 'Remove image?',
+                message: 'This image will be removed from the box. Your changes are not saved until you tap Save Changes.',
+                type: 'danger',
+                onConfirm: () => handleRemoveImage(index)
+            });
+        } else {
+            handleRemoveImage(index);
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         // Pass updates to parent
@@ -118,8 +131,8 @@ export function EditBoxModal({ isOpen, onClose, onSave, box }) {
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => handleRemoveImage(index)}
-                                        className="absolute top-1.5 right-1.5 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 active:scale-95 transition-transform"
+                                        onClick={() => requestRemoveImage(index)}
+                                        className="img-delete-btn"
                                         title="Remove image"
                                         aria-label="Remove image"
                                     >

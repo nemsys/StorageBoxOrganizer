@@ -4,7 +4,7 @@ import { Upload, Trash2, Search } from 'lucide-react';
 import { resizeImage } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
 
-export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId = '', availableItems = [], availableTags = [], onSelectExisting }) {
+export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId = '', availableItems = [], availableTags = [], onSelectExisting, askConfirm }) {
     const [mode, setMode] = useState('create'); // 'create' | 'select'
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -108,6 +108,19 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
         setImages(prev => prev.filter((_, i) => i !== index));
         setImagePreviews(prev => prev.filter((_, i) => i !== index));
         if (fileInputRef.current) fileInputRef.current.value = null;
+    };
+
+    const requestRemoveImage = (index) => {
+        if (typeof askConfirm === 'function') {
+            askConfirm({
+                title: 'Remove image?',
+                message: 'This image will be removed from the item.',
+                type: 'danger',
+                onConfirm: () => handleRemoveImage(index)
+            });
+        } else {
+            handleRemoveImage(index);
+        }
     };
 
     const handleSubmit = (e) => {
@@ -220,8 +233,8 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                                         />
                                         <button
                                             type="button"
-                                            onClick={() => handleRemoveImage(index)}
-                                            className="absolute top-1.5 right-1.5 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 active:scale-95 transition-transform"
+                                            onClick={() => requestRemoveImage(index)}
+                                            className="img-delete-btn"
                                             title="Remove image"
                                             aria-label="Remove image"
                                         >

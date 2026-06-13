@@ -1178,6 +1178,7 @@ function App() {
         isOpen={isAddBoxModalOpen}
         onClose={() => setIsAddBoxModalOpen(false)}
         onAdd={handleAddBox}
+        askConfirm={askConfirm}
       />
 
       <AddItemModal
@@ -1189,6 +1190,7 @@ function App() {
         availableItems={allItems}
         availableTags={allTags}
         onSelectExisting={handleSelectExistingItem}
+        askConfirm={askConfirm}
       />
 
       <EditBoxModal
@@ -1196,6 +1198,7 @@ function App() {
         onClose={() => setEditingBox(null)}
         onSave={handleUpdateBox}
         box={editingBox}
+        askConfirm={askConfirm}
       />
 
       <EditItemModal
@@ -1205,6 +1208,7 @@ function App() {
         item={editingItem}
         boxes={boxes}
         availableTags={allTags}
+        askConfirm={askConfirm}
       />
 
       <FullscreenImageModal
