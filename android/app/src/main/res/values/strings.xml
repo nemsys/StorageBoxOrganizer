@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Storage Box Organizer</string>
+    <string name="title_activity_main">Storage Box Organizer</string>
+    <string name="package_name">com.nemsys.storageboxorganizer</string>
+    <string name="custom_url_scheme">com.nemsys.storageboxorganizer</string>
+</resources>

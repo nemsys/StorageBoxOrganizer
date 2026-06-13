@@ -1,8 +1,12 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { useBackHandler } from '../native/backHandler';
 
 export function Modal({ isOpen, onClose, title, children }) {
+    // Android hardware back closes the modal (mirrors Escape / the X button).
+    useBackHandler(isOpen, onClose);
+
     useEffect(() => {
         const handleEsc = (e) => {
             if (e.key === 'Escape') onClose();

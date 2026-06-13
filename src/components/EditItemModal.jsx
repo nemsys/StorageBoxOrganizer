@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Modal } from './Modal';
 import { CameraCaptureModal } from './CameraCaptureModal';
+import { usePhotoCapture } from '../native/usePhotoCapture';
 import { Upload, Trash2, Calendar, History, Camera } from 'lucide-react';
 import { resizeImage } from '../utils/imageUtils';
 import { formatDate, formatDateTime } from '../utils/dateUtils';
@@ -14,7 +15,6 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
     const [tags, setTags] = useState('');
     const [selectedBoxId, setSelectedBoxId] = useState('');
     const fileInputRef = useRef(null);
-    const [cameraOpen, setCameraOpen] = useState(false);
 
     const draftKey = `edit-item-${item?.id ?? 'unknown'}`;
 
@@ -74,12 +74,15 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
         if (input) input.value = null;
     };
 
-    // Append a photo captured by the in-app camera (already a resized base64 URL).
+    // Append a captured photo (already a resized base64 URL).
     const handleCameraCapture = (dataUrl) => {
         if (!dataUrl) return;
         setImages(prev => [...prev, dataUrl]);
         setImagePreviews(prev => [...prev, dataUrl]);
     };
+
+    // Native camera on device, in-page getUserMedia camera on web.
+    const { takePhoto, cameraOpen, setCameraOpen } = usePhotoCapture(handleCameraCapture);
 
     // Removed cleanup effect as we don't use blob URLs for new images anymore
 
@@ -190,7 +193,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                             otherwise discard the page during native capture. */}
                         <button
                             type="button"
-                            onClick={() => setCameraOpen(true)}
+                            onClick={takePhoto}
                             className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-primary hover:bg-slate-800/50 transition-colors"
                         >
                             <Camera size={28} className="text-slate-500 mb-2" />

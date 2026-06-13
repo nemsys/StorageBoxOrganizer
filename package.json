@@ -11,9 +11,21 @@
     "preview": "vite preview",
     "backup": "node scripts/backup-firestore.js",
     "import": "node scripts/import-firestore.js",
-    "release": "standard-version"
+    "release": "standard-version",
+    "cap:sync": "vite build && cap sync android",
+    "android:open": "cap open android",
+    "android:run": "cap run android",
+    "android:apk": "vite build && cap sync android && cd android && ./gradlew assembleDebug"
   },
   "dependencies": {
+    "@capacitor/android": "^7.6.6",
+    "@capacitor/app": "^7.1.2",
+    "@capacitor/camera": "^7.0.5",
+    "@capacitor/cli": "^7.6.6",
+    "@capacitor/core": "^7.6.6",
+    "@capacitor/keyboard": "^7.0.6",
+    "@capacitor/splash-screen": "^7.0.5",
+    "@capacitor/status-bar": "^7.0.6",
     "clsx": "^2.1.1",
     "firebase": "^12.6.0",
     "firestore-export-import": "^1.6.0",

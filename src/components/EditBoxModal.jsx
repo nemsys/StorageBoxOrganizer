@@ -4,6 +4,7 @@ import { CameraCaptureModal } from './CameraCaptureModal';
 import { Upload, Trash2, Camera } from 'lucide-react';
 import { resizeImage } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
+import { usePhotoCapture } from '../native/usePhotoCapture';
 
 export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
     const [name, setName] = useState('');
@@ -11,7 +12,6 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
     const [images, setImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
     const fileInputRef = useRef(null);
-    const [cameraOpen, setCameraOpen] = useState(false);
 
     const draftKey = `edit-box-${box?.id ?? 'unknown'}`;
 
@@ -67,12 +67,15 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
         if (input) input.value = null;
     };
 
-    // Append a photo captured by the in-app camera (already a resized base64 URL).
+    // Append a captured photo (already a resized base64 URL).
     const handleCameraCapture = (dataUrl) => {
         if (!dataUrl) return;
         setImages(prev => [...prev, dataUrl]);
         setImagePreviews(prev => [...prev, dataUrl]);
     };
+
+    // Native camera on device, in-page getUserMedia camera on web.
+    const { takePhoto, cameraOpen, setCameraOpen } = usePhotoCapture(handleCameraCapture);
 
     // Removed cleanup effect as we don't use blob URLs for new images anymore
     // Existing URLs are strings and don't need revocation
@@ -162,7 +165,7 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
                             otherwise discard the page during native capture. */}
                         <button
                             type="button"
-                            onClick={() => setCameraOpen(true)}
+                            onClick={takePhoto}
                             className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-primary hover:bg-slate-800/50 transition-colors"
                         >
                             <Camera size={28} className="text-slate-500 mb-2" />

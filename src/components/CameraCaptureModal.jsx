@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, RefreshCw } from 'lucide-react';
 import { resizeImage } from '../utils/imageUtils';
+import { useBackHandler } from '../native/backHandler';
 
 /**
  * In-app camera capture. Streams the device camera into a <video> element and
@@ -79,6 +80,9 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
         stopStream();
         onClose();
     };
+
+    // Android hardware back closes the camera (web fallback overlay).
+    useBackHandler(isOpen, handleClose);
 
     const handleCapture = async () => {
         const video = videoRef.current;

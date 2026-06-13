@@ -907,11 +907,11 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen app-safe-bottom">
       <AuthModal isOpen={!user} onClose={() => { }} />
 
       {/* Global Navigation Wrap */}
-      <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-white/5">
+      <div className="sticky top-0 z-40 app-safe-top bg-slate-900/80 backdrop-blur-md border-b border-white/5">
         {/* Header */}
         <header ref={headerRef}>
           {/* Top Bar - User Info */}

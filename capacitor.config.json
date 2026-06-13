@@ -1,0 +1,20 @@
+{
+  "appId": "com.nemsys.storageboxorganizer",
+  "appName": "Storage Box Organizer",
+  "webDir": "dist",
+  "backgroundColor": "#0f172a",
+  "android": {
+    "backgroundColor": "#0f172a"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "backgroundColor": "#0f172a",
+      "showSpinner": false,
+      "androidSplashResourceName": "splash"
+    },
+    "Keyboard": {
+      "resize": "native"
+    }
+  }
+}

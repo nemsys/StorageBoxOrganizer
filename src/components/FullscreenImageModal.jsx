@@ -1,9 +1,13 @@
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { useBackHandler } from '../native/backHandler';
 
 export function FullscreenImageModal({ isOpen, onClose, imageUrl, images, itemName }) {
     const [currentIndex, setCurrentIndex] = useState(0);
+
+    // Android hardware back closes the fullscreen viewer.
+    useBackHandler(isOpen, onClose);
     const touchStartX = useRef(null);
     const touchStartY = useRef(null);
 

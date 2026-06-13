@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Built Android packages (kept local, not committed)
+*.apk
+*.aab
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -71,6 +71,31 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* ---- Native (Capacitor) app feel --------------------------------------- */
+/* Stop the browser/WebView rubber-band + pull-to-refresh and the long-press
+   callout so the app reads as native. Text remains selectable. env() insets
+   are 0 on normal web, so these rules are inert in the browser. */
+body {
+  overscroll-behavior-y: none;
+  -webkit-touch-callout: none;
+}
+
+/* Pad the sticky header below the status bar / notch, and keep page content
+   clear of the gesture nav bar at the bottom. */
+.app-safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.app-safe-bottom {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* On native, disable the iOS/Android tap highlight on interactive chrome. */
+body.native button,
+body.native a,
+body.native [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
 button {
   cursor: pointer;
   border: none;
