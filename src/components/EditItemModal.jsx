@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Modal } from './Modal';
-import { Upload, X, Calendar, History } from 'lucide-react';
+import { Upload, Trash2, Calendar, History } from 'lucide-react';
 import { resizeImage } from '../utils/imageUtils';
 import { formatDate, formatDateTime } from '../utils/dateUtils';
+import { useModalDraft, clearDraft } from '../utils/draftStorage';
 
-export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], availableTags = [] }) {
+export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], availableTags = [], askConfirm }) {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [images, setImages] = useState([]);
@@ -13,27 +14,44 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
     const [selectedBoxId, setSelectedBoxId] = useState('');
     const fileInputRef = useRef(null);
 
-    // Populate form when item changes
-    useEffect(() => {
-        if (item) {
-            setName(item.name || '');
-            setDescription(item.description || '');
+    const draftKey = `edit-item-${item?.id ?? 'unknown'}`;
 
+    // Populate from a persisted draft (e.g. after a mobile camera-induced reload)
+    // or, failing that, from the item itself. Keeps the unsaved photo and edits.
+    useModalDraft(
+        draftKey,
+        isOpen,
+        { name, description, images, tags, selectedBoxId },
+        (draft) => {
+            setName(draft.name || '');
+            setDescription(draft.description || '');
+            setImages(draft.images || []);
+            setImagePreviews(draft.images || []);
+            setTags(draft.tags || '');
+            setSelectedBoxId(draft.selectedBoxId || '');
+        },
+        () => {
             // Handle both new array format and old single image format
             let initialImages = [];
-            if (item.images && Array.isArray(item.images)) {
+            if (item?.images && Array.isArray(item.images)) {
                 initialImages = item.images;
-            } else if (item.image) {
+            } else if (item?.image) {
                 initialImages = [item.image];
             }
-
-            setImages(initialImages);
-            setImagePreviews(initialImages);
-
-            setTags(item.tags ? item.tags.join(', ') : '');
-            setSelectedBoxId(item.boxId || '');
+            return {
+                name: item?.name || '',
+                description: item?.description || '',
+                images: initialImages,
+                tags: item?.tags ? item.tags.join(', ') : '',
+                selectedBoxId: item?.boxId || ''
+            };
         }
-    }, [item]);
+    );
+
+    const handleClose = () => {
+        clearDraft(draftKey);
+        if (typeof onClose === 'function') onClose();
+    };
 
     const handleFileChange = async (e) => {
         const files = Array.from(e.target.files || []);
@@ -58,6 +76,19 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
         setImagePreviews(prev => prev.filter((_, i) => i !== index));
     };
 
+    const requestRemoveImage = (index) => {
+        if (typeof askConfirm === 'function') {
+            askConfirm({
+                title: 'Remove image?',
+                message: 'Your changes are not saved until you tap Save Changes.',
+                type: 'danger',
+                onConfirm: () => handleRemoveImage(index)
+            });
+        } else {
+            handleRemoveImage(index);
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         // Pass updates to parent
@@ -68,11 +99,12 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
             tags: tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
             boxId: selectedBoxId
         });
+        clearDraft(draftKey);
         if (typeof onClose === 'function') onClose();
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Edit Item">
+        <Modal isOpen={isOpen} onClose={handleClose} title="Edit Item">
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-slate-300 mb-1">Name</label>
@@ -127,11 +159,12 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => handleRemoveImage(index)}
-                                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => requestRemoveImage(index)}
+                                        className="img-delete-btn"
                                         title="Remove image"
+                                        aria-label="Remove image"
                                     >
-                                        <X size={14} />
+                                        <Trash2 size={16} />
                                     </button>
                                 </div>
                             ))}
@@ -147,7 +180,6 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                         <input
                             type="file"
                             accept="image/*"
-                            capture="environment"
                             multiple
                             onChange={handleFileChange}
                             className="hidden"
@@ -229,7 +261,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                 </div>
 
                 <div className="pt-4 flex justify-end gap-3">
-                    <button type="button" onClick={onClose} className="btn btn-ghost">Cancel</button>
+                    <button type="button" onClick={handleClose} className="btn btn-ghost">Cancel</button>
                     <button type="submit" className="btn btn-primary">Save Changes</button>
                 </div>
             </form>
