@@ -1,5 +1,6 @@
 import { Package, Edit, Trash2, Tag, ChevronRight, ZoomIn } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
+import { OverflowMenu } from './OverflowMenu';
 
 export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageClick, showNavigation = false }) {
     // Prepare images array
@@ -83,31 +84,39 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
 
             <div className="p-4 flex flex-col h-28">
                 <div className="flex items-start justify-between gap-2 mb-1">
-                    <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
-                        <p className="text-sm text-slate-300 mb-3 line-clamp-1">{item.description}</p>
-                    </div>
+                    {onEdit ? (
+                        <div
+                            onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onEdit(item); } }}
+                            role="button"
+                            tabIndex={0}
+                            className="flex-1 min-w-0 cursor-pointer rounded-lg -mx-1 -mt-1 px-1 pt-1 hover:bg-primary/10 transition-colors"
+                            title="Edit Item"
+                            aria-label={`Edit ${item.name}`}
+                        >
+                            <h3 className="text-lg font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
+                            <p className="text-sm text-slate-300 mb-3 line-clamp-1">{item.description}</p>
+                        </div>
+                    ) : (
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
+                            <p className="text-sm text-slate-300 mb-3 line-clamp-1">{item.description}</p>
+                        </div>
+                    )}
 
-                    <div className="flex gap-1 flex-shrink-0">
-                        {onEdit && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); onEdit(item); }}
-                                className="p-1.5 text-primary rounded-lg hover:bg-primary/20 transition-colors"
-                                title="Edit Item"
-                            >
-                                <Edit size={14} />
-                            </button>
-                        )}
-                        {onDelete && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
-                                className="p-1.5 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors"
-                                title="Delete Item"
-                            >
-                                <Trash2 size={14} />
-                            </button>
-                        )}
-                    </div>
+                    {(onEdit || onDelete) && (
+                        <div className="flex-shrink-0">
+                            <OverflowMenu
+                                label="Item actions"
+                                buttonClassName="p-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center justify-center"
+                                items={[
+                                    onEdit && { id: 'edit', label: 'Edit Item', icon: <Edit size={18} />, onClick: () => onEdit(item) },
+                                    (onEdit && onDelete) && { id: 'divider', isDivider: true },
+                                    onDelete && { id: 'delete', label: 'Delete Item', icon: <Trash2 size={18} />, danger: true, onClick: () => onDelete(item.id) },
+                                ].filter(Boolean)}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {item.tags && item.tags.length > 0 && (
