@@ -3,6 +3,11 @@
   "appName": "Storage Box Organizer",
   "webDir": "dist",
   "backgroundColor": "#0f172a",
+  "server": {
+    "url": "https://storageboxorganizer-42466.web.app",
+    "androidScheme": "https",
+    "errorPath": "error.html"
+  },
   "android": {
     "backgroundColor": "#0f172a"
   },
