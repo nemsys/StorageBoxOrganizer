@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { resizeImage } from '../utils/imageUtils';
+import { makeDerivatives } from '../utils/imageUtils';
 
 const isNative = Capacitor.isNativePlatform();
 
@@ -13,10 +13,10 @@ const isNative = Capacitor.isNativePlatform();
  * - Web/PWA: falls back to the in-page getUserMedia camera (CameraCaptureModal)
  *   by exposing `cameraOpen` / `setCameraOpen`.
  *
- * Either path yields a resized JPEG base64 data URL passed to `onCapture`,
- * matching the gallery-upload pipeline (max 800px, ~0.7 quality).
+ * Either path yields { thumb, full } derivatives passed to `onCapture`,
+ * matching the gallery-upload pipeline (WebP thumb + full).
  *
- * @param {(dataUrl: string) => void} onCapture
+ * @param {(derivatives: {thumb: string, full: string}) => void} onCapture
  */
 export function usePhotoCapture(onCapture) {
     const [cameraOpen, setCameraOpen] = useState(false);
@@ -38,13 +38,13 @@ export function usePhotoCapture(onCapture) {
                 source: CameraSource.Camera,
             });
             if (!photo || !photo.webPath) return;
-            // Always downscale through the shared pipeline so the stored base64
-            // stays small (Firestore caps documents at ~1MB) and matches gallery
+            // Always downscale through the shared pipeline so the stored bytes
+            // stay small (Firestore caps documents at ~1MB) and match gallery
             // uploads. Some devices ignore the camera's width hint and return a
             // full-resolution photo, which on its own can exceed the limit.
             const blob = await fetch(photo.webPath).then((r) => r.blob());
-            const dataUrl = await resizeImage(blob);
-            if (dataUrl) onCapture(dataUrl);
+            const derivatives = await makeDerivatives(blob);
+            if (derivatives) onCapture(derivatives);
         } catch {
             // User cancelled or denied — nothing to do.
         }

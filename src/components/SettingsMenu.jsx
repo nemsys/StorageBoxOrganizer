@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw } from 'lucide-react';
+import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw, ImageDown } from 'lucide-react';
 
-export const SettingsMenu = ({ onManageTags, onExport, onImport, theme, onToggleTheme, onCheckUpdates }) => {
+export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImages, theme, onToggleTheme, onCheckUpdates }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -61,6 +61,17 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, theme, onToggle
         setIsOpen(false);
       }
     },
+    ...(onOptimizeImages ? [
+      {
+        id: 'optimize-images',
+        label: 'Optimize Images',
+        icon: <ImageDown size={20} />,
+        onClick: () => {
+          onOptimizeImages();
+          setIsOpen(false);
+        }
+      }
+    ] : []),
     ...(onCheckUpdates ? [
       {
         id: 'divider-3',

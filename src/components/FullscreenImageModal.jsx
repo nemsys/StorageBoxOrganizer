@@ -1,38 +1,76 @@
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useBackHandler } from '../native/backHandler';
+import { firebaseStorage } from '../services/firebaseStorage';
 
-export function FullscreenImageModal({ isOpen, onClose, imageUrl, images, itemName }) {
+/**
+ * Fullscreen image viewer.
+ *
+ * Receives image refs ({ id?, thumb, full? }). The thumbnail renders instantly
+ * as a placeholder while the full-resolution image for the current slide is
+ * fetched on demand (cache-first via firebaseStorage.getFullImage) and swapped
+ * in. Legacy refs that already carry `full` inline skip the fetch.
+ */
+export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName }) {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [fullMap, setFullMap] = useState({}); // index -> resolved full data URL
+    const [loading, setLoading] = useState(false);
 
     // Android hardware back closes the fullscreen viewer.
     useBackHandler(isOpen, onClose);
     const touchStartX = useRef(null);
     const touchStartY = useRef(null);
 
-    // Determine which images to display
-    const displayImages = images && images.length > 0 ? images : (imageUrl ? [imageUrl] : []);
-    const showNavigation = displayImages.length > 1;
+    const refs = Array.isArray(imageRefs) ? imageRefs.filter(Boolean) : [];
+    const showNavigation = refs.length > 1;
 
     const goToPrevious = useCallback(() => {
-        setCurrentIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
-    }, [displayImages.length]);
+        setCurrentIndex((prev) => (prev === 0 ? refs.length - 1 : prev - 1));
+    }, [refs.length]);
 
     const goToNext = useCallback(() => {
-        setCurrentIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1));
-    }, [displayImages.length]);
+        setCurrentIndex((prev) => (prev === refs.length - 1 ? 0 : prev + 1));
+    }, [refs.length]);
 
-    // Lock scroll + reset index on open
+    // Lock scroll + reset state on open
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
             setCurrentIndex(0);
+            setFullMap({});
         } else {
             document.body.style.overflow = 'unset';
         }
         return () => { document.body.style.overflow = 'unset'; };
     }, [isOpen]);
+
+    // Resolve the full-resolution image for the current slide on demand.
+    useEffect(() => {
+        if (!isOpen) return;
+        const ref = refs[currentIndex];
+        if (!ref) return;
+        if (fullMap[currentIndex]) return; // already resolved
+
+        // Legacy/import refs carry the full inline — use directly.
+        if (ref.full) {
+            setFullMap((m) => ({ ...m, [currentIndex]: ref.full }));
+            return;
+        }
+        if (!ref.id) return; // nothing to fetch; thumb stays
+
+        let cancelled = false;
+        setLoading(true);
+        firebaseStorage.getFullImage(ref.id)
+            .then((full) => {
+                if (cancelled) return;
+                if (full) setFullMap((m) => ({ ...m, [currentIndex]: full }));
+            })
+            .finally(() => { if (!cancelled) setLoading(false); });
+
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, currentIndex, refs.length]);
 
     // Keyboard navigation
     useEffect(() => {
@@ -66,7 +104,11 @@ export function FullscreenImageModal({ isOpen, onClose, imageUrl, images, itemNa
         touchStartY.current = null;
     };
 
-    if (!isOpen || displayImages.length === 0) return null;
+    if (!isOpen || refs.length === 0) return null;
+
+    const currentRef = refs[currentIndex] || {};
+    const currentSrc = fullMap[currentIndex] || currentRef.thumb;
+    const showSpinner = loading && !fullMap[currentIndex];
 
     return createPortal(
         <div
@@ -92,11 +134,18 @@ export function FullscreenImageModal({ isOpen, onClose, imageUrl, images, itemNa
                 onTouchEnd={handleTouchEnd}
             >
                 <img
-                    src={displayImages[currentIndex]}
+                    src={currentSrc}
                     alt={itemName}
                     className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl select-none"
                     draggable={false}
                 />
+
+                {/* Loading spinner while the full-res image is fetched */}
+                {showSpinner && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <Loader2 size={36} className="text-white/80 animate-spin" />
+                    </div>
+                )}
 
                 {/* Navigation — buttons sit INSIDE the image area, never off-screen */}
                 {showNavigation && (
@@ -119,12 +168,12 @@ export function FullscreenImageModal({ isOpen, onClose, imageUrl, images, itemNa
 
                         {/* Counter */}
                         <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-slate-900/80 text-white text-xs md:text-sm px-3 py-1 rounded-full backdrop-blur-sm pointer-events-none">
-                            {currentIndex + 1} / {displayImages.length}
+                            {currentIndex + 1} / {refs.length}
                         </div>
 
                         {/* Dot indicators */}
                         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                            {displayImages.map((_, i) => (
+                            {refs.map((_, i) => (
                                 <button
                                     key={i}
                                     onClick={(e) => { e.stopPropagation(); setCurrentIndex(i); }}

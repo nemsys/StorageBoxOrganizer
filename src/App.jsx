@@ -22,6 +22,7 @@ import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { formatDate } from './utils/dateUtils';
+import { getImageRefs, refsToThumbs, makeDerivatives } from './utils/imageUtils';
 import { SortFilterBar } from './components/SortFilterBar';
 import { checkForUpdate, applyUpdate } from './native/updates';
 import { v4 as uuidv4 } from 'uuid';
@@ -98,7 +99,7 @@ function App() {
   const [selectedBoxTag, setSelectedBoxTag] = useState('');
 
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
-  const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, url: '', name: '' });
+  const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, refs: [], name: '' });
   const [toasts, setToasts] = useState([]);
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
@@ -332,25 +333,43 @@ function App() {
     window.history.pushState({ view: 'boxes' }, '', '#');
   };
 
-  // Handle Adding Box
+  // Turn a modal's image list into lightweight refs ({id, thumb}) stored on the
+  // entity. New captures ({thumb, full}) get a full-res doc written to the
+  // `images` collection; existing refs ({id, thumb}) are kept as-is; legacy
+  // full-only entries are re-derived into a proper thumb/full pair.
+  const persistImageRefs = async (modalImages, ownerType, ownerId) => {
+    const refs = [];
+    for (const img of (modalImages || [])) {
+      if (!img) continue;
+      if (img.id) {
+        refs.push({ id: img.id, thumb: img.thumb });
+        continue;
+      }
+      let { thumb, full } = img;
+      if (!full) full = thumb;
+      if (!full) continue;
+      if (!thumb || thumb === full) {
+        const d = await makeDerivatives(full);
+        if (d) ({ thumb, full } = d);
+      }
+      const ref = await firebaseStorage.saveImage({ thumb, full }, { ownerType, ownerId });
+      refs.push(ref);
+    }
+    return refs;
+  };
+
   // Handle Adding Box
   const handleAddBox = async (payload) => {
     try {
-      let imageUrls = [];
-      if (payload.images && payload.images.length > 0) {
-        // Upload all images
-        const uploadPromises = payload.images.map(image =>
-          firebaseStorage.uploadImage(image, 'boxes')
-        );
-        imageUrls = await Promise.all(uploadPromises);
-      }
+      const id = uuidv4();
+      const refs = await persistImageRefs(payload.images, 'box', id);
 
       const newBox = {
-        id: uuidv4(),
+        id,
         name: payload.name,
         description: payload.description,
-        images: imageUrls,
-        image: imageUrls.length > 0 ? imageUrls[0] : null, // Backward compatibility
+        images: refs,
+        image: refs[0]?.thumb || null, // Backward compatibility (thumb)
         createdAt: Date.now()
       };
       // Persist to Firebase
@@ -367,21 +386,15 @@ function App() {
   // Handle Adding Item
   const handleAddItem = async (payload) => {
     try {
-      let imageUrls = [];
-      if (payload.images && payload.images.length > 0) {
-        // Upload all images
-        const uploadPromises = payload.images.map(image =>
-          firebaseStorage.uploadImage(image, 'items')
-        );
-        imageUrls = await Promise.all(uploadPromises);
-      }
+      const id = uuidv4();
+      const refs = await persistImageRefs(payload.images, 'item', id);
 
       const newItem = {
-        id: uuidv4(),
+        id,
         name: payload.name,
         description: payload.description,
-        images: imageUrls,
-        image: imageUrls.length > 0 ? imageUrls[0] : null, // Backward compatibility
+        images: refs,
+        image: refs[0]?.thumb || null, // Backward compatibility (thumb)
         tags: payload.tags || [],
         boxId: payload.boxId || '',
         createdAt: Date.now()
@@ -520,24 +533,19 @@ function App() {
     if (!editingBox) return;
 
     try {
-      // Process images if they exist
       let processedUpdates = { ...updates };
 
       if (updates.images && Array.isArray(updates.images)) {
-        // Separate File objects from URLs
-        const imageUrls = [];
-        for (const img of updates.images) {
-          if (img instanceof File) {
-            // Upload new image
-            const url = await firebaseStorage.uploadImage(img, 'boxes');
-            imageUrls.push(url);
-          } else {
-            // Keep existing URL
-            imageUrls.push(img);
-          }
-        }
-        processedUpdates.images = imageUrls;
-        processedUpdates.image = imageUrls.length > 0 ? imageUrls[0] : null;
+        // Save any new captures, keep existing refs, then prune image docs the
+        // user removed during the edit.
+        const refs = await persistImageRefs(updates.images, 'box', editingBox.id);
+        const oldIds = getImageRefs(editingBox).map(r => r.id).filter(Boolean);
+        const newIds = refs.map(r => r.id).filter(Boolean);
+        const removed = oldIds.filter(id => !newIds.includes(id));
+        if (removed.length) await firebaseStorage.deleteImagesByIds(removed);
+
+        processedUpdates.images = refs;
+        processedUpdates.image = refs[0]?.thumb || null;
       }
 
       // Optimistic update
@@ -578,40 +586,20 @@ function App() {
     if (!editingItem) return;
 
     try {
-      let imageUrls = editingItem.images || (editingItem.image ? [editingItem.image] : []);
-
-      // If new images are provided (File objects), upload them
-      // Note: payload.images contains the final list of images (some might be URLs, some Files)
-      if (payload.images) {
-        const newImageUrls = [];
-        for (const img of payload.images) {
-          if (img instanceof File) {
-            const url = await firebaseStorage.uploadImage(img, 'items');
-            newImageUrls.push(url);
-          } else {
-            newImageUrls.push(img);
-          }
-        }
-        imageUrls = newImageUrls;
-      }
-
-      const updatedItem = {
-        ...editingItem,
-        name: payload.name,
-        description: payload.description,
-        images: imageUrls,
-        image: imageUrls.length > 0 ? imageUrls[0] : null, // Backward compatibility
-        tags: payload.tags || [],
-        boxId: payload.boxId || ''
-      };
+      // Save new captures, keep existing refs, prune removed image docs.
+      const refs = await persistImageRefs(payload.images, 'item', editingItem.id);
+      const oldIds = getImageRefs(editingItem).map(r => r.id).filter(Boolean);
+      const newIds = refs.map(r => r.id).filter(Boolean);
+      const removed = oldIds.filter(id => !newIds.includes(id));
+      if (removed.length) await firebaseStorage.deleteImagesByIds(removed);
 
       // Persist to Firebase
       // We pass the fields that changed. internal logic in updateItem handles merging.
       const persistedItem = await firebaseStorage.updateItem(editingItem.id, {
         name: payload.name,
         description: payload.description,
-        images: imageUrls,
-        image: imageUrls.length > 0 ? imageUrls[0] : null,
+        images: refs,
+        image: refs[0]?.thumb || null,
         tags: payload.tags || [],
         boxId: payload.boxId || ''
       });
@@ -681,15 +669,15 @@ function App() {
     }
   };
 
-  // Handle Fullscreen Image
-  const handleImageClick = (images, itemName) => {
-    // If a single string is passed (legacy), wrap it in an array
-    const imageList = Array.isArray(images) ? images : [images];
-    setFullscreenImage({ isOpen: true, url: imageList[0], images: imageList, name: itemName });
+  // Handle Fullscreen Image. Receives image refs ({id?, thumb, full?}); the
+  // viewer renders thumbs immediately and fetches full-res on demand.
+  const handleImageClick = (refs, itemName) => {
+    const list = Array.isArray(refs) ? refs : [refs];
+    setFullscreenImage({ isOpen: true, refs: list, name: itemName });
   };
 
   const handleCloseFullscreenImage = () => {
-    setFullscreenImage({ isOpen: false, url: '', images: [], name: '' });
+    setFullscreenImage({ isOpen: false, refs: [], name: '' });
   };
 
   // Data Import/Export Handlers
@@ -698,9 +686,20 @@ function App() {
       const boxesData = await firebaseStorage.getBoxes();
       const itemsData = await firebaseStorage.getAllItems();
 
+      // Hydrate full-size images (now stored separately) back into each entity
+      // so the backup is self-contained and restorable.
+      const hydrate = async (entity) => {
+        const refs = getImageRefs(entity);
+        const images = await Promise.all(refs.map(async (r) => ({
+          thumb: r.thumb,
+          full: r.full || (r.id ? await firebaseStorage.getFullImage(r.id) : r.thumb),
+        })));
+        return { ...entity, images, image: images[0]?.thumb || null };
+      };
+
       const backupData = {
-        boxes: boxesData,
-        items: itemsData,
+        boxes: await Promise.all(boxesData.map(hydrate)),
+        items: await Promise.all(itemsData.map(hydrate)),
         exportedAt: new Date().toISOString()
       };
 
@@ -721,6 +720,31 @@ function App() {
 
   const handleImportButtonClick = () => {
     fileInputRef.current?.click();
+  };
+
+  // One-tap migration of any legacy inline images into the split thumb/full
+  // layout. Safe to run repeatedly; already-optimised entities are skipped.
+  const handleOptimizeImages = () => {
+    askConfirm({
+      title: 'Optimize images?',
+      message: 'This converts older photos to the faster thumbnail + on-demand format. It may take a moment and is safe to run again later.',
+      type: 'primary',
+      onConfirm: async () => {
+        setImportState({ isImporting: true, progress: 0, phase: 'Scanning…', current: 0, total: 0 });
+        try {
+          const converted = await firebaseStorage.optimizeImages((p) => {
+            setImportState(prev => ({ ...prev, progress: p.progress, phase: p.phase, current: p.current, total: p.total }));
+          });
+          setImportState(prev => ({ ...prev, isImporting: false }));
+          addToast(converted > 0 ? `Optimized ${converted} item${converted === 1 ? '' : 's'}` : 'Everything is already optimized', 'success');
+          refreshData();
+        } catch (err) {
+          console.error('Optimize images failed:', err);
+          setImportState(prev => ({ ...prev, isImporting: false }));
+          addToast('Failed to optimize images', 'error');
+        }
+      }
+    });
   };
 
   const handleFileImport = async (event) => {
@@ -951,6 +975,7 @@ function App() {
                   onManageTags={() => setIsTagManagementModalOpen(true)}
                   onExport={handleExportData}
                   onImport={handleImportButtonClick}
+                  onOptimizeImages={handleOptimizeImages}
                   theme={theme}
                   onToggleTheme={toggleTheme}
                   onCheckUpdates={handleCheckForUpdates}
@@ -1080,13 +1105,13 @@ function App() {
               {/* Image Banner */}
               <div className="w-full h-48 md:h-64 bg-slate-800 rounded-3xl shadow-2xl border border-slate-700/50 overflow-hidden relative mb-6 group">
                 <ImageSlider
-                  images={currentBox.images && currentBox.images.length > 0 ? currentBox.images : (currentBox.image ? [currentBox.image] : [])}
+                  images={refsToThumbs(getImageRefs(currentBox))}
                   alt={currentBox.name}
-                  onImageClick={handleImageClick}
+                  onImageClick={() => handleImageClick(getImageRefs(currentBox), currentBox.name)}
                   className="w-full h-full"
                   fit="cover"
                 />
-                {(!currentBox.images || currentBox.images.length === 0) && !currentBox.image && (
+                {getImageRefs(currentBox).length === 0 && (
                   <div className="absolute inset-0 flex items-center justify-center text-slate-600">
                     <Package size={64} />
                   </div>
@@ -1252,8 +1277,7 @@ function App() {
       <FullscreenImageModal
         isOpen={fullscreenImage.isOpen}
         onClose={handleCloseFullscreenImage}
-        imageUrl={fullscreenImage.url}
-        images={fullscreenImage.images}
+        imageRefs={fullscreenImage.refs}
         itemName={fullscreenImage.name}
       />
       <TagManagementModal

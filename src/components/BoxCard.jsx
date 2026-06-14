@@ -1,14 +1,11 @@
 import { Package, ZoomIn } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
+import { getImageRefs, refsToThumbs } from '../utils/imageUtils';
 
 export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
-    // Prepare images array
-    let displayImages = [];
-    if (box.images && Array.isArray(box.images) && box.images.length > 0) {
-        displayImages = box.images;
-    } else if (box.image) {
-        displayImages = [box.image];
-    }
+    // Browse from inline thumbnails; full-res is fetched on demand (fullscreen).
+    const imageRefs = getImageRefs(box);
+    const displayImages = refsToThumbs(imageRefs);
 
     const hasImages = displayImages.length > 0;
 
@@ -41,7 +38,7 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
                     <div
                         onClick={(e) => {
                             e.stopPropagation(); // prevent card navigation
-                            onImageClick(displayImages, box.name);
+                            onImageClick(imageRefs, box.name);
                         }}
                         className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         style={{ background: 'rgba(0,0,0,0.35)', cursor: 'zoom-in' }}

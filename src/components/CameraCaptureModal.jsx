@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, RefreshCw } from 'lucide-react';
-import { resizeImage } from '../utils/imageUtils';
+import { makeDerivatives } from '../utils/imageUtils';
 import { useBackHandler } from '../native/backHandler';
 
 /**
@@ -13,7 +13,7 @@ import { useBackHandler } from '../native/backHandler';
  * Props:
  *   isOpen     - whether the camera is shown
  *   onClose    - called when the user cancels
- *   onCapture  - called with a base64 data URL of the captured (resized) photo
+ *   onCapture  - called with { thumb, full } derivatives of the captured photo
  */
 export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
     const videoRef = useRef(null);
@@ -94,9 +94,9 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
             const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.9));
-            // Reuse the shared resize/compress pipeline so output matches gallery uploads.
-            const dataUrl = await resizeImage(blob);
-            onCapture(dataUrl);
+            // Reuse the shared pipeline so output (thumb + full) matches gallery uploads.
+            const derivatives = await makeDerivatives(blob);
+            onCapture(derivatives);
             handleClose();
         } catch {
             setError('Failed to capture the photo. Please try again.');

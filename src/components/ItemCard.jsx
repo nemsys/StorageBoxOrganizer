@@ -1,15 +1,12 @@
 import { Package, Edit, Trash2, Tag, ChevronRight, ZoomIn } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 import { OverflowMenu } from './OverflowMenu';
+import { getImageRefs, refsToThumbs } from '../utils/imageUtils';
 
 export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageClick, showNavigation = false }) {
-    // Prepare images array
-    let displayImages = [];
-    if (item.images && Array.isArray(item.images) && item.images.length > 0) {
-        displayImages = item.images;
-    } else if (item.image) {
-        displayImages = [item.image];
-    }
+    // Browse from inline thumbnails; full-res is fetched on demand (fullscreen).
+    const imageRefs = getImageRefs(item);
+    const displayImages = refsToThumbs(imageRefs);
     return (
         <div className="card flex flex-col h-full relative group">
             {/* Image Area */}
@@ -23,7 +20,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                 <ImageSlider
                     images={displayImages}
                     alt={item.name}
-                    onImageClick={onImageClick && displayImages.length > 0 ? () => onImageClick(displayImages, item.name, item) : undefined}
+                    onImageClick={onImageClick && displayImages.length > 0 ? () => onImageClick(imageRefs, item.name, item) : undefined}
                     className="absolute inset-0 w-full h-full"
                     showNavigation={showNavigation}
                     fit="cover"
@@ -39,7 +36,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                     <div
                         onClick={(e) => {
                             e.stopPropagation();
-                            onImageClick(displayImages, item.name);
+                            onImageClick(imageRefs, item.name);
                         }}
                         className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         style={{ background: 'rgba(0,0,0,0.35)', cursor: 'zoom-in' }}

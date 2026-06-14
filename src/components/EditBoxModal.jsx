@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { Modal } from './Modal';
 import { CameraCaptureModal } from './CameraCaptureModal';
 import { Upload, Trash2, Camera } from 'lucide-react';
-import { resizeImage } from '../utils/imageUtils';
+import { makeDerivatives, getImageRefs, refsToThumbs } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
 import { usePhotoCapture } from '../native/usePhotoCapture';
 
@@ -25,22 +25,14 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
             setName(draft.name || '');
             setDescription(draft.description || '');
             setImages(draft.images || []);
-            setImagePreviews(draft.images || []);
+            setImagePreviews(refsToThumbs(draft.images || []));
         },
-        () => {
-            // Handle both new array format and old single image format
-            let initialImages = [];
-            if (box?.images && Array.isArray(box.images)) {
-                initialImages = box.images;
-            } else if (box?.image) {
-                initialImages = [box.image];
-            }
-            return {
-                name: box?.name || '',
-                description: box?.description || '',
-                images: initialImages
-            };
-        }
+        () => ({
+            name: box?.name || '',
+            description: box?.description || '',
+            // Refs ({id, thumb}) for existing images; new captures append {thumb, full}.
+            images: getImageRefs(box)
+        })
     );
 
     const handleClose = () => {
@@ -55,23 +47,21 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
         const files = Array.from(input.files || []);
         if (files.length === 0) return;
 
-        // Resize and get base64 for each file
-        const newImages = await Promise.all(
-            files.map(file => resizeImage(file))
-        );
+        // Build thumb + full derivatives for each file.
+        const derived = (await Promise.all(files.map(file => makeDerivatives(file)))).filter(Boolean);
 
-        // Add new images to existing ones
-        setImages(prev => [...prev, ...newImages]);
-        setImagePreviews(prev => [...prev, ...newImages]);
+        // Add new images (objects {thumb, full}) to existing ones.
+        setImages(prev => [...prev, ...derived]);
+        setImagePreviews(prev => [...prev, ...derived.map(d => d.thumb)]);
 
         if (input) input.value = null;
     };
 
-    // Append a captured photo (already a resized base64 URL).
-    const handleCameraCapture = (dataUrl) => {
-        if (!dataUrl) return;
-        setImages(prev => [...prev, dataUrl]);
-        setImagePreviews(prev => [...prev, dataUrl]);
+    // Append a captured photo (already { thumb, full } derivatives).
+    const handleCameraCapture = (derivatives) => {
+        if (!derivatives) return;
+        setImages(prev => [...prev, derivatives]);
+        setImagePreviews(prev => [...prev, derivatives.thumb]);
     };
 
     // Native camera on device, in-page getUserMedia camera on web.
