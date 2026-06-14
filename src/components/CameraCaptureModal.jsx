@@ -108,9 +108,10 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
 
     return createPortal(
         <div className="fixed inset-0 z-[60] bg-black flex flex-col">
-            {/* Top bar — keep clear of the status bar / notch */}
+            {/* Top bar — keep clear of the status bar / notch. shrink-0 so it
+                always keeps its height and never gets squeezed by the preview. */}
             <div
-                className="flex items-center justify-between px-4 pb-4 text-white"
+                className="shrink-0 flex items-center justify-between px-4 pb-4 text-white"
                 style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
             >
                 <button
@@ -132,8 +133,11 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                 </button>
             </div>
 
-            {/* Preview */}
-            <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+            {/* Preview — min-h-0 is essential: without it the <video>'s intrinsic
+                (camera-resolution) height expands this flex item and pushes the
+                shutter off-screen on some devices. min-h-0 lets it shrink to the
+                space left after the fixed top bar + shutter. */}
+            <div className="flex-1 min-h-0 relative flex items-center justify-center overflow-hidden">
                 {error ? (
                     <p className="p-6 text-center text-slate-300 max-w-sm">{error}</p>
                 ) : (
@@ -147,9 +151,10 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                 )}
             </div>
 
-            {/* Shutter — reserve safe-area room so it clears the gesture nav bar */}
+            {/* Shutter — shrink-0 so it always keeps its height/visibility;
+                reserve safe-area room so it clears the gesture nav bar. */}
             <div
-                className="flex items-center justify-center px-6 pt-4"
+                className="shrink-0 flex items-center justify-center px-6 pt-4"
                 style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.5rem)' }}
             >
                 <button
