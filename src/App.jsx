@@ -1013,8 +1013,8 @@ function App() {
               {!currentBox && (
                 <div className="flex bg-base/40 p-1 rounded-xl flex-1 max-w-xs border border-content/25 backdrop-blur-xl shadow-lg ring-1 ring-content/5">
                   {[
-                    { id: 'boxes', label: 'Your Boxes', onClick: handleBack },
-                    { id: 'allItems', label: 'Your Items', onClick: handleListAllItems }
+                    { id: 'boxes', label: 'Boxes', onClick: handleBack },
+                    { id: 'allItems', label: 'Items', onClick: handleListAllItems }
                   ].map(tab => {
                     const isActive = view === tab.id;
                     return (
@@ -1076,7 +1076,7 @@ function App() {
           <>
             {/* Title + count */}
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-content">Your Boxes</h2>
+              <h2 className="text-lg font-semibold text-content">Boxes</h2>
               <span className="text-muted text-sm">{filteredBoxes.length} boxes</span>
             </div>
             {/* Search */}
@@ -1213,7 +1213,7 @@ function App() {
           <>
             {/* Title + count */}
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-content">Your Items</h2>
+              <h2 className="text-lg font-semibold text-content">Items</h2>
               <span className="text-muted text-sm">{allItemsDisplayItems.length} items</span>
             </div>
             {/* Search */}
