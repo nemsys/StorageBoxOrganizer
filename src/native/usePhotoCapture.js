@@ -1,54 +1,40 @@
 import { useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { makeDerivatives } from '../utils/imageUtils';
 
 const isNative = Capacitor.isNativePlatform();
 
 /**
  * Unified "take a photo" entry point used by every image modal.
  *
- * - Native (Capacitor): uses the real device camera via @capacitor/camera. The
- *   capture happens in a native activity, so the WebView is never discarded and
- *   the photo is reliably returned — fixing the low-RAM page-discard bug.
- * - Web/PWA: falls back to the in-page getUserMedia camera (CameraCaptureModal)
- *   by exposing `cameraOpen` / `setCameraOpen`.
+ * Capture is done **in-page** via the getUserMedia camera (`CameraCaptureModal`)
+ * on every platform — native and web alike.
  *
- * Either path yields { thumb, full } derivatives passed to `onCapture`,
- * matching the gallery-upload pipeline (WebP thumb + full).
+ * Why not the native `@capacitor/camera`? On the native build it launches the
+ * device's separate camera *app*, which backgrounds our WebView. Aggressive
+ * OEMs (notably ColorOS / OPPO) then reclaim the WebView's renderer child
+ * process; the WebView reports `onRenderProcessGone` and — historically —
+ * killed the whole app, bouncing the user to the home screen and losing the
+ * in-flight photo. Capturing inside the page never backgrounds the app, so the
+ * renderer is never reaped and the photo is produced in-process and saved
+ * reliably. (A native `onRenderProcessGone` handler in MainActivity now also
+ * guards against renderer loss from any *other* backgrounding, e.g. the gallery
+ * picker — defence in depth.)
+ *
+ * The in-page camera yields { thumb, full } derivatives via `onCapture`,
+ * matching the gallery-upload pipeline.
  *
  * @param {(derivatives: {thumb: string, full: string}) => void} onCapture
  */
 export function usePhotoCapture(onCapture) {
+    // Kept in the signature for API compatibility with the modals; onCapture is
+    // wired through <CameraCaptureModal onCapture=...>.
+    void onCapture;
     const [cameraOpen, setCameraOpen] = useState(false);
 
-    const takePhoto = useCallback(async () => {
-        if (!isNative) {
-            setCameraOpen(true);
-            return;
-        }
-        try {
-            const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera');
-            const photo = await Camera.getPhoto({
-                quality: 90,
-                allowEditing: false,
-                correctOrientation: true,
-                // Uri is lighter than DataUrl (no huge base64 across the bridge),
-                // which lowers memory pressure on low-RAM devices.
-                resultType: CameraResultType.Uri,
-                source: CameraSource.Camera,
-            });
-            if (!photo || !photo.webPath) return;
-            // Always downscale through the shared pipeline so the stored bytes
-            // stay small (Firestore caps documents at ~1MB) and match gallery
-            // uploads. Some devices ignore the camera's width hint and return a
-            // full-resolution photo, which on its own can exceed the limit.
-            const blob = await fetch(photo.webPath).then((r) => r.blob());
-            const derivatives = await makeDerivatives(blob);
-            if (derivatives) onCapture(derivatives);
-        } catch {
-            // User cancelled or denied — nothing to do.
-        }
-    }, [onCapture]);
+    const takePhoto = useCallback(() => {
+        // Always use the in-page camera so the WebView is never backgrounded.
+        setCameraOpen(true);
+    }, []);
 
     return { isNative, takePhoto, cameraOpen, setCameraOpen };
 }
