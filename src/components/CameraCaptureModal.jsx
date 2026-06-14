@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, RefreshCw } from 'lucide-react';
+import { X, RefreshCw, Loader2 } from 'lucide-react';
 import { makeDerivatives } from '../utils/imageUtils';
 import { useBackHandler } from '../native/backHandler';
 
@@ -21,6 +21,10 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
     const [facingMode, setFacingMode] = useState('environment');
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
+    // True once the stream is actually rendering frames. Until then we cover the
+    // <video> (which briefly shows the WebView's default play-poster icon) with
+    // a loading spinner.
+    const [ready, setReady] = useState(false);
 
     const stopStream = () => {
         if (streamRef.current) {
@@ -36,8 +40,16 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
         if (!isOpen) return;
         let cancelled = false;
 
+        // Reset transient capture state every time the camera (re)opens. The
+        // modal component stays mounted across opens (it just renders null when
+        // closed), so without this a previous successful capture would leave
+        // `busy` stuck true and disable the shutter on the next open — exactly
+        // the "second photo does nothing" bug.
+        setBusy(false);
+        setError('');
+        setReady(false);
+
         (async () => {
-            setError('');
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode },
@@ -52,6 +64,18 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                     videoRef.current.srcObject = stream;
                     videoRef.current.play().catch(() => {});
                 }
+                // Warm up the WebView's image encoders once on open. The first
+                // JPEG/WebP encode after page load is slow (codec init), which
+                // made the first capture stall for seconds with no feedback;
+                // priming with a tiny throwaway encode makes the real capture
+                // fast. Fire-and-forget.
+                try {
+                    const warm = document.createElement('canvas');
+                    warm.width = warm.height = 8;
+                    warm.getContext('2d').fillRect(0, 0, 8, 8);
+                    warm.toDataURL('image/webp', 0.7);
+                    warm.toBlob(() => {}, 'image/jpeg', 0.9);
+                } catch { /* best-effort */ }
             } catch (err) {
                 if (cancelled) return;
                 setError(
@@ -86,16 +110,35 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
 
     const handleCapture = async () => {
         const video = videoRef.current;
-        if (!video || !video.videoWidth) return;
+        if (!video || busy) return;
         setBusy(true);
         try {
+            // The first tap right after opening can land before the <video>
+            // reports its dimensions (metadata not parsed yet), even when a
+            // frame is already visible. Wait for it instead of silently
+            // no-opping, so a single tap always captures.
+            if (!video.videoWidth) {
+                await new Promise((resolve) => {
+                    let settled = false;
+                    const done = () => { if (!settled) { settled = true; resolve(); } };
+                    video.addEventListener('loadeddata', done, { once: true });
+                    setTimeout(done, 2000); // safety net
+                });
+            }
+            if (!video.videoWidth) {
+                setError('Camera is still starting — please tap again.');
+                setBusy(false);
+                return;
+            }
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.9));
-            // Reuse the shared pipeline so output (thumb + full) matches gallery uploads.
-            const derivatives = await makeDerivatives(blob);
+            // Encode the frame to a data URL and run it through the shared
+            // pipeline (thumb + full), matching gallery uploads. toDataURL is
+            // synchronous, avoiding the toBlob callback that could stall.
+            const frame = canvas.toDataURL('image/jpeg', 0.9);
+            const derivatives = await makeDerivatives(frame);
             onCapture(derivatives);
             handleClose();
         } catch {
@@ -149,8 +192,20 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                         autoPlay
                         playsInline
                         muted
+                        onPlaying={() => setReady(true)}
                         className="w-full h-full object-contain"
                     />
+                )}
+
+                {/* Loading / capturing spinner. Shown while the camera is
+                    starting (covers the WebView's default video play-poster) and
+                    while a captured frame encodes, so the UI never looks broken
+                    or unresponsive. Opaque before the first frame, translucent
+                    over the live preview during capture. */}
+                {!error && (busy || !ready) && (
+                    <div className={`absolute inset-0 flex items-center justify-center pointer-events-none ${ready ? 'bg-black/40' : 'bg-black'}`}>
+                        <Loader2 size={44} className="animate-spin text-white" />
+                    </div>
                 )}
             </div>
 
