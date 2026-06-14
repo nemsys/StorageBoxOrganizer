@@ -137,7 +137,10 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                 (camera-resolution) height expands this flex item and pushes the
                 shutter off-screen on some devices. min-h-0 lets it shrink to the
                 space left after the fixed top bar + shutter. */}
-            <div className="flex-1 min-h-0 relative flex items-center justify-center overflow-hidden">
+            <div
+                className="flex-1 relative flex items-center justify-center overflow-hidden"
+                style={{ minHeight: 0 }}
+            >
                 {error ? (
                     <p className="p-6 text-center text-slate-300 max-w-sm">{error}</p>
                 ) : (
@@ -161,8 +164,20 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                     type="button"
                     onClick={handleCapture}
                     disabled={!!error || busy}
-                    className="w-16 h-16 rounded-full bg-white ring-4 ring-white/40 border-4 border-slate-900 disabled:opacity-40 active:scale-95 transition-transform"
                     aria-label="Capture photo"
+                    className="active:scale-95"
+                    style={{
+                        width: '4.5rem',
+                        height: '4.5rem',
+                        borderRadius: '9999px',
+                        backgroundColor: '#ffffff',
+                        border: '4px solid #0f172a',
+                        // Outer white ring (replaces the undefined ring-* utilities).
+                        boxShadow: '0 0 0 4px rgba(255,255,255,0.45)',
+                        opacity: (!!error || busy) ? 0.4 : 1,
+                        cursor: 'pointer',
+                        transition: 'transform 0.1s ease',
+                    }}
                 />
             </div>
         </div>,
