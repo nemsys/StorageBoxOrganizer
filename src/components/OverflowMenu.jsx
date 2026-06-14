@@ -71,7 +71,7 @@ export const OverflowMenu = ({ items = [], align = 'right', label = 'More action
     <div ref={triggerRef} style={{ display: 'inline-block' }}>
       <button
         onClick={(e) => { e.stopPropagation(); setIsOpen((v) => !v); }}
-        className={buttonClassName || 'p-2.5 rounded-xl text-slate-300 hover:bg-slate-700 hover:text-white transition-all hover:scale-105 active:scale-95'}
+        className={buttonClassName || 'p-2.5 rounded-xl text-muted hover:bg-elevated hover:text-content transition-all hover:scale-105 active:scale-95'}
         title={label}
         aria-label={label}
         aria-haspopup="menu"
@@ -91,11 +91,11 @@ export const OverflowMenu = ({ items = [], align = 'right', label = 'More action
               transition={{ duration: 0.1, ease: 'easeOut' }}
               role="menu"
               style={{ position: 'fixed', zIndex: 1000, ...positionStyle }}
-              className="w-52 py-2 bg-slate-950 border border-white/10 rounded-xl shadow-2xl overflow-hidden"
+              className="w-52 py-2 bg-base border border-content/25 rounded-xl shadow-2xl overflow-hidden"
             >
               {items.map((item) => (
                 item.isDivider ? (
-                  <div key={item.id} className="border-b border-white/5 my-1" />
+                  <div key={item.id} className="border-b border-content/15 my-1" />
                 ) : (
                   <button
                     key={item.id}
@@ -103,11 +103,11 @@ export const OverflowMenu = ({ items = [], align = 'right', label = 'More action
                     role="menuitem"
                     className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left group ${
                       item.danger
-                        ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
-                        : 'text-slate-300 hover:text-white hover:bg-white/10'
+                        ? 'text-danger hover:text-danger/80 hover:bg-danger/10'
+                        : 'text-muted hover:text-content hover:bg-elevated'
                     }`}
                   >
-                    <span className={item.danger ? 'text-red-400' : 'text-slate-500 group-hover:text-primary transition-colors'}>
+                    <span className={item.danger ? 'text-danger' : 'text-content/50 group-hover:text-primary transition-colors'}>
                       {item.icon}
                     </span>
                     <span className="whitespace-nowrap font-medium">{item.label}</span>

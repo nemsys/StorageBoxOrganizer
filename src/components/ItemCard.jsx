@@ -11,7 +11,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
         <div className="card flex flex-col h-full relative group">
             {/* Image Area */}
             <div
-                className="w-full bg-slate-800 relative group overflow-hidden"
+                className="w-full bg-surface relative group overflow-hidden"
                 style={{
                     aspectRatio: '4 / 3',
                     height: 'auto'
@@ -26,7 +26,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                     fit="cover"
                 />
                 {displayImages.length === 0 && (
-                    <div className="w-full h-full flex items-center justify-center text-slate-600">
+                    <div className="w-full h-full flex items-center justify-center text-content/40">
                         <Package size={48} />
                     </div>
                 )}
@@ -44,14 +44,14 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                         role="button"
                         aria-label={`View ${item.name} image fullscreen`}
                     >
-                        <div className="p-2 bg-slate-900/70 rounded-full backdrop-blur-sm">
-                            <ZoomIn size={22} className="text-white" />
+                        <div className="p-2 bg-base/70 rounded-full backdrop-blur-sm">
+                            <ZoomIn size={22} className="text-content" />
                         </div>
                     </div>
                 )}
 
                 {/* Overlay Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-base via-transparent to-transparent opacity-60 pointer-events-none" />
 
                 {/* Option A — Pill Badge (in-box view: boxName present, no navigation) */}
                 {boxName && !onBoxClick && (
@@ -91,13 +91,13 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                             title="Edit Item"
                             aria-label={`Edit ${item.name}`}
                         >
-                            <h3 className="text-lg font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
-                            <p className="text-sm text-slate-300 mb-3 line-clamp-1">{item.description}</p>
+                            <h3 className="text-lg font-bold text-content whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
+                            <p className="text-sm text-muted mb-3 line-clamp-1">{item.description}</p>
                         </div>
                     ) : (
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
-                            <p className="text-sm text-slate-300 mb-3 line-clamp-1">{item.description}</p>
+                            <h3 className="text-lg font-bold text-content whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
+                            <p className="text-sm text-muted mb-3 line-clamp-1">{item.description}</p>
                         </div>
                     )}
 
@@ -105,7 +105,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                         <div className="flex-shrink-0">
                             <OverflowMenu
                                 label="Item actions"
-                                buttonClassName="p-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center justify-center"
+                                buttonClassName="p-3 rounded-lg text-muted hover:bg-elevated hover:text-content transition-colors flex items-center justify-center"
                                 items={[
                                     onEdit && { id: 'edit', label: 'Edit Item', icon: <Edit size={18} />, onClick: () => onEdit(item) },
                                     (onEdit && onDelete) && { id: 'divider', isDivider: true },
@@ -119,7 +119,7 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                 {item.tags && item.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-auto">
                         {item.tags.map((tag, i) => (
-                            <span key={i} className="text-xs px-2 py-1 rounded-full bg-slate-700 text-slate-300 flex items-center gap-1">
+                            <span key={i} className="text-xs px-2 py-1 rounded-full bg-elevated text-muted flex items-center gap-1">
                                 <Tag size={10} /> {tag}
                             </span>
                         ))}

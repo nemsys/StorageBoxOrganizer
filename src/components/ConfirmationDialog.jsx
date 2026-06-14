@@ -13,7 +13,7 @@ export const ConfirmationDialog = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
       <div>
-        <p className="text-slate-300" style={{ lineHeight: 1.6 }}>
+        <p className="text-muted" style={{ lineHeight: 1.6 }}>
           {message}
         </p>
 

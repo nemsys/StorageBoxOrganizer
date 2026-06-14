@@ -12,11 +12,11 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
     return (
         <div
             onClick={() => { if (typeof onClick === 'function') onClick(box); }}
-            className="card group cursor-pointer flex flex-col h-full relative overflow-hidden bg-slate-900"
+            className="card group cursor-pointer flex flex-col h-full relative overflow-hidden bg-base"
         >
             {/* Image Area */}
             <div
-                className="w-full bg-slate-800 relative overflow-hidden"
+                className="w-full bg-surface relative overflow-hidden"
                 style={{ aspectRatio: '1 / 1', height: 'auto' }}
             >
                 <ImageSlider
@@ -28,7 +28,7 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
                 />
 
                 {!hasImages && (
-                    <div className="absolute inset-0 flex items-center justify-center text-slate-600">
+                    <div className="absolute inset-0 flex items-center justify-center text-content/40">
                         <Package size={48} />
                     </div>
                 )}
@@ -46,8 +46,8 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
                         role="button"
                         aria-label={`View ${box.name} image fullscreen`}
                     >
-                        <div className="p-2 bg-slate-900/70 rounded-full backdrop-blur-sm">
-                            <ZoomIn size={22} className="text-white" />
+                        <div className="p-2 bg-base/70 rounded-full backdrop-blur-sm">
+                            <ZoomIn size={22} className="text-content" />
                         </div>
                     </div>
                 )}
@@ -81,10 +81,10 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
             </div>
 
             <div className="p-3 flex flex-col flex-1">
-                <h3 className="text-base font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis mb-1 group-hover:text-primary transition-colors">
+                <h3 className="text-base font-bold text-content whitespace-nowrap overflow-hidden text-ellipsis mb-1 group-hover:text-primary transition-colors">
                     {box.name}
                 </h3>
-                <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                <p className="text-xs text-muted line-clamp-2 leading-relaxed">
                     {box.description || 'No description'}
                 </p>
             </div>

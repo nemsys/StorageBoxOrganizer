@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
 // Unique id for this build; exposed to the app as __BUILD_ID__ and written to
 // dist/version.json so the running app can detect when a newer deploy exists.
@@ -12,6 +13,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    tailwindcss(),
     {
       name: 'emit-version-json',
       apply: 'build',

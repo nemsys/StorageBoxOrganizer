@@ -11,7 +11,7 @@ export const ImportProgressModal = ({ isOpen, progress, phase, current, total })
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+            className="absolute inset-0 bg-base/80 backdrop-blur-md"
           />
 
           {/* Modal Container */}
@@ -19,7 +19,7 @@ export const ImportProgressModal = ({ isOpen, progress, phase, current, total })
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl p-8 shadow-2xl overflow-hidden"
+            className="relative w-full max-w-md bg-base border border-content/25 rounded-2xl p-8 shadow-2xl overflow-hidden"
           >
             {/* Background Accent */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/0 via-primary to-primary/0" />
@@ -36,16 +36,16 @@ export const ImportProgressModal = ({ isOpen, progress, phase, current, total })
                       <UploadCloud size={32} className="text-primary" />
                     </motion.div>
                   ) : (
-                    <CheckCircle2 size={32} className="text-green-400" />
+                    <CheckCircle2 size={32} className="text-success" />
                   )}
                 </div>
               </div>
 
               <div className="space-y-2 w-full">
-                <h3 className="text-xl font-bold text-white tracking-tight">
+                <h3 className="text-xl font-bold text-content tracking-tight">
                   {progress < 100 ? 'Importing Your Data' : 'Import Complete'}
                 </h3>
-                <p className="text-slate-400 text-sm font-medium">
+                <p className="text-muted text-sm font-medium">
                   {phase}
                 </p>
               </div>
@@ -53,15 +53,15 @@ export const ImportProgressModal = ({ isOpen, progress, phase, current, total })
               {/* Progress Section */}
               <div className="w-full space-y-3">
                 <div className="flex justify-between items-end">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-content/50 uppercase tracking-wider">
                     Overall Progress
                   </span>
-                  <span className="text-sm font-bold text-white tabular-nums">
+                  <span className="text-sm font-bold text-content tabular-nums">
                     {progress}%
                   </span>
                 </div>
                 
-                <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 p-0.5">
+                <div className="h-3 w-full bg-elevated rounded-full overflow-hidden border border-content/15 p-0.5">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
@@ -71,16 +71,16 @@ export const ImportProgressModal = ({ isOpen, progress, phase, current, total })
                 </div>
 
                 <div className="flex justify-center items-center gap-4 pt-2">
-                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5">
-                      <Boxes size={14} className="text-slate-400" />
-                      <span className="text-xs font-medium text-slate-300">
+                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-elevated border border-content/15">
+                      <Boxes size={14} className="text-muted" />
+                      <span className="text-xs font-medium text-muted">
                         {current} of {total} items
                       </span>
                    </div>
                 </div>
               </div>
 
-              <p className="text-[11px] text-slate-500 italic mt-2">
+              <p className="text-[11px] text-content/50 italic mt-2">
                 Please do not close your browser until the process is finished.
               </p>
             </div>

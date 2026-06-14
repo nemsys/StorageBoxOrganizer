@@ -945,7 +945,7 @@ function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-base flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
       </div>
     );
@@ -956,21 +956,21 @@ function App() {
       <AuthModal isOpen={!user} onClose={() => { }} />
 
       {/* Global Navigation Wrap */}
-      <div className="sticky top-0 z-40 app-safe-top bg-slate-900/80 backdrop-blur-md border-b border-white/5">
+      <div className="sticky top-0 z-40 app-safe-top bg-base/80 backdrop-blur-md border-b border-content/15">
         {/* Header */}
         <header ref={headerRef}>
           {/* Top Bar - User Info */}
           {user && (
-            <div className="bg-slate-950/50 border-b border-white/5 py-1.5 px-4">
+            <div className="bg-base/50 border-b border-content/15 py-1.5 px-4">
               <div className="container flex justify-end items-center gap-4">
-                <span className="text-xs text-slate-400">Signed in as <span className="text-white font-medium ml-1">{user.email}</span></span>
+                <span className="text-xs text-muted">Signed in as <span className="text-content font-medium ml-1">{user.email}</span></span>
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-1 text-xs text-slate-400 hover:text-red-400 transition-colors"
+                  className="flex items-center gap-1 text-xs text-muted hover:text-danger transition-colors"
                 >
                   <LogOut size={12} /> Sign Out
                 </button>
-                <div className="w-px h-3 bg-white/10 mx-1"></div>
+                <div className="w-px h-3 bg-elevated mx-1"></div>
                 <SettingsMenu
                   onManageTags={() => setIsTagManagementModalOpen(true)}
                   onExport={handleExportData}
@@ -988,7 +988,7 @@ function App() {
             <div className="flex items-center gap-4">
               {/* Back button - only when inside a box */}
               {view === 'items' && (
-                <button onClick={handleBack} className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors shrink-0">
+                <button onClick={handleBack} className="p-2 rounded-lg hover:bg-elevated text-muted hover:text-content transition-colors shrink-0">
                   <ArrowLeft size={22} />
                 </button>
               )}
@@ -1003,7 +1003,7 @@ function App() {
                   <PackageOpen size={22} />
                 </div>
                 {view === 'items' && (
-                  <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                  <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-content to-muted">
                     {currentBox?.name}
                   </h1>
                 )}
@@ -1011,7 +1011,7 @@ function App() {
 
               {/* Tab Switcher in header — only on top-level views */}
               {!currentBox && (
-                <div className="flex bg-slate-900/40 p-1 rounded-xl flex-1 max-w-xs border border-white/10 backdrop-blur-xl shadow-lg ring-1 ring-white/5">
+                <div className="flex bg-base/40 p-1 rounded-xl flex-1 max-w-xs border border-content/25 backdrop-blur-xl shadow-lg ring-1 ring-content/5">
                   {[
                     { id: 'boxes', label: 'Your Boxes', onClick: handleBack },
                     { id: 'allItems', label: 'Your Items', onClick: handleListAllItems }
@@ -1021,7 +1021,7 @@ function App() {
                       <button
                         key={tab.id}
                         onClick={tab.onClick}
-                        className={`flex-1 flex items-center justify-center py-2 px-3 text-lg font-bold rounded-lg transition-colors duration-300 relative ${isActive ? 'text-primary' : 'text-slate-400 hover:text-white/90'}`}
+                        className={`flex-1 flex items-center justify-center py-2 px-3 text-lg font-bold rounded-lg transition-colors duration-300 relative ${isActive ? 'text-primary' : 'text-muted hover:text-content/90'}`}
                       >
                         {isActive && (
                           <motion.div
@@ -1054,7 +1054,7 @@ function App() {
 
         {/* Sticky Sort / Filter bar */}
         {user && (view === 'boxes' || view === 'allItems') && (
-          <div className="sfb-wrapper border-t border-white/5">
+          <div className="sfb-wrapper border-t border-content/15">
             <div className="sfb-wrapper__inner">
               <SortFilterBar
                 sortOrder={view === 'boxes' ? boxSortOrder : itemSortOrder}
@@ -1076,8 +1076,8 @@ function App() {
           <>
             {/* Title + count */}
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">Your Boxes</h2>
-              <span className="text-slate-400 text-sm">{filteredBoxes.length} boxes</span>
+              <h2 className="text-lg font-semibold text-content">Your Boxes</h2>
+              <span className="text-muted text-sm">{filteredBoxes.length} boxes</span>
             </div>
             {/* Search */}
             <div className="mb-6">
@@ -1103,7 +1103,7 @@ function App() {
             {/* Box Header */}
             <div className="mb-8 animate-fade-in">
               {/* Image Banner */}
-              <div className="w-full h-48 md:h-64 bg-slate-800 rounded-3xl shadow-2xl border border-slate-700/50 overflow-hidden relative mb-6 group">
+              <div className="w-full h-48 md:h-64 bg-surface rounded-3xl shadow-2xl border border-border/50 overflow-hidden relative mb-6 group">
                 <ImageSlider
                   images={refsToThumbs(getImageRefs(currentBox))}
                   alt={currentBox.name}
@@ -1112,12 +1112,12 @@ function App() {
                   fit="cover"
                 />
                 {getImageRefs(currentBox).length === 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center text-slate-600">
+                  <div className="absolute inset-0 flex items-center justify-center text-content/40">
                     <Package size={64} />
                   </div>
                 )}
                 {/* Visual gradient overlay to make the banner feel more integrated */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-t from-base/60 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
 
               {/* Box Info Row */}
@@ -1133,8 +1133,8 @@ function App() {
                       title="Edit Box"
                       aria-label={`Edit ${currentBox.name}`}
                     >
-                      <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">{currentBox.name}</h1>
-                      <p className="text-slate-300 text-lg leading-relaxed mt-2 max-w-3xl">{currentBox.description}</p>
+                      <h1 className="text-4xl md:text-5xl font-bold text-content tracking-tight">{currentBox.name}</h1>
+                      <p className="text-muted text-lg leading-relaxed mt-2 max-w-3xl">{currentBox.description}</p>
                     </div>
                     <div className="shrink-0">
                       <OverflowMenu
@@ -1164,12 +1164,12 @@ function App() {
                       />
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-4 text-sm text-slate-400">
-                    <span className="bg-slate-800/50 px-3 py-1.5 rounded-full border border-white/5 flex items-center gap-1.5">
+                  <div className="flex flex-wrap gap-4 text-sm text-muted">
+                    <span className="bg-surface/50 px-3 py-1.5 rounded-full border border-content/15 flex items-center gap-1.5">
                       <Calendar size={14} className="opacity-60" />
                       Created: {formatDate(currentBox.createdAt)}
                     </span>
-                    <span className="bg-slate-800/50 px-3 py-1.5 rounded-full border border-white/5 flex items-center gap-1.5">
+                    <span className="bg-surface/50 px-3 py-1.5 rounded-full border border-content/15 flex items-center gap-1.5">
                       <Package size={14} className="opacity-60" />
                       {items.length} items
                     </span>
@@ -1183,11 +1183,11 @@ function App() {
             {/* Items Grid */}
             {items.length === 0 ? (
               <div className="flex flex-col items-center justify-center text-center py-16 px-6">
-                <div className="p-4 rounded-full bg-slate-800/60 mb-4">
-                  <Package size={28} className="text-slate-400" />
+                <div className="p-4 rounded-full bg-surface/60 mb-4">
+                  <Package size={28} className="text-muted" />
                 </div>
-                <p className="text-slate-300 text-lg font-medium">No items in this box yet</p>
-                <p className="text-slate-500 text-sm mt-1 mb-5">Add your first item to start tracking what's inside.</p>
+                <p className="text-muted text-lg font-medium">No items in this box yet</p>
+                <p className="text-content/50 text-sm mt-1 mb-5">Add your first item to start tracking what's inside.</p>
                 <button
                   onClick={() => setIsAddItemModalOpen(true)}
                   className="btn btn-primary"
@@ -1213,8 +1213,8 @@ function App() {
           <>
             {/* Title + count */}
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">Your Items</h2>
-              <span className="text-slate-400 text-sm">{allItemsDisplayItems.length} items</span>
+              <h2 className="text-lg font-semibold text-content">Your Items</h2>
+              <span className="text-muted text-sm">{allItemsDisplayItems.length} items</span>
             </div>
             {/* Search */}
             <div className="mb-6">

@@ -86,19 +86,19 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
         <Modal isOpen={isOpen} onClose={onClose} title="Manage Tags">
             <div className="space-y-4">
                 {tagCounts.length > 0 && (
-                    <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                        <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                    <div className="flex items-center justify-between pb-2 border-b border-content/15">
+                        <span className="text-xs font-medium text-muted uppercase tracking-wider">
                             {tagCounts.length} {tagCounts.length === 1 ? 'tag' : 'tags'} found
                         </span>
                         <div className="flex items-center gap-2">
-                             <span className="text-xs text-slate-500">Sort by:</span>
+                             <span className="text-xs text-content/50">Sort by:</span>
                              <select
                                 value={tagSortOrder}
                                 onChange={(e) => setTagSortOrder(e.target.value)}
-                                className="bg-slate-800 border border-slate-700/50 rounded-lg px-2 py-1 text-xs text-white cursor-pointer hover:bg-slate-700 transition-colors outline-none focus:ring-1 focus:ring-primary/50"
+                                className="bg-surface border border-border/50 rounded-lg px-2 py-1 text-xs text-content cursor-pointer hover:bg-elevated transition-colors outline-none focus:ring-1 focus:ring-primary/50"
                              >
-                                <option value="alpha" className="bg-slate-900 text-white">Alphabetical</option>
-                                <option value="count" className="bg-slate-900 text-white">Item Count</option>
+                                <option value="alpha" className="bg-base text-content">Alphabetical</option>
+                                <option value="count" className="bg-base text-content">Item Count</option>
                              </select>
                         </div>
                     </div>
@@ -106,11 +106,11 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
 
                 {tagCounts.length === 0 ? (
                     <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/5">
-                            <Tag size={32} className="text-slate-500" />
+                        <div className="w-16 h-16 bg-surface/50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-content/15">
+                            <Tag size={32} className="text-content/50" />
                         </div>
-                        <p className="text-slate-400">No tags found in your inventory.</p>
-                        <p className="text-xs text-slate-500 mt-1">Tags you add to items will appear here.</p>
+                        <p className="text-muted">No tags found in your inventory.</p>
+                        <p className="text-xs text-content/50 mt-1">Tags you add to items will appear here.</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-white/5">
@@ -124,7 +124,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                                                 type="text"
                                                 value={editingTag.newName}
                                                 onChange={(e) => setEditingTag({ ...editingTag, newName: e.target.value })}
-                                                className="input py-1.5 text-sm flex-1 bg-slate-800/50 border-primary/30"
+                                                className="input py-1.5 text-sm flex-1 bg-surface/50 border-primary/30"
                                                 disabled={isProcessing}
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') handleConfirmRename();
@@ -134,7 +134,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                                             <div className="flex items-center gap-1">
                                                 <button 
                                                     onClick={handleConfirmRename}
-                                                    className="p-1.5 text-green-500 hover:bg-green-500/10 rounded-md transition-colors"
+                                                    className="p-1.5 text-success hover:bg-success/10 rounded-md transition-colors"
                                                     disabled={isProcessing}
                                                     title="Confirm rename"
                                                 >
@@ -142,7 +142,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                                                 </button>
                                                 <button 
                                                     onClick={handleCancelRename}
-                                                    className="p-1.5 text-slate-400 hover:bg-white/10 rounded-md transition-colors"
+                                                    className="p-1.5 text-muted hover:bg-elevated rounded-md transition-colors"
                                                     disabled={isProcessing}
                                                     title="Cancel"
                                                 >
@@ -152,8 +152,8 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                                         </div>
                                     ) : (
                                         <>
-                                            <span className="text-slate-100 font-medium truncate">{tag}</span>
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-400 px-2 py-0.5 rounded-md border border-white/5 shrink-0">
+                                            <span className="text-content font-medium truncate">{tag}</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-surface text-muted px-2 py-0.5 rounded-md border border-content/15 shrink-0">
                                                 {count} {count === 1 ? 'item' : 'items'}
                                             </span>
                                         </>
@@ -164,7 +164,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
                                         <button 
                                             onClick={() => handleStartRename(tag)}
-                                            className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors outline-none focus:ring-2 focus:ring-primary/50"
+                                            className="p-2 text-muted hover:text-content hover:bg-elevated rounded-lg transition-colors outline-none focus:ring-2 focus:ring-primary/50"
                                             title="Rename tag"
                                             disabled={isProcessing}
                                         >
@@ -172,7 +172,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                                         </button>
                                         <button 
                                             onClick={() => handleDelete(tag, count)}
-                                            className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors outline-none focus:ring-2 focus:ring-red-500/50"
+                                            className="p-2 text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors outline-none focus:ring-2 focus:ring-danger/50"
                                             title="Delete tag"
                                             disabled={isProcessing}
                                         >
@@ -187,10 +187,10 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
             </div>
             
             {isProcessing && (
-                <div className="absolute inset-0 bg-slate-950 flex items-center justify-center rounded-xl z-50 pointer-events-auto">
-                    <div className="bg-slate-900 border border-white/10 p-4 rounded-2xl shadow-2xl flex items-center gap-3">
+                <div className="absolute inset-0 bg-base flex items-center justify-center rounded-xl z-50 pointer-events-auto">
+                    <div className="bg-base border border-content/25 p-4 rounded-2xl shadow-2xl flex items-center gap-3">
                         <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                        <span className="text-sm font-medium text-slate-200">Updating items...</span>
+                        <span className="text-sm font-medium text-content/90">Updating items...</span>
                     </div>
                 </div>
             )}

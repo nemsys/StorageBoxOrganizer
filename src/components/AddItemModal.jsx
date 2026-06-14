@@ -167,13 +167,13 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
     return (
         <Modal isOpen={isOpen} onClose={handleClose} title="Add Item">
             {/* Mode Tabs */}
-            <div className="flex gap-2 mb-4 border-b border-slate-700">
+            <div className="flex gap-2 mb-4 border-b border-border">
                 <button
                     type="button"
                     onClick={() => setMode('create')}
                     className={`px-4 py-2 font-medium transition-colors ${mode === 'create'
                         ? 'text-primary border-b-2 border-primary'
-                        : 'text-slate-400 hover:text-slate-200'
+                        : 'text-muted hover:text-content/90'
                         }`}
                 >
                     Create New
@@ -183,7 +183,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     onClick={() => setMode('select')}
                     className={`px-4 py-2 font-medium transition-colors ${mode === 'select'
                         ? 'text-primary border-b-2 border-primary'
-                        : 'text-slate-400 hover:text-slate-200'
+                        : 'text-muted hover:text-content/90'
                         }`}
                 >
                     Select Existing
@@ -194,7 +194,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
             {mode === 'create' && (
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Name</label>
+                        <label className="block text-sm font-medium text-muted mb-1">Name</label>
                         <input
                             type="text"
                             required
@@ -206,7 +206,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Box</label>
+                        <label className="block text-sm font-medium text-muted mb-1">Box</label>
                         <select
                             value={selectedBoxId}
                             onChange={(e) => setSelectedBoxId(e.target.value)}
@@ -222,7 +222,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
+                        <label className="block text-sm font-medium text-muted mb-1">Description</label>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -232,7 +232,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Images</label>
+                        <label className="block text-sm font-medium text-muted mb-1">Images</label>
 
                         {/* Image Previews Grid */}
                         {imagePreviews.length > 0 && (
@@ -266,16 +266,16 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                             <button
                                 type="button"
                                 onClick={takePhoto}
-                                className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-primary hover:bg-slate-800/50 transition-colors"
+                                className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-surface/50 transition-colors"
                             >
-                                <Camera size={28} className="text-slate-500 mb-2" />
-                                <span className="text-sm text-slate-400">Take Photo</span>
+                                <Camera size={28} className="text-content/50 mb-2" />
+                                <span className="text-sm text-muted">Take Photo</span>
                             </button>
                             {/* Gallery: capture-free so the OS shows its lighter multi-select
                                 picker (the intentional default — see draftStorage.js). */}
-                            <label className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-primary hover:bg-slate-800/50 transition-colors">
-                                <Upload size={28} className="text-slate-500 mb-2" />
-                                <span className="text-sm text-slate-400">
+                            <label className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-surface/50 transition-colors">
+                                <Upload size={28} className="text-content/50 mb-2" />
+                                <span className="text-sm text-muted">
                                     {imagePreviews.length > 0 ? 'Add more' : 'Gallery'}
                                 </span>
                                 <input
@@ -288,7 +288,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                                 />
                             </label>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">Take a photo or upload from your gallery</p>
+                        <p className="text-xs text-content/50 mt-1">Take a photo or upload from your gallery</p>
                         <CameraCaptureModal
                             isOpen={cameraOpen}
                             onClose={() => setCameraOpen(false)}
@@ -298,8 +298,8 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
 
                     <div>
                         <div className="flex justify-between items-end mb-1">
-                            <label className="block text-sm font-medium text-slate-300">Tags</label>
-                            <span className="text-[10px] text-slate-500 uppercase tracking-wider">Tap chips to add</span>
+                            <label className="block text-sm font-medium text-muted">Tags</label>
+                            <span className="text-[10px] text-content/50 uppercase tracking-wider">Tap chips to add</span>
                         </div>
 
                         {/* Tag Ribbon - Horizontal Scrollable Suggestions */}
@@ -366,7 +366,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                 <div className="space-y-4">
                     {/* Dropdown to select item */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Select Item</label>
+                        <label className="block text-sm font-medium text-muted mb-1">Select Item</label>
                         <select
                             className="input"
                             value={selectedExistingId}
@@ -380,7 +380,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                             ))}
                         </select>
                         {filteredItems.length === 0 && (
-                            <p className="text-xs text-slate-400 mt-1">
+                            <p className="text-xs text-muted mt-1">
                                 {searchQuery ? 'No items match your search' : 'No items available to select'}
                             </p>
                         )}
@@ -388,7 +388,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
 
                     {/* Optional search to filter dropdown */}
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={20} />
                         <input
                             type="text"
                             value={searchQuery}
@@ -398,7 +398,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                         />
                     </div>
 
-                    <div className="text-xs text-slate-400 text-right">
+                    <div className="text-xs text-muted text-right">
                         Showing {filteredItems.length} of {selectableItems.length} items
                     </div>
 

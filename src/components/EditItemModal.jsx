@@ -112,7 +112,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
         <Modal isOpen={isOpen} onClose={handleClose} title="Edit Item">
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Name</label>
+                    <label className="block text-sm font-medium text-muted mb-1">Name</label>
                     <input
                         type="text"
                         required
@@ -124,7 +124,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Box</label>
+                    <label className="block text-sm font-medium text-muted mb-1">Box</label>
                     <select
                         value={selectedBoxId}
                         onChange={(e) => setSelectedBoxId(e.target.value)}
@@ -140,7 +140,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
+                    <label className="block text-sm font-medium text-muted mb-1">Description</label>
                     <textarea
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
@@ -150,7 +150,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Images</label>
+                    <label className="block text-sm font-medium text-muted mb-1">Images</label>
 
                     {/* Image Previews Grid */}
                     {imagePreviews.length > 0 && (
@@ -184,16 +184,16 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                         <button
                             type="button"
                             onClick={takePhoto}
-                            className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-primary hover:bg-slate-800/50 transition-colors"
+                            className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-surface/50 transition-colors"
                         >
-                            <Camera size={28} className="text-slate-500 mb-2" />
-                            <span className="text-sm text-slate-400">Take Photo</span>
+                            <Camera size={28} className="text-content/50 mb-2" />
+                            <span className="text-sm text-muted">Take Photo</span>
                         </button>
                         {/* Gallery: capture-free so the OS shows its lighter multi-select
                             picker (the intentional default — see draftStorage.js). */}
-                        <label className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-primary hover:bg-slate-800/50 transition-colors">
-                            <Upload size={28} className="text-slate-500 mb-2" />
-                            <span className="text-sm text-slate-400">
+                        <label className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-surface/50 transition-colors">
+                            <Upload size={28} className="text-content/50 mb-2" />
+                            <span className="text-sm text-muted">
                                 {imagePreviews.length > 0 ? 'Add more' : 'Gallery'}
                             </span>
                             <input
@@ -206,7 +206,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                             />
                         </label>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">Take a photo or upload from your gallery</p>
+                    <p className="text-xs text-content/50 mt-1">Take a photo or upload from your gallery</p>
                     <CameraCaptureModal
                         isOpen={cameraOpen}
                         onClose={() => setCameraOpen(false)}
@@ -216,8 +216,8 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
 
                 <div>
                     <div className="flex justify-between items-end mb-1">
-                        <label className="block text-sm font-medium text-slate-300">Tags</label>
-                        <span className="text-[10px] text-slate-500 uppercase tracking-wider">Tap chips to add</span>
+                        <label className="block text-sm font-medium text-muted">Tags</label>
+                        <span className="text-[10px] text-content/50 uppercase tracking-wider">Tap chips to add</span>
                     </div>
 
                     {/* Tag Ribbon - Horizontal Scrollable Suggestions */}
@@ -272,14 +272,14 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                 </div>
 
 
-                <div className="pt-6 mt-2 border-t border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-slate-500">
+                <div className="pt-6 mt-2 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-content/50">
                     <div className="flex items-center gap-1.5">
-                        <Calendar size={12} className="text-slate-600" />
+                        <Calendar size={12} className="text-content/40" />
                         <span>Created: {formatDate(item?.createdAt)}</span>
                     </div>
                     {item?.modifiedAt && (
                         <div className="flex items-center gap-1.5">
-                            <History size={12} className="text-slate-600" />
+                            <History size={12} className="text-content/40" />
                             <span>Modified: {formatDateTime(item.modifiedAt)}</span>
                         </div>
                     )}

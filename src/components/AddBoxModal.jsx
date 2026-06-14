@@ -100,7 +100,7 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
         <Modal isOpen={isOpen} onClose={handleClose} title="Add New Box">
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Name</label>
+                    <label className="block text-sm font-medium text-muted mb-1">Name</label>
                     <input
                         type="text"
                         required
@@ -112,7 +112,7 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
+                    <label className="block text-sm font-medium text-muted mb-1">Description</label>
                     <textarea
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
@@ -122,7 +122,7 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Images</label>
+                    <label className="block text-sm font-medium text-muted mb-1">Images</label>
 
                     {/* Image Previews Grid */}
                     {imagePreviews.length > 0 && (
@@ -156,16 +156,16 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
                         <button
                             type="button"
                             onClick={takePhoto}
-                            className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-primary hover:bg-slate-800/50 transition-colors"
+                            className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-surface/50 transition-colors"
                         >
-                            <Camera size={28} className="text-slate-500 mb-2" />
-                            <span className="text-sm text-slate-400">Take Photo</span>
+                            <Camera size={28} className="text-content/50 mb-2" />
+                            <span className="text-sm text-muted">Take Photo</span>
                         </button>
                         {/* Gallery: capture-free so the OS shows its lighter multi-select
                             picker (the intentional default — see draftStorage.js). */}
-                        <label className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-primary hover:bg-slate-800/50 transition-colors">
-                            <Upload size={28} className="text-slate-500 mb-2" />
-                            <span className="text-sm text-slate-400">
+                        <label className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-surface/50 transition-colors">
+                            <Upload size={28} className="text-content/50 mb-2" />
+                            <span className="text-sm text-muted">
                                 {imagePreviews.length > 0 ? 'Add more' : 'Gallery'}
                             </span>
                             <input
@@ -178,7 +178,7 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
                             />
                         </label>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">Take a photo or upload from your gallery</p>
+                    <p className="text-xs text-content/50 mt-1">Take a photo or upload from your gallery</p>
                     <CameraCaptureModal
                         isOpen={cameraOpen}
                         onClose={() => setCameraOpen(false)}

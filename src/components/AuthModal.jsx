@@ -34,9 +34,9 @@ export function AuthModal({ isOpen, onClose }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black animate-fade-in">
-            <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-                <div className="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <div className="bg-base border border-border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+                <div className="p-6 border-b border-border flex justify-between items-center bg-surface/50">
+                    <h2 className="text-xl font-bold text-content flex items-center gap-2">
                         {isSignUp ? <UserPlus size={24} className="text-primary" /> : <LogIn size={24} className="text-primary" />}
                         {isSignUp ? 'Create Account' : 'Welcome Back'}
                     </h2>
@@ -44,21 +44,21 @@ export function AuthModal({ isOpen, onClose }) {
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     {error && (
-                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                        <div className="p-3 bg-danger/10 border border-danger/20 rounded-lg text-danger text-sm">
                             {error}
                         </div>
                     )}
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300">Email</label>
+                        <label className="text-sm font-medium text-muted">Email</label>
                         <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-content/50" size={18} />
                             <input
                                 type="email"
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="input w-full pl-10 pr-4 placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 transition-all text-base"
+                                className="input w-full pl-10 pr-4 placeholder:text-content/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 transition-all text-base"
                                 style={{ paddingTop: '14px', paddingBottom: '14px' }}
                                 placeholder="you@example.com"
                             />
@@ -66,16 +66,16 @@ export function AuthModal({ isOpen, onClose }) {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300">Password</label>
+                        <label className="text-sm font-medium text-muted">Password</label>
                         <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-content/50" size={18} />
                             <input
                                 type="password"
                                 required
                                 minLength={6}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="input w-full pl-10 pr-4 placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 transition-all text-base"
+                                className="input w-full pl-10 pr-4 placeholder:text-content/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 transition-all text-base"
                                 style={{ paddingTop: '14px', paddingBottom: '14px' }}
                                 placeholder="••••••••"
                             />
@@ -100,7 +100,7 @@ export function AuthModal({ isOpen, onClose }) {
                         <button
                             type="button"
                             onClick={() => setIsSignUp(!isSignUp)}
-                            className="text-sm text-slate-300 hover:text-primary transition-colors"
+                            className="text-sm text-muted hover:text-primary transition-colors"
                         >
                             {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
                         </button>
