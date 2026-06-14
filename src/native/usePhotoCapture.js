@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { resizeImage } from '../utils/imageUtils';
 
 const isNative = Capacitor.isNativePlatform();
 
@@ -28,14 +29,22 @@ export function usePhotoCapture(onCapture) {
         try {
             const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera');
             const photo = await Camera.getPhoto({
-                quality: 70,
-                width: 800,
+                quality: 90,
                 allowEditing: false,
                 correctOrientation: true,
-                resultType: CameraResultType.DataUrl,
+                // Uri is lighter than DataUrl (no huge base64 across the bridge),
+                // which lowers memory pressure on low-RAM devices.
+                resultType: CameraResultType.Uri,
                 source: CameraSource.Camera,
             });
-            if (photo && photo.dataUrl) onCapture(photo.dataUrl);
+            if (!photo || !photo.webPath) return;
+            // Always downscale through the shared pipeline so the stored base64
+            // stays small (Firestore caps documents at ~1MB) and matches gallery
+            // uploads. Some devices ignore the camera's width hint and return a
+            // full-resolution photo, which on its own can exceed the limit.
+            const blob = await fetch(photo.webPath).then((r) => r.blob());
+            const dataUrl = await resizeImage(blob);
+            if (dataUrl) onCapture(dataUrl);
         } catch {
             // User cancelled or denied — nothing to do.
         }

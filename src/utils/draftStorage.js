@@ -1,24 +1,29 @@
 import { useEffect, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 /**
  * Draft persistence for modal forms.
  *
- * On mobile, launching the native camera (`<input type="file" capture>`) pushes
- * the web page to the background. Memory-constrained devices then discard the
- * page and reload it when the user returns from the camera, wiping all React
+ * On mobile, launching the camera pushes the page/app to the background.
+ * Memory-constrained devices then discard it and reload (web) or kill and
+ * cold-restart the app process (native) when the user returns, wiping all React
  * state (the open modal and the just-typed form data / images). These helpers
- * persist a modal's working state to sessionStorage so a reload can restore it,
- * making the discard/reload invisible to the user.
+ * persist a modal's working state so the restart can restore it, making the
+ * discard invisible.
  *
- * sessionStorage is used (not localStorage) so drafts are scoped to the tab and
- * naturally cleared when the tab is closed.
+ * Backend differs by platform: the web build uses sessionStorage (tab-scoped,
+ * cleared when the tab closes); the native build uses localStorage, because a
+ * process kill wipes sessionStorage — localStorage survives the cold restart so
+ * the in-progress edit is recovered.
  */
 
 const PREFIX = 'sbo_draft_';
 
+const store = Capacitor.isNativePlatform() ? window.localStorage : window.sessionStorage;
+
 export function loadDraft(key) {
     try {
-        const raw = sessionStorage.getItem(PREFIX + key);
+        const raw = store.getItem(PREFIX + key);
         return raw ? JSON.parse(raw) : null;
     } catch {
         return null;
@@ -27,17 +32,17 @@ export function loadDraft(key) {
 
 export function saveDraft(key, data) {
     try {
-        sessionStorage.setItem(PREFIX + key, JSON.stringify(data));
+        store.setItem(PREFIX + key, JSON.stringify(data));
     } catch (e) {
-        // sessionStorage may be unavailable (private mode) or full (large base64
-        // images can exceed the quota). Persistence is best-effort, so fail quietly.
+        // Storage may be unavailable (private mode) or full (large base64 images
+        // can exceed the quota). Persistence is best-effort, so fail quietly.
         console.warn('[draft] failed to persist', key, e);
     }
 }
 
 export function clearDraft(key) {
     try {
-        sessionStorage.removeItem(PREFIX + key);
+        store.removeItem(PREFIX + key);
     } catch {
         /* noop */
     }
