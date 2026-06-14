@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Tags, Download, Upload, Sun, Moon } from 'lucide-react';
+import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw } from 'lucide-react';
 
-export const SettingsMenu = ({ onManageTags, onExport, onImport, theme, onToggleTheme }) => {
+export const SettingsMenu = ({ onManageTags, onExport, onImport, theme, onToggleTheme, onCheckUpdates }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -60,7 +60,22 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, theme, onToggle
         onImport();
         setIsOpen(false);
       }
-    }
+    },
+    ...(onCheckUpdates ? [
+      {
+        id: 'divider-3',
+        isDivider: true
+      },
+      {
+        id: 'check-updates',
+        label: 'Check for Updates',
+        icon: <RefreshCw size={20} />,
+        onClick: () => {
+          onCheckUpdates();
+          setIsOpen(false);
+        }
+      }
+    ] : [])
   ];
 
   return (

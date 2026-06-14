@@ -23,6 +23,7 @@ import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { formatDate } from './utils/dateUtils';
 import { SortFilterBar } from './components/SortFilterBar';
+import { checkForUpdate, applyUpdate } from './native/updates';
 import { v4 as uuidv4 } from 'uuid';
 import { loadDraft, saveDraft, clearDraft } from './utils/draftStorage';
 
@@ -139,6 +140,26 @@ function App() {
       type: options.type || 'danger',
       onConfirm: options.onConfirm
     });
+  };
+
+  // Check the live deployment for a newer build and offer to reload into it.
+  const handleCheckForUpdates = async () => {
+    addToast('Checking for updates…', 'info');
+    try {
+      const { updateAvailable } = await checkForUpdate();
+      if (updateAvailable) {
+        askConfirm({
+          title: 'Update available',
+          message: 'A new version is ready. Reload now to update?',
+          type: 'primary',
+          onConfirm: applyUpdate
+        });
+      } else {
+        addToast("You're on the latest version", 'success');
+      }
+    } catch {
+      addToast('Could not check for updates. Check your connection.', 'error');
+    }
   };
 
   // Auth Listener
@@ -932,6 +953,7 @@ function App() {
                   onImport={handleImportButtonClick}
                   theme={theme}
                   onToggleTheme={toggleTheme}
+                  onCheckUpdates={handleCheckForUpdates}
                 />
               </div>
             </div>
