@@ -55,25 +55,8 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
 
                 {/* Option A — Pill Badge (in-box view: boxName present, no navigation) */}
                 {boxName && !onBoxClick && (
-                    <div
-                        className="absolute z-20 flex items-center gap-1"
-                        style={{
-                            bottom: '10px',
-                            left: '10px',
-                            padding: '4px 10px',
-                            backgroundColor: 'rgba(var(--color-bg-rgb), 0.82)',
-                            backdropFilter: 'blur(8px)',
-                            WebkitBackdropFilter: 'blur(8px)',
-                            border: '1px solid rgba(var(--color-primary-rgb), 0.25)',
-                            borderRadius: '8px',
-                            fontSize: '10px',
-                            color: 'var(--color-primary)',
-                            fontWeight: 600,
-                            letterSpacing: '0.02em',
-                            textTransform: 'uppercase',
-                        }}
-                    >
-                        <Package size={10} />
+                    <div className="badge badge-box absolute z-20 bottom-2.5 left-2.5">
+                        <Package size={12} />
                         <span>{boxName}</span>
                     </div>
                 )}
@@ -91,12 +74,12 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                             title="Edit Item"
                             aria-label={`Edit ${item.name}`}
                         >
-                            <h3 className="text-lg font-bold text-content whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
+                            <h3 className="text-[15px] font-semibold text-content whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
                             <p className="text-sm text-muted mb-3 line-clamp-1">{item.description}</p>
                         </div>
                     ) : (
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-content whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
+                            <h3 className="text-[15px] font-semibold text-content whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
                             <p className="text-sm text-muted mb-3 line-clamp-1">{item.description}</p>
                         </div>
                     )}
@@ -135,42 +118,18 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                             e.stopPropagation();
                             onBoxClick(item.boxId);
                         }}
-                        className="flex items-center gap-2 w-full text-left transition-colors"
-                        style={{
-                            padding: '8px 16px',
-                            borderTop: '1px solid rgba(var(--color-text-rgb),0.06)',
-                            backgroundColor: 'rgba(var(--color-surface-rgb), 0.4)',
-                            color: 'var(--color-text-muted)',
-                            minHeight: '38px',
-                        }}
-                        onMouseEnter={e => {
-                            e.currentTarget.style.backgroundColor = 'rgba(var(--color-primary-rgb), 0.08)';
-                            e.currentTarget.style.color = 'var(--color-primary)';
-                        }}
-                        onMouseLeave={e => {
-                            e.currentTarget.style.backgroundColor = 'rgba(var(--color-surface-rgb), 0.4)';
-                            e.currentTarget.style.color = 'var(--color-text-muted)';
-                        }}
+                        className="card-footer card-footer--link"
                     >
-                        <Package size={12} className="shrink-0" />
-                        <span style={{ fontSize: '11px', fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <Package size={14} className="shrink-0" />
+                        <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
                             {boxName}
                         </span>
-                        <ChevronRight size={12} className="shrink-0" style={{ opacity: 0.5 }} />
+                        <ChevronRight size={14} className="shrink-0 opacity-50" />
                     </button>
                 ) : (
-                    <div
-                        className="flex items-center gap-2 w-full"
-                        style={{
-                            padding: '8px 16px',
-                            borderTop: '1px solid rgba(var(--color-text-rgb),0.06)',
-                            backgroundColor: 'rgba(var(--color-surface-rgb), 0.3)',
-                            color: 'var(--color-text-muted)',
-                            minHeight: '38px',
-                        }}
-                    >
-                        <Package size={12} className="shrink-0" />
-                        <span style={{ fontSize: '11px', fontWeight: 500 }}>Unassigned</span>
+                    <div className="card-footer card-footer--static">
+                        <Package size={14} className="shrink-0" />
+                        <span>Unassigned</span>
                     </div>
                 )
             )}

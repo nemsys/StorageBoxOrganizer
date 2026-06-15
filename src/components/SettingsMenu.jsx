@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw, ImageDown } from 'lucide-react';
+import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw, ImageDown, LogOut } from 'lucide-react';
 
-export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImages, theme, onToggleTheme, onCheckUpdates }) => {
+export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImages, theme, onToggleTheme, onCheckUpdates, onSignOut }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -20,7 +20,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
     {
       id: 'theme',
       label: theme === 'dark' ? 'Light Mode' : 'Dark Mode',
-      icon: theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />,
+      icon: theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />,
       onClick: () => {
         onToggleTheme();
         setIsOpen(false);
@@ -33,7 +33,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
     {
       id: 'tags',
       label: 'Manage Tags',
-      icon: <Tags size={20} />,
+      icon: <Tags size={18} />,
       onClick: () => {
         onManageTags();
         setIsOpen(false);
@@ -46,7 +46,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
     {
       id: 'export',
       label: 'Export Data',
-      icon: <Download size={20} />,
+      icon: <Download size={18} />,
       onClick: () => {
         onExport();
         setIsOpen(false);
@@ -55,7 +55,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
     {
       id: 'import',
       label: 'Import Data',
-      icon: <Upload size={20} />,
+      icon: <Upload size={18} />,
       onClick: () => {
         onImport();
         setIsOpen(false);
@@ -65,7 +65,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
       {
         id: 'optimize-images',
         label: 'Optimize Images',
-        icon: <ImageDown size={20} />,
+        icon: <ImageDown size={18} />,
         onClick: () => {
           onOptimizeImages();
           setIsOpen(false);
@@ -80,9 +80,24 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
       {
         id: 'check-updates',
         label: 'Check for Updates',
-        icon: <RefreshCw size={20} />,
+        icon: <RefreshCw size={18} />,
         onClick: () => {
           onCheckUpdates();
+          setIsOpen(false);
+        }
+      }
+    ] : []),
+    ...(onSignOut ? [
+      {
+        id: 'divider-signout',
+        isDivider: true
+      },
+      {
+        id: 'sign-out',
+        label: 'Sign Out',
+        icon: <LogOut size={18} />,
+        onClick: () => {
+          onSignOut();
           setIsOpen(false);
         }
       }
@@ -93,7 +108,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-lg bg-elevated hover:bg-elevated border border-content/15 text-muted hover:text-content transition-all group"
+        className="p-2.5 rounded-lg bg-elevated hover:bg-elevated border border-content/15 text-muted hover:text-content transition-all group"
         title="Settings"
         aria-label="Settings Menu"
       >
