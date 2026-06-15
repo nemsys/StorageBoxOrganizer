@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Modal } from './Modal';
 import { CameraCaptureModal } from './CameraCaptureModal';
+import { FullscreenImageModal } from './FullscreenImageModal';
 import { Upload, Trash2, Camera } from 'lucide-react';
 import { makeDerivatives, getImageRefs, refsToThumbs } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
@@ -11,6 +12,7 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
     const [description, setDescription] = useState('');
     const [images, setImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
+    const [viewerIndex, setViewerIndex] = useState(null); // null = closed
     const fileInputRef = useRef(null);
 
     const draftKey = `edit-box-${box?.id ?? 'unknown'}`;
@@ -132,7 +134,8 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
                                     <img
                                         src={preview}
                                         alt={`Preview ${index + 1}`}
-                                        className="w-full h-full object-cover rounded-lg"
+                                        onClick={() => setViewerIndex(index)}
+                                        className="w-full h-full object-cover rounded-lg cursor-pointer"
                                     />
                                     <button
                                         type="button"
@@ -183,6 +186,16 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
                         isOpen={cameraOpen}
                         onClose={() => setCameraOpen(false)}
                         onCapture={handleCameraCapture}
+                    />
+                    {/* Fullscreen slider for previews — tap a thumb to view full-res;
+                        delete in place from here too (onDelete). */}
+                    <FullscreenImageModal
+                        isOpen={viewerIndex !== null}
+                        onClose={() => setViewerIndex(null)}
+                        imageRefs={images}
+                        startIndex={viewerIndex ?? 0}
+                        itemName={name}
+                        onDelete={requestRemoveImage}
                     />
                 </div>
 

@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Modal } from './Modal';
 import { CameraCaptureModal } from './CameraCaptureModal';
+import { FullscreenImageModal } from './FullscreenImageModal';
 import { usePhotoCapture } from '../native/usePhotoCapture';
 import { Upload, Trash2, Calendar, History, Camera } from 'lucide-react';
 import { makeDerivatives, getImageRefs, refsToThumbs } from '../utils/imageUtils';
@@ -14,6 +15,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
     const [imagePreviews, setImagePreviews] = useState([]);
     const [tags, setTags] = useState('');
     const [selectedBoxId, setSelectedBoxId] = useState('');
+    const [viewerIndex, setViewerIndex] = useState(null); // null = closed
     const fileInputRef = useRef(null);
 
     const draftKey = `edit-item-${item?.id ?? 'unknown'}`;
@@ -160,7 +162,8 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                                     <img
                                         src={preview}
                                         alt={`Preview ${index + 1}`}
-                                        className="w-full h-full object-cover rounded-lg"
+                                        onClick={() => setViewerIndex(index)}
+                                        className="w-full h-full object-cover rounded-lg cursor-pointer"
                                     />
                                     <button
                                         type="button"
@@ -211,6 +214,16 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                         isOpen={cameraOpen}
                         onClose={() => setCameraOpen(false)}
                         onCapture={handleCameraCapture}
+                    />
+                    {/* Fullscreen slider for previews — tap a thumb to view full-res;
+                        delete in place from here too (onDelete). */}
+                    <FullscreenImageModal
+                        isOpen={viewerIndex !== null}
+                        onClose={() => setViewerIndex(null)}
+                        imageRefs={images}
+                        startIndex={viewerIndex ?? 0}
+                        itemName={name}
+                        onDelete={requestRemoveImage}
                     />
                 </div>
 

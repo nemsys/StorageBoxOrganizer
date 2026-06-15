@@ -1,4 +1,4 @@
-import { X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Loader2, Trash2 } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useBackHandler } from '../native/backHandler';
@@ -11,8 +11,12 @@ import { firebaseStorage } from '../services/firebaseStorage';
  * as a placeholder while the full-resolution image for the current slide is
  * fetched on demand (cache-first via firebaseStorage.getFullImage) and swapped
  * in. Legacy refs that already carry `full` inline skip the fetch.
+ *
+ * `startIndex` opens the viewer on a specific slide (defaults to the first).
+ * When `onDelete` is provided, a delete control is shown and invoked with the
+ * current slide index — used by the edit modals to remove an image in place.
  */
-export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName }) {
+export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName, startIndex = 0, onDelete }) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [fullMap, setFullMap] = useState({}); // index -> resolved full data URL
     const [loading, setLoading] = useState(false);
@@ -33,17 +37,30 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
         setCurrentIndex((prev) => (prev === refs.length - 1 ? 0 : prev + 1));
     }, [refs.length]);
 
-    // Lock scroll + reset state on open
+    // Lock scroll + reset state on open (start on the requested slide)
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
-            setCurrentIndex(0);
+            setCurrentIndex(Math.min(Math.max(startIndex, 0), Math.max(refs.length - 1, 0)));
             setFullMap({});
         } else {
             document.body.style.overflow = 'unset';
         }
         return () => { document.body.style.overflow = 'unset'; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen]);
+
+    // Keep the index valid when the image list shrinks (e.g. after a delete);
+    // close once the last image is gone.
+    useEffect(() => {
+        if (!isOpen) return;
+        if (refs.length === 0) {
+            onClose();
+        } else if (currentIndex > refs.length - 1) {
+            setCurrentIndex(refs.length - 1);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, refs.length]);
 
     // Resolve the full-resolution image for the current slide on demand.
     useEffect(() => {
@@ -115,15 +132,29 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
             className="fixed inset-0 z-50 flex items-center justify-center bg-black animate-fade-in"
             onClick={onClose}
         >
-            {/* Close button */}
+            {/* Close button — offset below the status bar / notch */}
             <button
                 onClick={(e) => { e.stopPropagation(); onClose(); }}
-                className="absolute top-4 right-4 p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-full transition-colors z-20"
+                style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+                className="absolute right-4 p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-full transition-colors z-20"
                 title="Close (Esc)"
                 aria-label="Close fullscreen"
             >
                 <X size={24} />
             </button>
+
+            {/* Delete button — only when editing (onDelete provided) */}
+            {onDelete && (
+                <button
+                    onClick={(e) => { e.stopPropagation(); onDelete(currentIndex); }}
+                    style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+                    className="absolute left-4 p-2 bg-red-600 hover:bg-red-500 text-white rounded-full transition-colors z-20"
+                    title="Delete image"
+                    aria-label="Delete image"
+                >
+                    <Trash2 size={24} />
+                </button>
+            )}
 
             {/* Image + overlay controls — stopPropagation so clicks here don't close */}
             <div
