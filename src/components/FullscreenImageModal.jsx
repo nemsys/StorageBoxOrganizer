@@ -132,10 +132,11 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
             className="fixed inset-0 z-50 flex items-center justify-center bg-black animate-fade-in"
             onClick={onClose}
         >
-            {/* Close button */}
+            {/* Close button — offset below the status bar / notch */}
             <button
                 onClick={(e) => { e.stopPropagation(); onClose(); }}
-                className="absolute top-4 right-4 p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-full transition-colors z-20"
+                style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+                className="absolute right-4 p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-full transition-colors z-20"
                 title="Close (Esc)"
                 aria-label="Close fullscreen"
             >
@@ -146,7 +147,8 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
             {onDelete && (
                 <button
                     onClick={(e) => { e.stopPropagation(); onDelete(currentIndex); }}
-                    className="absolute top-4 left-4 p-2 bg-red-600 hover:bg-red-500 text-white rounded-full transition-colors z-20"
+                    style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+                    className="absolute left-4 p-2 bg-red-600 hover:bg-red-500 text-white rounded-full transition-colors z-20"
                     title="Delete image"
                     aria-label="Delete image"
                 >
