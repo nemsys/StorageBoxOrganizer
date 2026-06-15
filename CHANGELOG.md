@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.5.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.4.0...v1.5.0) (2026-06-15)
+
+
+### Features
+
+* add permanent Delete Item action in box view ([#7](https://github.com/nemsys/StorageBoxOrganizer/issues/7)) ([ba37637](https://github.com/nemsys/StorageBoxOrganizer/commit/ba3763722403dac1ab371b28423d6fa969e53bd0))
+
 ## [1.4.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.3.0...v1.4.0) (2026-06-15)
 
 
