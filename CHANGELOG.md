@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.3.0...v1.4.0) (2026-06-15)
+
+
+### Features
+
+* unify type scale and UI consistency pass ([#6](https://github.com/nemsys/StorageBoxOrganizer/issues/6)) ([be45ee8](https://github.com/nemsys/StorageBoxOrganizer/commit/be45ee8cb865866bd07d7990000e406e07de16a4))
+
 ## [1.3.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.2.6...v1.3.0) (2026-06-15)
 
 
