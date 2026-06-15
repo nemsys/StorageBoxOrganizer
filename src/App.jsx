@@ -413,52 +413,51 @@ function App() {
     }
   };
 
-  // Handle Deleting Item
+  // Remove an item from its box without deleting it (it stays in "All Items").
+  const handleRemoveItemFromBox = async (itemId) => {
+    askConfirm({
+      title: 'Remove from Box?',
+      message: 'Remove this item from the box? (It will remain in "All Items")',
+      type: 'primary',
+      onConfirm: async () => {
+        // Optimistic update - remove from current view
+        setItems(prev => prev.filter(i => i.id !== itemId));
+
+        try {
+          await firebaseStorage.updateItem(itemId, { boxId: '' });
+          // Update allItems to reflect the change
+          setAllItems(prev => prev.map(i => i.id === itemId ? { ...i, boxId: '' } : i));
+          addToast("Item removed from box", "success");
+        } catch (err) {
+          console.error('Failed to remove item from box', err);
+          refreshData(); // Revert on error
+          addToast("Failed to remove item from box", "error");
+        }
+      }
+    });
+  };
+
+  // Permanently delete an item (available from both the box view and All Items).
   const handleDeleteItem = async (itemId) => {
-    if (currentBox) {
-      // If in a box, just remove from box (unassign)
-      askConfirm({
-        title: 'Remove from Box?',
-        message: 'Remove this item from the box? (It will remain in "All Items")',
-        type: 'primary',
-        onConfirm: async () => {
-          // Optimistic update - remove from current view
-          setItems(prev => prev.filter(i => i.id !== itemId));
+    askConfirm({
+      title: 'Delete Item?',
+      message: 'Are you sure you want to PERMANENTLY delete this item?',
+      type: 'danger',
+      onConfirm: async () => {
+        // Optimistic update
+        setItems(prev => prev.filter(i => i.id !== itemId));
+        setAllItems(prev => prev.filter(i => i.id !== itemId));
 
-          try {
-            await firebaseStorage.updateItem(itemId, { boxId: '' });
-            // Update allItems to reflect the change
-            setAllItems(prev => prev.map(i => i.id === itemId ? { ...i, boxId: '' } : i));
-            addToast("Item removed from box", "success");
-          } catch (err) {
-            console.error('Failed to remove item from box', err);
-            refreshData(); // Revert on error
-            addToast("Failed to remove item from box", "error");
-          }
+        try {
+          await firebaseStorage.deleteItem(itemId);
+          addToast("Item deleted permanently", "success");
+        } catch (err) {
+          console.error('Failed to delete item', err);
+          refreshData(); // Revert on error
+          addToast("Failed to delete item", "error");
         }
-      });
-    } else {
-      // If in "All Items" or elsewhere, permanently delete
-      askConfirm({
-        title: 'Delete Item?',
-        message: 'Are you sure you want to PERMANENTLY delete this item?',
-        type: 'danger',
-        onConfirm: async () => {
-          // Optimistic update
-          setItems(prev => prev.filter(i => i.id !== itemId));
-          setAllItems(prev => prev.filter(i => i.id !== itemId));
-
-          try {
-            await firebaseStorage.deleteItem(itemId);
-            addToast("Item deleted permanently", "success");
-          } catch (err) {
-            console.error('Failed to delete item', err);
-            refreshData(); // Revert on error
-            addToast("Failed to delete item", "error");
-          }
-        }
-      });
-    }
+      }
+    });
   };
 
   async function handleDeleteBox(id) {
@@ -1195,6 +1194,7 @@ function App() {
               <ItemList
                 items={items.map(item => ({ ...item, boxName: currentBox?.name }))}
                 onDeleteItem={handleDeleteItem}
+                onRemoveFromBox={handleRemoveItemFromBox}
                 onEditItem={handleEditItem}
                 onImageClick={handleImageClick}
                 showItemNavigation={true}
