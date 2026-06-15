@@ -1,9 +1,9 @@
-import { Package, Edit, Trash2, Tag, ChevronRight, ZoomIn } from 'lucide-react';
+import { Package, PackageMinus, Edit, Trash2, Tag, ChevronRight, ZoomIn } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 import { OverflowMenu } from './OverflowMenu';
 import { getImageRefs, refsToThumbs } from '../utils/imageUtils';
 
-export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageClick, showNavigation = false }) {
+export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onBoxClick, onImageClick, showNavigation = false }) {
     // Browse from inline thumbnails; full-res is fetched on demand (fullscreen).
     const imageRefs = getImageRefs(item);
     const displayImages = refsToThumbs(imageRefs);
@@ -84,14 +84,15 @@ export function ItemCard({ item, onDelete, onEdit, boxName, onBoxClick, onImageC
                         </div>
                     )}
 
-                    {(onEdit || onDelete) && (
+                    {(onEdit || onRemoveFromBox || onDelete) && (
                         <div className="flex-shrink-0">
                             <OverflowMenu
                                 label="Item actions"
                                 buttonClassName="p-3 rounded-lg text-muted hover:bg-elevated hover:text-content transition-colors flex items-center justify-center"
                                 items={[
                                     onEdit && { id: 'edit', label: 'Edit Item', icon: <Edit size={18} />, onClick: () => onEdit(item) },
-                                    (onEdit && onDelete) && { id: 'divider', isDivider: true },
+                                    (onEdit && (onRemoveFromBox || onDelete)) && { id: 'divider', isDivider: true },
+                                    onRemoveFromBox && { id: 'remove', label: 'Remove from Box', icon: <PackageMinus size={18} />, onClick: () => onRemoveFromBox(item.id) },
                                     onDelete && { id: 'delete', label: 'Delete Item', icon: <Trash2 size={18} />, danger: true, onClick: () => onDelete(item.id) },
                                 ].filter(Boolean)}
                             />
