@@ -58,7 +58,7 @@ export function AuthModal({ isOpen, onClose }) {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="input w-full pl-10 pr-4 placeholder:text-content/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 transition-all text-base"
+                                className="input w-full pl-10 pr-4 placeholder:text-content/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 transition-all text-[16px]"
                                 style={{ paddingTop: '14px', paddingBottom: '14px' }}
                                 placeholder="you@example.com"
                             />
@@ -75,7 +75,7 @@ export function AuthModal({ isOpen, onClose }) {
                                 minLength={6}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="input w-full pl-10 pr-4 placeholder:text-content/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 transition-all text-base"
+                                className="input w-full pl-10 pr-4 placeholder:text-content/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 transition-all text-[16px]"
                                 style={{ paddingTop: '14px', paddingBottom: '14px' }}
                                 placeholder="••••••••"
                             />
