@@ -17,7 +17,7 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
             {/* Image Area */}
             <div
                 className="w-full bg-surface relative overflow-hidden"
-                style={{ aspectRatio: '1 / 1', height: 'auto' }}
+                style={{ aspectRatio: '4 / 3', height: 'auto' }}
             >
                 <ImageSlider
                     images={displayImages}
@@ -62,29 +62,16 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
                 />
 
                 {/* Item Count Badge */}
-                <div
-                    className="absolute z-20 font-bold uppercase tracking-wider flex items-center justify-center pointer-events-none"
-                    style={{
-                        bottom: '8px',
-                        right: '8px',
-                        padding: '3px 8px',
-                        backgroundColor: 'var(--color-primary)',
-                        color: 'var(--color-bg)',
-                        borderRadius: '6px',
-                        fontSize: '9px',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
-                        minWidth: '3rem'
-                    }}
-                >
+                <div className="badge badge-count absolute z-20 bottom-2 right-2 pointer-events-none">
                     {itemCount} {itemCount === 1 ? 'item' : 'items'}
                 </div>
             </div>
 
-            <div className="p-3 flex flex-col flex-1">
-                <h3 className="text-base font-bold text-content whitespace-nowrap overflow-hidden text-ellipsis mb-1 group-hover:text-primary transition-colors">
+            <div className="p-4 flex flex-col flex-1">
+                <h3 className="text-[15px] font-semibold text-content whitespace-nowrap overflow-hidden text-ellipsis mb-1 group-hover:text-primary transition-colors">
                     {box.name}
                 </h3>
-                <p className="text-xs text-muted line-clamp-2 leading-relaxed">
+                <p className="text-sm text-muted line-clamp-2 leading-relaxed">
                     {box.description || 'No description'}
                 </p>
             </div>

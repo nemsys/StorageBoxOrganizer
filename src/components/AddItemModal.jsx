@@ -171,7 +171,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                 <button
                     type="button"
                     onClick={() => setMode('create')}
-                    className={`px-4 py-2 font-medium transition-colors ${mode === 'create'
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${mode === 'create'
                         ? 'text-primary border-b-2 border-primary'
                         : 'text-muted hover:text-content/90'
                         }`}
@@ -181,7 +181,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                 <button
                     type="button"
                     onClick={() => setMode('select')}
-                    className={`px-4 py-2 font-medium transition-colors ${mode === 'select'
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${mode === 'select'
                         ? 'text-primary border-b-2 border-primary'
                         : 'text-muted hover:text-content/90'
                         }`}

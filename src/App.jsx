@@ -962,15 +962,8 @@ function App() {
           {/* Top Bar - User Info */}
           {user && (
             <div className="bg-base/50 border-b border-content/15 py-1.5 px-4">
-              <div className="container flex justify-end items-center gap-4">
+              <div className="container flex justify-end items-center gap-3">
                 <span className="text-xs text-muted">Signed in as <span className="text-content font-medium ml-1">{user.email}</span></span>
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center gap-1 text-xs text-muted hover:text-danger transition-colors"
-                >
-                  <LogOut size={12} /> Sign Out
-                </button>
-                <div className="w-px h-3 bg-elevated mx-1"></div>
                 <SettingsMenu
                   onManageTags={() => setIsTagManagementModalOpen(true)}
                   onExport={handleExportData}
@@ -979,6 +972,7 @@ function App() {
                   theme={theme}
                   onToggleTheme={toggleTheme}
                   onCheckUpdates={handleCheckForUpdates}
+                  onSignOut={handleSignOut}
                 />
               </div>
             </div>
@@ -988,7 +982,7 @@ function App() {
             <div className="flex items-center gap-4">
               {/* Back button - only when inside a box */}
               {view === 'items' && (
-                <button onClick={handleBack} className="p-2 rounded-lg hover:bg-elevated text-muted hover:text-content transition-colors shrink-0">
+                <button onClick={handleBack} className="p-2.5 rounded-lg hover:bg-elevated text-muted hover:text-content transition-colors shrink-0" aria-label="Back to boxes">
                   <ArrowLeft size={22} />
                 </button>
               )}
@@ -1003,7 +997,7 @@ function App() {
                   <PackageOpen size={22} />
                 </div>
                 {view === 'items' && (
-                  <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-content to-muted">
+                  <h1 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-content to-muted">
                     {currentBox?.name}
                   </h1>
                 )}
@@ -1021,7 +1015,7 @@ function App() {
                       <button
                         key={tab.id}
                         onClick={tab.onClick}
-                        className={`flex-1 flex items-center justify-center py-2 px-3 text-lg font-bold rounded-lg transition-colors duration-300 relative ${isActive ? 'text-primary' : 'text-muted hover:text-content/90'}`}
+                        className={`flex-1 flex items-center justify-center py-2 px-3 text-sm font-semibold rounded-lg transition-colors duration-300 relative ${isActive ? 'text-primary' : 'text-muted hover:text-content/90'}`}
                       >
                         {isActive && (
                           <motion.div
@@ -1038,16 +1032,6 @@ function App() {
                 </div>
               )}
 
-              {/* Search bar for inside-box view */}
-              {view === 'items' && (
-                <div className="flex-1 max-w-xs">
-                  <SearchBar
-                    value={searchQuery}
-                    onChange={setSearchQuery}
-                    placeholder="Search in this box..."
-                  />
-                </div>
-              )}
             </div>
           </div>
         </header>
@@ -1133,8 +1117,8 @@ function App() {
                       title="Edit Box"
                       aria-label={`Edit ${currentBox.name}`}
                     >
-                      <h1 className="text-4xl md:text-5xl font-bold text-content tracking-tight">{currentBox.name}</h1>
-                      <p className="text-muted text-lg leading-relaxed mt-2 max-w-3xl">{currentBox.description}</p>
+                      <h1 className="text-2xl md:text-3xl font-bold text-content tracking-tight">{currentBox.name}</h1>
+                      <p className="text-muted text-sm leading-relaxed mt-2 max-w-3xl">{currentBox.description}</p>
                     </div>
                     <div className="shrink-0">
                       <OverflowMenu
@@ -1143,20 +1127,20 @@ function App() {
                           {
                             id: 'edit',
                             label: 'Edit Box',
-                            icon: <Edit size={20} />,
+                            icon: <Edit size={18} />,
                             onClick: () => handleEditBox(currentBox),
                           },
                           {
                             id: 'remove',
                             label: 'Remove (keep items)',
-                            icon: <LogOut size={20} />,
+                            icon: <LogOut size={18} />,
                             onClick: () => handleRemoveBox(currentBox.id),
                           },
                           { id: 'divider', isDivider: true },
                           {
                             id: 'delete',
                             label: 'Delete Box & Items',
-                            icon: <Trash2 size={20} />,
+                            icon: <Trash2 size={18} />,
                             danger: true,
                             onClick: () => handleDeleteBox(currentBox.id),
                           },
@@ -1179,6 +1163,17 @@ function App() {
             </div>
 
 
+
+            {/* Search within this box */}
+            {items.length > 0 && (
+              <div className="mb-6">
+                <SearchBar
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search in this box..."
+                />
+              </div>
+            )}
 
             {/* Items Grid */}
             {items.length === 0 ? (
