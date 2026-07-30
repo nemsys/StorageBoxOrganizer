@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.2](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.6.1...v1.6.2) (2026-07-30)
+
+
+### Bug Fixes
+
+* simplify last-change label in edit box view ([#10](https://github.com/nemsys/StorageBoxOrganizer/issues/10)) ([7cd7905](https://github.com/nemsys/StorageBoxOrganizer/commit/7cd79052610aa7a024b4e7e4b28d069f73fc61f5))
+
 ### [1.6.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.6.0...v1.6.1) (2026-07-30)
 
 ## [1.6.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.5.0...v1.6.0) (2026-07-30)
