@@ -3,7 +3,7 @@ import { Modal } from './Modal';
 import { CameraCaptureModal } from './CameraCaptureModal';
 import { FullscreenImageModal } from './FullscreenImageModal';
 import { Upload, Trash2, Camera, Calendar, History } from 'lucide-react';
-import { formatDate, formatDateTime } from '../utils/dateUtils';
+import { formatDate } from '../utils/dateUtils';
 import { makeDerivatives, getImageRefs, refsToThumbs } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
 import { usePhotoCapture } from '../native/usePhotoCapture';
@@ -210,7 +210,7 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
                     {box?.updatedAt && (
                         <div className="flex items-center gap-1.5">
                             <History size={12} className="text-content/40" />
-                            <span>Contents changed: {formatDateTime(box.updatedAt)}</span>
+                            <span>Updated: {formatDate(box.updatedAt)}</span>
                         </div>
                     )}
                 </div>
