@@ -2,7 +2,8 @@ import { useState, useRef } from 'react';
 import { Modal } from './Modal';
 import { CameraCaptureModal } from './CameraCaptureModal';
 import { FullscreenImageModal } from './FullscreenImageModal';
-import { Upload, Trash2, Camera } from 'lucide-react';
+import { Upload, Trash2, Camera, Calendar, History } from 'lucide-react';
+import { formatDate, formatDateTime } from '../utils/dateUtils';
 import { makeDerivatives, getImageRefs, refsToThumbs } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
 import { usePhotoCapture } from '../native/usePhotoCapture';
@@ -197,6 +198,21 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
                         itemName={name}
                         onDelete={requestRemoveImage}
                     />
+                </div>
+
+                {/* The box view shows the last contents change; creation date
+                    stays available here. */}
+                <div className="pt-6 mt-2 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-content/50">
+                    <div className="flex items-center gap-1.5">
+                        <Calendar size={12} className="text-content/40" />
+                        <span>Created: {formatDate(box?.createdAt)}</span>
+                    </div>
+                    {box?.updatedAt && (
+                        <div className="flex items-center gap-1.5">
+                            <History size={12} className="text-content/40" />
+                            <span>Contents changed: {formatDateTime(box.updatedAt)}</span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="pt-4 flex justify-end gap-3">

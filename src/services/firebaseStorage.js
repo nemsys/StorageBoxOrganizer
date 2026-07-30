@@ -5,6 +5,7 @@ import {
   doc,
   getDocs,
   setDoc,
+  updateDoc,
   deleteDoc,
   query,
   where,
@@ -190,6 +191,16 @@ export const firebaseStorage = {
     };
     await setDoc(boxRef, updatedBox);
     return updatedBox;
+  },
+
+  // Stamp a box as "contents changed" (item added / removed / moved / deleted).
+  // Deliberately NOT called for edits to a box's or an item's own fields —
+  // photos, text and tags don't count as a contents change. Single field write,
+  // no read, so it stays cheap on the Spark quota.
+  touchBox: async (id, updatedAt = Date.now()) => {
+    getUserId();
+    await updateDoc(doc(db, BOXES_COLL, id), { updatedAt });
+    return updatedAt;
   },
 
   deleteBox: async (id) => {

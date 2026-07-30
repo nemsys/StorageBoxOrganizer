@@ -17,7 +17,7 @@ import { OverflowMenu } from './components/OverflowMenu';
 import { ImportProgressModal } from './components/ImportProgressModal';
 import { Toast } from './components/Toast';
 import { ConfirmationDialog } from './components/ConfirmationDialog';
-import { ArrowLeft, PackageOpen, LogOut, Package, Edit, Trash2, Calendar, Plus } from 'lucide-react';
+import { ArrowLeft, PackageOpen, LogOut, Package, Edit, Trash2, Calendar, History, Plus } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -358,6 +358,30 @@ function App() {
     return refs;
   };
 
+  // The box an item currently sits in ('' when unassigned) — read before a
+  // mutation drops the item from local state.
+  const findItemBoxId = (itemId) =>
+    (items.find(i => i.id === itemId) || allItems.find(i => i.id === itemId))?.boxId || '';
+
+  // Mark one or more boxes as "contents changed" and reflect it immediately in
+  // the UI. Only add / remove / move / delete of items counts as a change —
+  // editing a box's or an item's photos, text or tags deliberately does not.
+  // Best effort: a failed stamp must never fail the operation that caused it.
+  const touchBoxes = async (...boxIds) => {
+    const ids = [...new Set(boxIds.filter(Boolean))];
+    if (!ids.length) return;
+
+    const updatedAt = Date.now();
+    setBoxes(prev => prev.map(b => ids.includes(b.id) ? { ...b, updatedAt } : b));
+    setCurrentBox(prev => (prev && ids.includes(prev.id) ? { ...prev, updatedAt } : prev));
+
+    try {
+      await Promise.all(ids.map(id => firebaseStorage.touchBox(id, updatedAt)));
+    } catch (err) {
+      console.error('Failed to stamp box update time', err);
+    }
+  };
+
   // Handle Adding Box
   const handleAddBox = async (payload) => {
     try {
@@ -407,6 +431,7 @@ function App() {
       setItems(prev => [newItem, ...prev]);
       setAllItems(prev => [newItem, ...prev]);
       setIsAddItemModalOpen(false);
+      await touchBoxes(newItem.boxId);
     } catch (error) {
       console.error("Error adding item:", error);
       addToast("Failed to add item. Please try again.", "error");
@@ -420,6 +445,8 @@ function App() {
       message: 'Remove this item from the box? (It will remain in "All Items")',
       type: 'primary',
       onConfirm: async () => {
+        const previousBoxId = findItemBoxId(itemId);
+
         // Optimistic update - remove from current view
         setItems(prev => prev.filter(i => i.id !== itemId));
 
@@ -427,6 +454,7 @@ function App() {
           await firebaseStorage.updateItem(itemId, { boxId: '' });
           // Update allItems to reflect the change
           setAllItems(prev => prev.map(i => i.id === itemId ? { ...i, boxId: '' } : i));
+          await touchBoxes(previousBoxId);
           addToast("Item removed from box", "success");
         } catch (err) {
           console.error('Failed to remove item from box', err);
@@ -444,12 +472,15 @@ function App() {
       message: 'Are you sure you want to PERMANENTLY delete this item?',
       type: 'danger',
       onConfirm: async () => {
+        const previousBoxId = findItemBoxId(itemId);
+
         // Optimistic update
         setItems(prev => prev.filter(i => i.id !== itemId));
         setAllItems(prev => prev.filter(i => i.id !== itemId));
 
         try {
           await firebaseStorage.deleteItem(itemId);
+          await touchBoxes(previousBoxId);
           addToast("Item deleted permanently", "success");
         } catch (err) {
           console.error('Failed to delete item', err);
@@ -606,6 +637,14 @@ function App() {
       setItems(prev => prev.map(item => item.id === editingItem.id ? persistedItem : item));
       setAllItems(prev => prev.map(item => item.id === editingItem.id ? persistedItem : item));
       setEditingItem(null);
+
+      // Only a box reassignment counts as a contents change; name, description,
+      // photo and tag edits leave both boxes' "Updated" dates alone.
+      const previousBoxId = editingItem.boxId || '';
+      const nextBoxId = persistedItem.boxId || '';
+      if (previousBoxId !== nextBoxId) {
+        await touchBoxes(previousBoxId, nextBoxId);
+      }
     } catch (error) {
       console.error("Error updating item:", error);
       addToast("Failed to update item. Please try again.", "error");
@@ -644,9 +683,14 @@ function App() {
     if (!currentBox) return;
 
     try {
+      const previousBoxId = findItemBoxId(itemId);
+
       // Update the item's boxId to the current box
       const updates = { boxId: currentBox.id };
       await firebaseStorage.updateItem(itemId, updates);
+
+      // Both ends of the move changed contents.
+      await touchBoxes(previousBoxId, currentBox.id);
 
       // Refresh data to show the updated item in the current box
       if (view === 'items') {
@@ -1148,9 +1192,20 @@ function App() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-4 text-sm text-muted">
+                    {/* Last contents change is the useful date here; fall back to
+                        creation for boxes nobody has touched since packing. */}
                     <span className="bg-surface/50 px-3 py-1.5 rounded-full border border-content/15 flex items-center gap-1.5">
-                      <Calendar size={14} className="opacity-60" />
-                      Created: {formatDate(currentBox.createdAt)}
+                      {currentBox.updatedAt ? (
+                        <>
+                          <History size={14} className="opacity-60" />
+                          Updated: {formatDate(currentBox.updatedAt)}
+                        </>
+                      ) : (
+                        <>
+                          <Calendar size={14} className="opacity-60" />
+                          Created: {formatDate(currentBox.createdAt)}
+                        </>
+                      )}
                     </span>
                     <span className="bg-surface/50 px-3 py-1.5 rounded-full border border-content/15 flex items-center gap-1.5">
                       <Package size={14} className="opacity-60" />
