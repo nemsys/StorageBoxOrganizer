@@ -112,7 +112,6 @@
 
   "photo.take": "Снимай",
   "photo.gallery": "Галерия",
-  "photo.addMore": "Добави още",
   "photo.hint": "Снимай или качи {{photo.one}} от галерията си",
   "photo.remove": "Премахни {{photo.the}}",
   "photo.preview": "Преглед {{index}}",

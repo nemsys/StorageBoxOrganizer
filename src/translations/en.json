@@ -112,7 +112,6 @@
 
   "photo.take": "Take {{^photo.one}}",
   "photo.gallery": "Gallery",
-  "photo.addMore": "Add more",
   "photo.hint": "Take a {{photo.one}} or upload from your gallery",
   "photo.remove": "Remove {{photo.the}}",
   "photo.preview": "Preview {{index}}",
