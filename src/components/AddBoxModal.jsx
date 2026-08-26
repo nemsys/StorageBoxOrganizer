@@ -168,7 +168,7 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
                         <label className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-surface/50 transition-colors">
                             <Upload size={28} className="text-content/50 mb-2" />
                             <span className="text-sm text-muted">
-                                {imagePreviews.length > 0 ? t('photo.addMore') : t('photo.gallery')}
+                                {t('photo.gallery')}
                             </span>
                             <input
                                 type="file"
