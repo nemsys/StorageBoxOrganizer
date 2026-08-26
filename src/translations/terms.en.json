@@ -1,0 +1,25 @@
+{
+  "_readme": "Domain nouns. Change a word here and it changes everywhere in the UI. See README.md.",
+
+  "terms": {
+    "box":   { "one": "box",   "counted": "boxes",  "many": "boxes",  "the": "the box",   "theSubj": "the box",   "theMany": "the boxes",  "g": "n" },
+    "item":  { "one": "item",  "counted": "items",  "many": "items",  "the": "the item",  "theSubj": "the item",  "theMany": "the items",  "g": "n" },
+    "tag":   { "one": "tag",   "counted": "tags",   "many": "tags",   "the": "the tag",   "theSubj": "the tag",   "theMany": "the tags",   "g": "n" },
+    "photo": { "one": "photo", "counted": "photos", "many": "photos", "the": "the photo", "theSubj": "the photo", "theMany": "the photos", "g": "n" }
+  },
+
+  "forms": {
+    "in": "in it",
+    "this": "this",
+    "new": "new",
+    "first": "first",
+    "unknown": "unknown",
+    "created": "created",
+    "updated": "updated",
+    "modified": "modified",
+    "deleted": "deleted",
+    "removed": "removed",
+    "optimized": "Optimized",
+    "found": "found"
+  }
+}
