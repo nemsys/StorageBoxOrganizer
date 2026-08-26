@@ -27,6 +27,7 @@ import { SortFilterBar } from './components/SortFilterBar';
 import { checkForUpdate, applyUpdate } from './native/updates';
 import { v4 as uuidv4 } from 'uuid';
 import { loadDraft, saveDraft, clearDraft } from './utils/draftStorage';
+import { useTranslation } from './translations';
 
 const MOCK_BOXES = [
   {
@@ -57,6 +58,7 @@ const MOCK_ITEMS = [
 function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const { t } = useTranslation();
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
@@ -136,7 +138,7 @@ function App() {
   const askConfirm = (options) => {
     setConfirmDialog({
       isOpen: true,
-      title: options.title || 'Are you sure?',
+      title: options.title || t('common.areYouSure'),
       message: options.message || '',
       type: options.type || 'danger',
       onConfirm: options.onConfirm
@@ -145,21 +147,21 @@ function App() {
 
   // Check the live deployment for a newer build and offer to reload into it.
   const handleCheckForUpdates = async () => {
-    addToast('Checking for updates…', 'info');
+    addToast(t('update.checking'), 'info');
     try {
       const { updateAvailable } = await checkForUpdate();
       if (updateAvailable) {
         askConfirm({
-          title: 'Update available',
-          message: 'A new version is ready. Reload now to update?',
+          title: t('update.availableTitle'),
+          message: t('update.availableMessage'),
           type: 'primary',
           onConfirm: applyUpdate
         });
       } else {
-        addToast("You're on the latest version", 'success');
+        addToast(t('update.latest'), 'success');
       }
     } catch {
-      addToast('Could not check for updates. Check your connection.', 'error');
+      addToast(t('update.failed'), 'error');
     }
   };
 
@@ -403,7 +405,7 @@ function App() {
       setIsAddBoxModalOpen(false);
     } catch (error) {
       console.error("Error adding box:", error);
-      addToast("Failed to add box. Please try again.", "error");
+      addToast(t('box.addFailed'), "error");
     }
   };
 
@@ -434,15 +436,15 @@ function App() {
       await touchBoxes(newItem.boxId);
     } catch (error) {
       console.error("Error adding item:", error);
-      addToast("Failed to add item. Please try again.", "error");
+      addToast(t('item.addFailed'), "error");
     }
   };
 
   // Remove an item from its box without deleting it (it stays in "All Items").
   const handleRemoveItemFromBox = async (itemId) => {
     askConfirm({
-      title: 'Remove from Box?',
-      message: 'Remove this item from the box? (It will remain in "All Items")',
+      title: t('item.removeFromBoxTitle'),
+      message: t('item.removeFromBoxMessage'),
       type: 'primary',
       onConfirm: async () => {
         const previousBoxId = findItemBoxId(itemId);
@@ -455,11 +457,11 @@ function App() {
           // Update allItems to reflect the change
           setAllItems(prev => prev.map(i => i.id === itemId ? { ...i, boxId: '' } : i));
           await touchBoxes(previousBoxId);
-          addToast("Item removed from box", "success");
+          addToast(t('item.removedToast'), "success");
         } catch (err) {
           console.error('Failed to remove item from box', err);
           refreshData(); // Revert on error
-          addToast("Failed to remove item from box", "error");
+          addToast(t('item.removeFailed'), "error");
         }
       }
     });
@@ -468,8 +470,8 @@ function App() {
   // Permanently delete an item (available from both the box view and All Items).
   const handleDeleteItem = async (itemId) => {
     askConfirm({
-      title: 'Delete Item?',
-      message: 'Are you sure you want to PERMANENTLY delete this item?',
+      title: t('item.deleteTitle'),
+      message: t('item.deleteMessage'),
       type: 'danger',
       onConfirm: async () => {
         const previousBoxId = findItemBoxId(itemId);
@@ -481,11 +483,11 @@ function App() {
         try {
           await firebaseStorage.deleteItem(itemId);
           await touchBoxes(previousBoxId);
-          addToast("Item deleted permanently", "success");
+          addToast(t('item.deletedToast'), "success");
         } catch (err) {
           console.error('Failed to delete item', err);
           refreshData(); // Revert on error
-          addToast("Failed to delete item", "error");
+          addToast(t('item.deleteFailed'), "error");
         }
       }
     });
@@ -493,8 +495,8 @@ function App() {
 
   async function handleDeleteBox(id) {
     askConfirm({
-      title: 'Delete Box?',
-      message: 'Are you sure you want to delete this box and all its items?',
+      title: t('box.deleteTitle'),
+      message: t('box.deleteMessage'),
       type: 'danger',
       onConfirm: async () => {
         // Optimistic update
@@ -508,11 +510,11 @@ function App() {
 
         try {
           await firebaseStorage.deleteBox(id);
-          addToast("Box and contents deleted", "success");
+          addToast(t('box.deletedToast'), "success");
         } catch (err) {
           console.error('Failed to delete box', err);
           refreshData(); // Revert
-          addToast("Failed to delete box", "error");
+          addToast(t('box.deleteFailed'), "error");
         }
       }
     });
@@ -520,8 +522,8 @@ function App() {
 
   async function handleRemoveBox(id) {
     askConfirm({
-      title: 'Remove Box?',
-      message: 'Are you sure you want to remove this box? Items will be moved to "Unassigned".',
+      title: t('box.removeTitle'),
+      message: t('box.removeMessage', { unassigned: t('box.unassigned') }),
       type: 'primary',
       onConfirm: async () => {
         // Optimistic update - remove box from list and unassign items
@@ -544,11 +546,11 @@ function App() {
 
           // 3. Delete the box
           await firebaseStorage.deleteBox(id);
-          addToast("Box removed; items unassigned", "success");
+          addToast(t('box.removedToast'), "success");
         } catch (err) {
           console.error('Failed to remove box', err);
           refreshData(); // Revert
-          addToast("Failed to remove box", "error");
+          addToast(t('box.removeFailed'), "error");
         }
       }
     });
@@ -603,7 +605,7 @@ function App() {
     } catch (err) {
       console.error('Failed to update box', err);
       refreshData(); // Revert on error
-      addToast('Failed to update box: ' + err.message, "error");
+      addToast(t('box.updateFailed', { error: err.message }), "error");
     }
   };
 
@@ -647,7 +649,7 @@ function App() {
       }
     } catch (error) {
       console.error("Error updating item:", error);
-      addToast("Failed to update item. Please try again.", "error");
+      addToast(t('item.updateFailed'), "error");
     }
   };
 
@@ -699,7 +701,7 @@ function App() {
       }
     } catch (err) {
       console.error('Failed to move item', err);
-      addToast('Failed to move item: ' + err.message, "error");
+      addToast(t('item.moveFailed', { error: err.message }), "error");
     }
   };
 
@@ -757,7 +759,7 @@ function App() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Export failed:', err);
-      addToast('Failed to export data', "error");
+      addToast(t('export.failed'), "error");
     }
   };
 
@@ -769,22 +771,22 @@ function App() {
   // layout. Safe to run repeatedly; already-optimised entities are skipped.
   const handleOptimizeImages = () => {
     askConfirm({
-      title: 'Optimize images?',
-      message: 'This converts older photos to the faster thumbnail + on-demand format. It may take a moment and is safe to run again later.',
+      title: t('optimize.confirmTitle'),
+      message: t('optimize.confirmMessage'),
       type: 'primary',
       onConfirm: async () => {
-        setImportState({ isImporting: true, progress: 0, phase: 'Scanning…', current: 0, total: 0 });
+        setImportState({ isImporting: true, progress: 0, phase: { key: 'import.phase.scanning' }, current: 0, total: 0 });
         try {
           const converted = await firebaseStorage.optimizeImages((p) => {
             setImportState(prev => ({ ...prev, progress: p.progress, phase: p.phase, current: p.current, total: p.total }));
           });
           setImportState(prev => ({ ...prev, isImporting: false }));
-          addToast(converted > 0 ? `Optimized ${converted} item${converted === 1 ? '' : 's'}` : 'Everything is already optimized', 'success');
+          addToast(converted > 0 ? t('optimize.done', { count: converted }) : t('optimize.alreadyDone'), 'success');
           refreshData();
         } catch (err) {
           console.error('Optimize images failed:', err);
           setImportState(prev => ({ ...prev, isImporting: false }));
-          addToast('Failed to optimize images', 'error');
+          addToast(t('optimize.failed'), 'error');
         }
       }
     });
@@ -799,13 +801,13 @@ function App() {
       try {
         const data = JSON.parse(e.target.result);
         if (!data.boxes || !data.items) {
-          throw new Error('Invalid backup format');
+          throw new Error(t('import.invalidFormat'));
         }
 
         setImportState({
           isImporting: true,
           progress: 0,
-          phase: 'Initializing...',
+          phase: { key: 'import.phase.init' },
           current: 0,
           total: (data.boxes?.length || 0) + (data.items?.length || 0)
         });
@@ -822,18 +824,18 @@ function App() {
         // Brief delay to show 100% completion
         setTimeout(() => {
           setImportState(prev => ({ ...prev, isImporting: false }));
-          addToast('Data imported successfully!', "success");
+          addToast(t('import.success'), "success");
           refreshData();
         }, 800);
       } catch (err) {
         console.error('Import failed:', err);
-        addToast('Failed to import data: ' + err.message, "error");
+        addToast(t('import.failed', { error: err.message }), "error");
       }
     };
 
     askConfirm({
-      title: 'Import Backup?',
-      message: 'This will import data from the backup. Fresh copies of all items and boxes will be created in your account. Proceed?',
+      title: t('import.confirmTitle'),
+      message: t('import.confirmMessage'),
       type: 'primary',
       onConfirm: () => {
         reader.readAsText(file);
@@ -903,11 +905,11 @@ function App() {
     const results = fuse.search(searchQuery).map(result => result.item);
 
     return results.map(item => {
-      if (!item.boxId) return { ...item, boxName: 'Unassigned' };
+      if (!item.boxId) return { ...item, boxName: t('box.unassigned') };
       const box = boxes.find(b => b.id === item.boxId);
-      return { ...item, boxName: box?.name || 'Unknown Box' };
+      return { ...item, boxName: box?.name || t('box.unknown') };
     });
-  }, [view, searchQuery, boxes, items]);
+  }, [view, searchQuery, boxes, items, t]);
 
   // Handle Box Click from Search Results
   const handleBoxClickFromSearch = (boxId) => {
@@ -963,11 +965,11 @@ function App() {
 
     // Enrich with boxName for the footer row (Option C)
     return sorted.map(item => {
-      if (!item.boxId) return { ...item, boxName: 'Unassigned' };
+      if (!item.boxId) return { ...item, boxName: t('box.unassigned') };
       const box = boxes.find(b => b.id === item.boxId);
-      return { ...item, boxName: box?.name || 'Unknown Box' };
+      return { ...item, boxName: box?.name || t('box.unknown') };
     });
-  }, [items, selectedTag, searchQuery, itemSortOrder, view, boxes]);
+  }, [items, selectedTag, searchQuery, itemSortOrder, view, boxes, t]);
 
   // Handle List All Items
   const handleListAllItems = async () => {
@@ -1006,7 +1008,7 @@ function App() {
           {user && (
             <div className="bg-base/50 border-b border-content/15 py-1.5 px-4">
               <div className="container flex justify-end items-center gap-3">
-                <span className="text-xs text-muted">Signed in as <span className="text-content font-medium ml-1">{user.email}</span></span>
+                <span className="text-xs text-muted">{t('nav.signedInAs')} <span className="text-content font-medium ml-1">{user.email}</span></span>
                 <SettingsMenu
                   onManageTags={() => setIsTagManagementModalOpen(true)}
                   onExport={handleExportData}
@@ -1025,7 +1027,7 @@ function App() {
             <div className="flex items-center gap-4">
               {/* Back button - only when inside a box */}
               {view === 'items' && (
-                <button onClick={handleBack} className="p-2.5 rounded-lg hover:bg-elevated text-muted hover:text-content transition-colors shrink-0" aria-label="Back to boxes">
+                <button onClick={handleBack} className="p-2.5 rounded-lg hover:bg-elevated text-muted hover:text-content transition-colors shrink-0" aria-label={t('nav.back')}>
                   <ArrowLeft size={22} />
                 </button>
               )}
@@ -1034,7 +1036,7 @@ function App() {
               <div
                 className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity shrink-0"
                 onClick={handleBack}
-                title="Go to Home"
+                title={t('nav.home')}
               >
                 <div className="p-2 bg-primary/10 rounded-lg text-primary">
                   <PackageOpen size={22} />
@@ -1050,8 +1052,8 @@ function App() {
               {!currentBox && (
                 <div className="flex bg-base/40 p-1 rounded-xl flex-1 max-w-xs border border-content/25 backdrop-blur-xl shadow-lg ring-1 ring-content/5">
                   {[
-                    { id: 'boxes', label: 'Boxes', onClick: handleBack },
-                    { id: 'allItems', label: 'Items', onClick: handleListAllItems }
+                    { id: 'boxes', label: t('nav.boxes'), onClick: handleBack },
+                    { id: 'allItems', label: t('nav.items'), onClick: handleListAllItems }
                   ].map(tab => {
                     const isActive = view === tab.id;
                     return (
@@ -1103,15 +1105,15 @@ function App() {
           <>
             {/* Title + count */}
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-content">Boxes</h2>
-              <span className="text-muted text-sm">{filteredBoxes.length} boxes</span>
+              <h2 className="text-lg font-semibold text-content">{t('box.title')}</h2>
+              <span className="text-muted text-sm">{t('box.count', { count: filteredBoxes.length })}</span>
             </div>
             {/* Search */}
             <div className="mb-6">
               <SearchBar
                 value={boxSearchQuery}
                 onChange={setBoxSearchQuery}
-                placeholder="Search your boxes..."
+                placeholder={t('box.search')}
               />
             </div>
 
@@ -1157,32 +1159,32 @@ function App() {
                       role="button"
                       tabIndex={0}
                       className="flex-1 min-w-0 cursor-pointer rounded-2xl -mx-2 -mt-2 px-2 pt-2 hover:bg-primary/10 transition-colors"
-                      title="Edit Box"
-                      aria-label={`Edit ${currentBox.name}`}
+                      title={t('box.edit')}
+                      aria-label={t('box.editAria', { name: currentBox.name })}
                     >
                       <h1 className="text-2xl md:text-3xl font-bold text-content tracking-tight">{currentBox.name}</h1>
                       <p className="text-muted text-sm leading-relaxed mt-2 max-w-3xl">{currentBox.description}</p>
                     </div>
                     <div className="shrink-0">
                       <OverflowMenu
-                        label="Box actions"
+                        label={t('box.actions')}
                         items={[
                           {
                             id: 'edit',
-                            label: 'Edit Box',
+                            label: t('box.edit'),
                             icon: <Edit size={18} />,
                             onClick: () => handleEditBox(currentBox),
                           },
                           {
                             id: 'remove',
-                            label: 'Remove (keep items)',
+                            label: t('box.removeKeepItems'),
                             icon: <LogOut size={18} />,
                             onClick: () => handleRemoveBox(currentBox.id),
                           },
                           { id: 'divider', isDivider: true },
                           {
                             id: 'delete',
-                            label: 'Delete Box & Items',
+                            label: t('box.deleteWithItems'),
                             icon: <Trash2 size={18} />,
                             danger: true,
                             onClick: () => handleDeleteBox(currentBox.id),
@@ -1198,18 +1200,18 @@ function App() {
                       {currentBox.updatedAt ? (
                         <>
                           <History size={14} className="opacity-60" />
-                          Updated: {formatDate(currentBox.updatedAt)}
+                          {t('box.updatedOn', { date: formatDate(currentBox.updatedAt) })}
                         </>
                       ) : (
                         <>
                           <Calendar size={14} className="opacity-60" />
-                          Created: {formatDate(currentBox.createdAt)}
+                          {t('box.createdOn', { date: formatDate(currentBox.createdAt) })}
                         </>
                       )}
                     </span>
                     <span className="bg-surface/50 px-3 py-1.5 rounded-full border border-content/15 flex items-center gap-1.5">
                       <Package size={14} className="opacity-60" />
-                      {items.length} items
+                      {t('item.count', { count: items.length })}
                     </span>
                   </div>
                 </div>
@@ -1224,7 +1226,7 @@ function App() {
                 <SearchBar
                   value={searchQuery}
                   onChange={setSearchQuery}
-                  placeholder="Search in this box..."
+                  placeholder={t('item.searchInBox')}
                 />
               </div>
             )}
@@ -1235,14 +1237,14 @@ function App() {
                 <div className="p-4 rounded-full bg-surface/60 mb-4">
                   <Package size={28} className="text-muted" />
                 </div>
-                <p className="text-muted text-lg font-medium">No items in this box yet</p>
-                <p className="text-content/50 text-sm mt-1 mb-5">Add your first item to start tracking what's inside.</p>
+                <p className="text-muted text-lg font-medium">{t('item.emptyTitle')}</p>
+                <p className="text-content/50 text-sm mt-1 mb-5">{t('item.emptyHint')}</p>
                 <button
                   onClick={() => setIsAddItemModalOpen(true)}
                   className="btn btn-primary"
                 >
                   <Plus size={18} />
-                  Add item
+                  {t('item.add')}
                 </button>
               </div>
             ) : (
@@ -1263,15 +1265,15 @@ function App() {
           <>
             {/* Title + count */}
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-content">Items</h2>
-              <span className="text-muted text-sm">{allItemsDisplayItems.length} items</span>
+              <h2 className="text-lg font-semibold text-content">{t('item.title')}</h2>
+              <span className="text-muted text-sm">{t('item.count', { count: allItemsDisplayItems.length })}</span>
             </div>
             {/* Search */}
             <div className="mb-6">
               <SearchBar
                 value={searchQuery}
                 onChange={setSearchQuery}
-                placeholder="Search all items..."
+                placeholder={t('item.searchAll')}
               />
             </div>
 
@@ -1385,8 +1387,8 @@ function App() {
               }
             }}
             className="fab-btn"
-            title={view === 'boxes' ? "Add Box" : "Add Item"}
-            aria-label={view === 'boxes' ? "Add Box" : "Add Item"}
+            title={view === 'boxes' ? t('box.add') : t('item.add')}
+            aria-label={view === 'boxes' ? t('box.add') : t('item.add')}
           >
             <Plus size={28} />
           </motion.button>

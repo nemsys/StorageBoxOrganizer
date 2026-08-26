@@ -3,6 +3,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useBackHandler } from '../native/backHandler';
 import { firebaseStorage } from '../services/firebaseStorage';
+import { useTranslation } from '../translations';
 
 /**
  * Fullscreen image viewer.
@@ -17,6 +18,7 @@ import { firebaseStorage } from '../services/firebaseStorage';
  * current slide index — used by the edit modals to remove an image in place.
  */
 export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName, startIndex = 0, onDelete }) {
+    const { t } = useTranslation();
     const [currentIndex, setCurrentIndex] = useState(0);
     const [fullMap, setFullMap] = useState({}); // index -> resolved full data URL
     const [loading, setLoading] = useState(false);
@@ -137,8 +139,8 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
                 onClick={(e) => { e.stopPropagation(); onClose(); }}
                 style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
                 className="absolute right-4 p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-full transition-colors z-20"
-                title="Close (Esc)"
-                aria-label="Close fullscreen"
+                title={t('photo.closeEsc')}
+                aria-label={t('photo.closeFullscreen')}
             >
                 <X size={24} />
             </button>
@@ -149,8 +151,8 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
                     onClick={(e) => { e.stopPropagation(); onDelete(currentIndex); }}
                     style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
                     className="absolute left-4 p-2 bg-red-600 hover:bg-red-500 text-white rounded-full transition-colors z-20"
-                    title="Delete image"
-                    aria-label="Delete image"
+                    title={t('photo.delete')}
+                    aria-label={t('photo.delete')}
                 >
                     <Trash2 size={24} />
                 </button>
@@ -184,7 +186,7 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
                         <button
                             onClick={(e) => { e.stopPropagation(); goToPrevious(); }}
                             className="absolute left-2 top-1/2 -translate-y-1/2 p-2 md:p-3 bg-slate-900/80 hover:bg-slate-800 text-white rounded-full transition-all z-10 backdrop-blur-sm"
-                            aria-label="Previous image"
+                            aria-label={t('photo.previous')}
                         >
                             <ChevronLeft size={24} />
                         </button>
@@ -192,7 +194,7 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
                         <button
                             onClick={(e) => { e.stopPropagation(); goToNext(); }}
                             className="absolute right-2 top-1/2 -translate-y-1/2 p-2 md:p-3 bg-slate-900/80 hover:bg-slate-800 text-white rounded-full transition-all z-10 backdrop-blur-sm"
-                            aria-label="Next image"
+                            aria-label={t('photo.next')}
                         >
                             <ChevronRight size={24} />
                         </button>

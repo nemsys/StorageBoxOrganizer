@@ -5,8 +5,10 @@ import { Upload, Trash2, Search, Camera } from 'lucide-react';
 import { makeDerivatives, refsToThumbs } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
 import { usePhotoCapture } from '../native/usePhotoCapture';
+import { useTranslation } from '../translations';
 
 export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId = '', availableItems = [], availableTags = [], onSelectExisting, askConfirm }) {
+    const { t } = useTranslation();
     const [mode, setMode] = useState('create'); // 'create' | 'select'
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -126,8 +128,8 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
     const requestRemoveImage = (index) => {
         if (typeof askConfirm === 'function') {
             askConfirm({
-                title: 'Remove image?',
-                message: 'Your changes are not saved until you tap Add Item.',
+                title: t('photo.removeTitle'),
+                message: t('photo.removeMessageAddItem', { addItem: t('item.add') }),
                 type: 'danger',
                 onConfirm: () => handleRemoveImage(index)
             });
@@ -159,13 +161,13 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
     };
 
     const getBoxName = (boxId) => {
-        if (!boxId) return 'Unassigned';
+        if (!boxId) return t('box.unassigned');
         const box = boxes.find(b => b.id === boxId);
-        return box?.name || 'Unknown Box';
+        return box?.name || t('box.unknown');
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={handleClose} title="Add Item">
+        <Modal isOpen={isOpen} onClose={handleClose} title={t('item.addTitle')}>
             {/* Mode Tabs */}
             <div className="flex gap-2 mb-4 border-b border-border">
                 <button
@@ -176,7 +178,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                         : 'text-muted hover:text-content/90'
                         }`}
                 >
-                    Create New
+                    {t('item.createNew')}
                 </button>
                 <button
                     type="button"
@@ -186,7 +188,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                         : 'text-muted hover:text-content/90'
                         }`}
                 >
-                    Select Existing
+                    {t('item.selectExisting')}
                 </button>
             </div>
 
@@ -194,25 +196,25 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
             {mode === 'create' && (
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-muted mb-1">Name</label>
+                        <label className="block text-sm font-medium text-muted mb-1">{t('common.name')}</label>
                         <input
                             type="text"
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             className="input"
-                            placeholder="e.g., Hammer"
+                            placeholder={t('item.namePlaceholder')}
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-muted mb-1">Box</label>
+                        <label className="block text-sm font-medium text-muted mb-1">{t('box.label')}</label>
                         <select
                             value={selectedBoxId}
                             onChange={(e) => setSelectedBoxId(e.target.value)}
                             className="input"
                         >
-                            <option value="">Unassigned (No Box)</option>
+                            <option value="">{t('box.unassignedOption')}</option>
                             {boxes.map(box => (
                                 <option key={box.id} value={box.id}>
                                     {box.name}
@@ -222,17 +224,17 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-muted mb-1">Description</label>
+                        <label className="block text-sm font-medium text-muted mb-1">{t('common.description')}</label>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             className="input min-h-[100px]"
-                            placeholder="Details about the item..."
+                            placeholder={t('item.descriptionPlaceholder')}
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-muted mb-1">Images</label>
+                        <label className="block text-sm font-medium text-muted mb-1">{t('common.images')}</label>
 
                         {/* Image Previews Grid */}
                         {imagePreviews.length > 0 && (
@@ -241,15 +243,15 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                                     <div key={index} className="relative group aspect-square">
                                         <img
                                             src={preview}
-                                            alt={`Preview ${index + 1}`}
+                                            alt={t('photo.preview', { index: index + 1 })}
                                             className="w-full h-full object-cover rounded-lg"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => requestRemoveImage(index)}
                                             className="img-delete-btn"
-                                            title="Remove image"
-                                            aria-label="Remove image"
+                                            title={t('photo.remove')}
+                                            aria-label={t('photo.remove')}
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -269,14 +271,14 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                                 className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-surface/50 transition-colors"
                             >
                                 <Camera size={28} className="text-content/50 mb-2" />
-                                <span className="text-sm text-muted">Take Photo</span>
+                                <span className="text-sm text-muted">{t('photo.take')}</span>
                             </button>
                             {/* Gallery: capture-free so the OS shows its lighter multi-select
                                 picker (the intentional default — see draftStorage.js). */}
                             <label className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-surface/50 transition-colors">
                                 <Upload size={28} className="text-content/50 mb-2" />
                                 <span className="text-sm text-muted">
-                                    {imagePreviews.length > 0 ? 'Add more' : 'Gallery'}
+                                    {imagePreviews.length > 0 ? t('photo.addMore') : t('photo.gallery')}
                                 </span>
                                 <input
                                     type="file"
@@ -288,7 +290,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                                 />
                             </label>
                         </div>
-                        <p className="text-xs text-content/50 mt-1">Take a photo or upload from your gallery</p>
+                        <p className="text-xs text-content/50 mt-1">{t('photo.hint')}</p>
                         <CameraCaptureModal
                             isOpen={cameraOpen}
                             onClose={() => setCameraOpen(false)}
@@ -298,8 +300,8 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
 
                     <div>
                         <div className="flex justify-between items-end mb-1">
-                            <label className="block text-sm font-medium text-muted">Tags</label>
-                            <span className="text-[10px] text-content/50 uppercase tracking-wider">Tap chips to add</span>
+                            <label className="block text-sm font-medium text-muted">{t('common.tags')}</label>
+                            <span className="text-[10px] text-content/50 uppercase tracking-wider">{t('item.tagsHint')}</span>
                         </div>
 
                         {/* Tag Ribbon - Horizontal Scrollable Suggestions */}
@@ -349,14 +351,14 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                             value={tags}
                             onChange={(e) => setTags(e.target.value)}
                             className="input"
-                            placeholder="tool, heavy, metal..."
+                            placeholder={t('item.tagsPlaceholder')}
                         />
                     </div>
 
 
                     <div className="pt-4 flex justify-end gap-3">
-                        <button type="button" onClick={handleClose} className="btn btn-ghost">Cancel</button>
-                        <button type="submit" className="btn btn-primary">Add Item</button>
+                        <button type="button" onClick={handleClose} className="btn btn-ghost">{t('common.cancel')}</button>
+                        <button type="submit" className="btn btn-primary">{t('item.add')}</button>
                     </div>
                 </form>
             )}
@@ -366,13 +368,13 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                 <div className="space-y-4">
                     {/* Dropdown to select item */}
                     <div>
-                        <label className="block text-sm font-medium text-muted mb-1">Select Item</label>
+                        <label className="block text-sm font-medium text-muted mb-1">{t('item.selectLabel')}</label>
                         <select
                             className="input"
                             value={selectedExistingId}
                             onChange={(e) => setSelectedExistingId(e.target.value)}
                         >
-                            <option value="">Choose an item...</option>
+                            <option value="">{t('item.choosePlaceholder')}</option>
                             {filteredItems.map(item => (
                                 <option key={item.id} value={item.id}>
                                     {item.name} - {getBoxName(item.boxId)}
@@ -381,7 +383,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                         </select>
                         {filteredItems.length === 0 && (
                             <p className="text-xs text-muted mt-1">
-                                {searchQuery ? 'No items match your search' : 'No items available to select'}
+                                {searchQuery ? t('item.noMatch') : t('item.noneAvailable')}
                             </p>
                         )}
                     </div>
@@ -394,16 +396,16 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="input pl-10"
-                            placeholder="Filter items..."
+                            placeholder={t('item.filterPlaceholder')}
                         />
                     </div>
 
                     <div className="text-xs text-muted text-right">
-                        Showing {filteredItems.length} of {selectableItems.length} items
+                        {t('item.showingCount', { shown: filteredItems.length, total: selectableItems.length })}
                     </div>
 
                     <div className="pt-4 flex justify-end gap-3">
-                        <button type="button" onClick={handleClose} className="btn btn-ghost">Cancel</button>
+                        <button type="button" onClick={handleClose} className="btn btn-ghost">{t('common.cancel')}</button>
                         <button
                             type="button"
                             onClick={() => {
@@ -415,7 +417,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                             disabled={!selectedExistingId}
                             className="btn btn-primary"
                         >
-                            Move Item
+                            {t('item.move')}
                         </button>
                     </div>
                 </div>

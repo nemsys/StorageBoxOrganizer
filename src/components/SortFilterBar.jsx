@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { ArrowUpDown, Tag, ChevronDown, Check } from 'lucide-react';
+import { useTranslation } from '../translations';
 
 const SORT_OPTIONS = [
-    { value: 'newest',    label: 'Newest first' },
-    { value: 'oldest',    label: 'Oldest first' },
-    { value: 'name-asc',  label: 'Name A → Z'   },
-    { value: 'name-desc', label: 'Name Z → A'   },
+    { value: 'newest',    tKey: 'sort.newest'   },
+    { value: 'oldest',    tKey: 'sort.oldest'   },
+    { value: 'name-asc',  tKey: 'sort.nameAsc'  },
+    { value: 'name-desc', tKey: 'sort.nameDesc' },
 ];
 
 export function SortFilterBar({ sortOrder, onSortChange, selectedTag, onTagChange, tags = [] }) {
+    const { t } = useTranslation();
     const [sortOpen,   setSortOpen]   = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
     const sortRef   = useRef(null);
@@ -49,7 +51,7 @@ export function SortFilterBar({ sortOrder, onSortChange, selectedTag, onTagChang
                     className={`sfb__pill ${isSortActive ? 'sfb__pill--on' : ''}`}
                 >
                     <ArrowUpDown size={13} strokeWidth={2.5} />
-                    <span className="sfb__pill-label">{currentSort.label}</span>
+                    <span className="sfb__pill-label">{t(currentSort.tKey)}</span>
                     <ChevronDown size={13} strokeWidth={2.5}
                         className={`sfb__chevron ${sortOpen ? 'sfb__chevron--open' : ''}`} />
                 </button>
@@ -64,7 +66,7 @@ export function SortFilterBar({ sortOrder, onSortChange, selectedTag, onTagChang
                                 onClick={() => { onSortChange(opt.value); setSortOpen(false); }}
                                 className={`sfb__drop-item ${sortOrder === opt.value ? 'sfb__drop-item--on' : ''}`}
                             >
-                                {opt.label}
+                                {t(opt.tKey)}
                                 {sortOrder === opt.value && <Check size={14} strokeWidth={2.5} />}
                             </button>
                         ))}
@@ -81,7 +83,7 @@ export function SortFilterBar({ sortOrder, onSortChange, selectedTag, onTagChang
                     className={`sfb__pill ${isFilterActive ? 'sfb__pill--on' : ''}`}
                 >
                     <Tag size={13} strokeWidth={2.5} />
-                    <span className="sfb__pill-label">{selectedTag || 'All tags'}</span>
+                    <span className="sfb__pill-label">{selectedTag || t('tags.all')}</span>
                     {isFilterActive && <span className="sfb__dot" aria-hidden="true" />}
                     <ChevronDown size={13} strokeWidth={2.5}
                         className={`sfb__chevron ${filterOpen ? 'sfb__chevron--open' : ''}`} />
@@ -96,7 +98,7 @@ export function SortFilterBar({ sortOrder, onSortChange, selectedTag, onTagChang
                                 onClick={() => { onTagChange(''); setFilterOpen(false); }}
                                 className={`sfb__drop-item ${!selectedTag ? 'sfb__drop-item--on' : ''}`}
                             >
-                                All tags
+                                {t('tags.all')}
                                 {!selectedTag && <Check size={14} strokeWidth={2.5} />}
                             </button>
 
@@ -114,7 +116,7 @@ export function SortFilterBar({ sortOrder, onSortChange, selectedTag, onTagChang
                                     )}
                                 </button>
                             )) : (
-                                <div className="sfb__drop-empty">No tags yet</div>
+                                <div className="sfb__drop-empty">{t('tags.none')}</div>
                             )}
                         </div>
                     </div>

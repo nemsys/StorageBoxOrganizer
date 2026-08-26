@@ -99,20 +99,25 @@ const sourceFiles = [];
   }
 })(join(root, 'src'));
 
-const usedKeys = new Set();
+// Called keys must exist. Keys only *mentioned* — in a lookup table like
+// AUTH_ERROR_KEYS, a { key, params } progress payload, a tKey on an options
+// array — count as used but are never required to exist, since that pattern
+// can't be told apart from an ordinary dotted string such as 'fuse.js'.
+const calledKeys = new Set();
+const mentionedKeys = new Set();
 for (const file of sourceFiles) {
   const code = readFileSync(file, 'utf8');
-  for (const m of code.matchAll(/\bt\(\s*['"]([\w.]+)['"]/g)) usedKeys.add(m[1]);
-  // Keys handed to a component as data rather than translated on the spot.
-  for (const m of code.matchAll(/\b(?:tKey|phaseKey|labelKey)\s*[:=]\s*['"]([\w.]+)['"]/g)) usedKeys.add(m[1]);
+  for (const m of code.matchAll(/\bt\(\s*['"]([\w.]+)['"]/g)) calledKeys.add(m[1]);
+  for (const m of code.matchAll(/\btranslate\(\s*\w+\s*,\s*['"]([\w.]+)['"]/g)) calledKeys.add(m[1]);
+  for (const m of code.matchAll(/['"]([a-z][\w]*(?:\.[\w]+)+)['"]/g)) mentionedKeys.add(m[1]);
 }
 
 const defined = new Set(Object.keys(strings.en).map(baseKey));
-for (const key of usedKeys) {
-  if (!defined.has(key)) fail(`code uses t("${key}") but no such key exists in en.json`);
+for (const key of calledKeys) {
+  if (!defined.has(key)) fail(`code calls t("${key}") but no such key exists in en.json`);
 }
 for (const key of defined) {
-  if (!usedKeys.has(key)) warn(`"${key}" is defined but never used in the code`);
+  if (!calledKeys.has(key) && !mentionedKeys.has(key)) warn(`"${key}" is defined but never used in the code`);
 }
 
 // ── report ───────────────────────────────────────────────────────────────────

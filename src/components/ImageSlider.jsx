@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from '../translations';
 
 export function ImageSlider({ images, alt, onImageClick, className = '', showNavigation: showNavigationProp = true, fit = 'contain' }) {
+    const { t } = useTranslation();
     const [currentIndex, setCurrentIndex] = useState(0);
 
     if (!images || images.length === 0) {
@@ -57,7 +59,7 @@ export function ImageSlider({ images, alt, onImageClick, className = '', showNav
                         onClick={goToPrevious}
                         style={{ top: '50%', transform: 'translateY(-50%)' }}
                         className="absolute left-2 p-2 bg-base text-content rounded-full hover:bg-surface transition-all z-50 opacity-100 hover:scale-110"
-                        aria-label="Previous image"
+                        aria-label={t('photo.previous')}
                     >
                         <ChevronLeft size={24} />
                     </button>
@@ -67,7 +69,7 @@ export function ImageSlider({ images, alt, onImageClick, className = '', showNav
                         onClick={goToNext}
                         style={{ top: '50%', transform: 'translateY(-50%)' }}
                         className="absolute right-2 p-2 bg-base text-content rounded-full hover:bg-surface transition-all z-50 opacity-100 hover:scale-110"
-                        aria-label="Next image"
+                        aria-label={t('photo.next')}
                     >
                         <ChevronRight size={24} />
                     </button>
@@ -82,7 +84,7 @@ export function ImageSlider({ images, alt, onImageClick, className = '', showNav
                                     ? 'bg-white w-6 h-2.5'
                                     : 'bg-white/50 hover:bg-white/75 w-2.5 h-2.5'
                                     }`}
-                                aria-label={`Go to image ${index + 1}`}
+                                aria-label={t('photo.goTo', { index: index + 1 })}
                             />
                         ))}
                     </div>

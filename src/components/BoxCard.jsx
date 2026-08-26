@@ -1,8 +1,10 @@
 import { Package, ZoomIn } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 import { getImageRefs, refsToThumbs } from '../utils/imageUtils';
+import { useTranslation } from '../translations';
 
 export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
+    const { t } = useTranslation();
     // Browse from inline thumbnails; full-res is fetched on demand (fullscreen).
     const imageRefs = getImageRefs(box);
     const displayImages = refsToThumbs(imageRefs);
@@ -42,9 +44,9 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
                         }}
                         className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         style={{ background: 'rgba(0,0,0,0.35)', cursor: 'zoom-in' }}
-                        title="View fullscreen"
+                        title={t('photo.viewFullscreen')}
                         role="button"
-                        aria-label={`View ${box.name} image fullscreen`}
+                        aria-label={t('box.viewFullscreen', { name: box.name })}
                     >
                         <div className="p-2 bg-base/70 rounded-full backdrop-blur-sm">
                             <ZoomIn size={22} className="text-content" />
@@ -63,7 +65,7 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
 
                 {/* Item Count Badge */}
                 <div className="badge badge-count absolute z-20 bottom-2 right-2 pointer-events-none">
-                    {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                    {t('box.itemCount', { count: itemCount })}
                 </div>
             </div>
 
@@ -72,7 +74,7 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
                     {box.name}
                 </h3>
                 <p className="text-sm text-muted line-clamp-2 leading-relaxed">
-                    {box.description || 'No description'}
+                    {box.description || t('common.noDescription')}
                 </p>
             </div>
         </div>

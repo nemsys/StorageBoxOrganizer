@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react';
 import { Modal } from './Modal';
 import { Tag, Edit2, Trash2, Check, X } from 'lucide-react';
+import { useTranslation } from '../translations';
 
 export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onDeleteTag, addToast, askConfirm }) {
+    const { t } = useTranslation();
     const [editingTag, setEditingTag] = useState(null); // { oldName, newName }
     const [isProcessing, setIsProcessing] = useState(false);
     const [tagSortOrder, setTagSortOrder] = useState('alpha'); // 'alpha' | 'count'
@@ -48,33 +50,33 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
         setIsProcessing(true);
         try {
             await onRenameTag(editingTag.oldName, editingTag.newName.trim());
-            addToast(`Tag renamed to "${editingTag.newName.trim()}"`, "success");
+            addToast(t('tags.renamed', { name: editingTag.newName.trim() }), "success");
             setEditingTag(null);
         } catch (err) {
             console.error("Failed to rename tag:", err);
-            addToast("Failed to rename tag. Please try again.", "error");
+            addToast(t('tags.renameFailed'), "error");
         } finally {
             setIsProcessing(false);
         }
     };
 
     const handleDelete = async (tag, count) => {
-        const message = count > 0 
-            ? `Are you sure you want to remove the tag "${tag}" from ${count} item(s)?`
-            : `Are you sure you want to remove the tag "${tag}"?`;
+        const message = count > 0
+            ? t('tags.deleteMessage', { name: tag, count })
+            : t('tags.deleteMessageUnused', { name: tag });
 
         askConfirm({
-            title: 'Delete Tag?',
+            title: t('tags.deleteTitle'),
             message: message,
             type: 'danger',
             onConfirm: async () => {
                 setIsProcessing(true);
                 try {
                     await onDeleteTag(tag);
-                    addToast(`Tag "${tag}" deleted`, "success");
+                    addToast(t('tags.deletedToast', { name: tag }), "success");
                 } catch (err) {
                     console.error("Failed to delete tag:", err);
-                    addToast("Failed to delete tag. Please try again.", "error");
+                    addToast(t('tags.deleteFailed'), "error");
                 } finally {
                     setIsProcessing(false);
                 }
@@ -83,22 +85,22 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Manage Tags">
+        <Modal isOpen={isOpen} onClose={onClose} title={t('tags.title')}>
             <div className="space-y-4">
                 {tagCounts.length > 0 && (
                     <div className="flex items-center justify-between pb-2 border-b border-content/15">
                         <span className="text-xs font-medium text-muted uppercase tracking-wider">
-                            {tagCounts.length} {tagCounts.length === 1 ? 'tag' : 'tags'} found
+                            {t('tags.found', { count: tagCounts.length })}
                         </span>
                         <div className="flex items-center gap-2">
-                             <span className="text-xs text-content/50">Sort by:</span>
+                             <span className="text-xs text-content/50">{t('common.sortBy')}</span>
                              <select
                                 value={tagSortOrder}
                                 onChange={(e) => setTagSortOrder(e.target.value)}
                                 className="bg-surface border border-border/50 rounded-lg px-2 py-1 text-xs text-content cursor-pointer hover:bg-elevated transition-colors outline-none focus:ring-1 focus:ring-primary/50"
                              >
-                                <option value="alpha" className="bg-base text-content">Alphabetical</option>
-                                <option value="count" className="bg-base text-content">Item Count</option>
+                                <option value="alpha" className="bg-base text-content">{t('tags.sortAlpha')}</option>
+                                <option value="count" className="bg-base text-content">{t('tags.sortCount')}</option>
                              </select>
                         </div>
                     </div>
@@ -109,8 +111,8 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                         <div className="w-16 h-16 bg-surface/50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-content/15">
                             <Tag size={32} className="text-content/50" />
                         </div>
-                        <p className="text-muted">No tags found in your inventory.</p>
-                        <p className="text-xs text-content/50 mt-1">Tags you add to items will appear here.</p>
+                        <p className="text-muted">{t('tags.emptyTitle')}</p>
+                        <p className="text-xs text-content/50 mt-1">{t('tags.emptyHint')}</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-white/5">
@@ -136,7 +138,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                                                     onClick={handleConfirmRename}
                                                     className="p-1.5 text-success hover:bg-success/10 rounded-md transition-colors"
                                                     disabled={isProcessing}
-                                                    title="Confirm rename"
+                                                    title={t('tags.confirmRename')}
                                                 >
                                                     <Check size={18} />
                                                 </button>
@@ -144,7 +146,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                                                     onClick={handleCancelRename}
                                                     className="p-1.5 text-muted hover:bg-elevated rounded-md transition-colors"
                                                     disabled={isProcessing}
-                                                    title="Cancel"
+                                                    title={t('tags.cancelRename')}
                                                 >
                                                     <X size={18} />
                                                 </button>
@@ -154,7 +156,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                                         <>
                                             <span className="text-content font-medium truncate">{tag}</span>
                                             <span className="text-[10px] font-bold uppercase tracking-wider bg-surface text-muted px-2 py-0.5 rounded-md border border-content/15 shrink-0">
-                                                {count} {count === 1 ? 'item' : 'items'}
+                                                {t('tags.itemCount', { count })}
                                             </span>
                                         </>
                                     )}
@@ -165,7 +167,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                                         <button 
                                             onClick={() => handleStartRename(tag)}
                                             className="p-2 text-muted hover:text-content hover:bg-elevated rounded-lg transition-colors outline-none focus:ring-2 focus:ring-primary/50"
-                                            title="Rename tag"
+                                            title={t('tags.rename')}
                                             disabled={isProcessing}
                                         >
                                             <Edit2 size={16} />
@@ -173,7 +175,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                                         <button 
                                             onClick={() => handleDelete(tag, count)}
                                             className="p-2 text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors outline-none focus:ring-2 focus:ring-danger/50"
-                                            title="Delete tag"
+                                            title={t('tags.delete')}
                                             disabled={isProcessing}
                                         >
                                             <Trash2 size={16} />
@@ -190,7 +192,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                 <div className="absolute inset-0 bg-base flex items-center justify-center rounded-xl z-50 pointer-events-auto">
                     <div className="bg-base border border-content/25 p-4 rounded-2xl shadow-2xl flex items-center gap-3">
                         <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                        <span className="text-sm font-medium text-content/90">Updating items...</span>
+                        <span className="text-sm font-medium text-content/90">{t('tags.updating')}</span>
                     </div>
                 </div>
             )}

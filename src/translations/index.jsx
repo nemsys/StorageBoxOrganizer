@@ -1,3 +1,8 @@
+/* eslint-disable react-refresh/only-export-components --
+   This module deliberately exports the provider together with the hook, the
+   language list and the bare translate() helper: they are one unit, and
+   splitting them would only buy fast refresh on a context that mounts once at
+   the app root. Editing this file triggers a full reload; that's the trade. */
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 
 import en from './en.json';

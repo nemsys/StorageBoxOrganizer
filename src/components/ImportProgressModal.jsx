@@ -1,7 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { UploadCloud, CheckCircle2, Boxes } from 'lucide-react';
+import { useTranslation } from '../translations';
 
 export const ImportProgressModal = ({ isOpen, progress, phase, current, total }) => {
+  const { t } = useTranslation();
   return (
     <AnimatePresence>
       {isOpen && (
@@ -43,10 +45,10 @@ export const ImportProgressModal = ({ isOpen, progress, phase, current, total })
 
               <div className="space-y-2 w-full">
                 <h3 className="text-xl font-bold text-content tracking-tight">
-                  {progress < 100 ? 'Importing Your Data' : 'Import Complete'}
+                  {progress < 100 ? t('import.title') : t('import.complete')}
                 </h3>
                 <p className="text-muted text-sm font-medium">
-                  {phase}
+                  {phase?.key ? t(phase.key, phase.params) : phase}
                 </p>
               </div>
 
@@ -54,7 +56,7 @@ export const ImportProgressModal = ({ isOpen, progress, phase, current, total })
               <div className="w-full space-y-3">
                 <div className="flex justify-between items-end">
                   <span className="text-xs font-semibold text-content/50 uppercase tracking-wider">
-                    Overall Progress
+                    {t('import.overall')}
                   </span>
                   <span className="text-sm font-bold text-content tabular-nums">
                     {progress}%
@@ -74,14 +76,14 @@ export const ImportProgressModal = ({ isOpen, progress, phase, current, total })
                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-elevated border border-content/15">
                       <Boxes size={14} className="text-muted" />
                       <span className="text-xs font-medium text-muted">
-                        {current} of {total} items
+                        {t('import.progressCount', { current, total })}
                       </span>
                    </div>
                 </div>
               </div>
 
               <p className="text-[11px] text-content/50 italic mt-2">
-                Please do not close your browser until the process is finished.
+                {t('import.warning')}
               </p>
             </div>
           </motion.div>
