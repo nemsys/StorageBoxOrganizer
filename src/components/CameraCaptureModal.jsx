@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, RefreshCw, Loader2 } from 'lucide-react';
 import { makeDerivatives } from '../utils/imageUtils';
 import { useBackHandler } from '../native/backHandler';
+import { useTranslation } from '../translations';
 
 /**
  * In-app camera capture. Streams the device camera into a <video> element and
@@ -16,6 +17,7 @@ import { useBackHandler } from '../native/backHandler';
  *   onCapture  - called with { thumb, full } derivatives of the captured photo
  */
 export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
+    const { t } = useTranslation();
     const videoRef = useRef(null);
     const streamRef = useRef(null);
     const [facingMode, setFacingMode] = useState('environment');
@@ -80,8 +82,8 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                 if (cancelled) return;
                 setError(
                     err && err.name === 'NotAllowedError'
-                        ? 'Camera permission was denied. Allow camera access in your browser, or use the Gallery option.'
-                        : 'Could not open the camera. Use the Gallery option instead.'
+                        ? t('camera.denied')
+                        : t('camera.failed')
                 );
             }
         })();
@@ -90,7 +92,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
             cancelled = true;
             stopStream();
         };
-    }, [isOpen, facingMode]);
+    }, [isOpen, facingMode, t]);
 
     // Lock background scroll while the camera is open.
     useEffect(() => {
@@ -126,7 +128,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                 });
             }
             if (!video.videoWidth) {
-                setError('Camera is still starting — please tap again.');
+                setError(t('camera.starting'));
                 setBusy(false);
                 return;
             }
@@ -142,7 +144,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
             onCapture(derivatives);
             handleClose();
         } catch {
-            setError('Failed to capture the photo. Please try again.');
+            setError(t('camera.captureFailed'));
             setBusy(false);
         }
     };
@@ -161,16 +163,16 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                     type="button"
                     onClick={handleClose}
                     className="btn-icon btn-ghost text-white"
-                    aria-label="Close camera"
+                    aria-label={t('camera.close')}
                 >
                     <X size={24} />
                 </button>
-                <span className="text-sm text-slate-300">Take Photo</span>
+                <span className="text-sm text-slate-300">{t('photo.take')}</span>
                 <button
                     type="button"
                     onClick={() => setFacingMode(m => (m === 'environment' ? 'user' : 'environment'))}
                     className="btn-icon btn-ghost text-white"
-                    aria-label="Switch camera"
+                    aria-label={t('camera.switch')}
                 >
                     <RefreshCw size={20} />
                 </button>
@@ -219,7 +221,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                     type="button"
                     onClick={handleCapture}
                     disabled={!!error || busy}
-                    aria-label="Capture photo"
+                    aria-label={t('camera.capture')}
                     className="active:scale-95"
                     style={{
                         width: '4.5rem',

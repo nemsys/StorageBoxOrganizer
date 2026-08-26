@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw, ImageDown, LogOut } from 'lucide-react';
+import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw, ImageDown, LogOut, Languages } from 'lucide-react';
+import { useTranslation, LANGUAGES } from '../translations';
 
 export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImages, theme, onToggleTheme, onCheckUpdates, onSignOut }) => {
+  const { t, lang, setLang } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -19,7 +21,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
   const menuItems = [
     {
       id: 'theme',
-      label: theme === 'dark' ? 'Light Mode' : 'Dark Mode',
+      label: theme === 'dark' ? t('settings.lightMode') : t('settings.darkMode'),
       icon: theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />,
       onClick: () => {
         onToggleTheme();
@@ -32,7 +34,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
     },
     {
       id: 'tags',
-      label: 'Manage Tags',
+      label: t('settings.manageTags'),
       icon: <Tags size={18} />,
       onClick: () => {
         onManageTags();
@@ -45,7 +47,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
     },
     {
       id: 'export',
-      label: 'Export Data',
+      label: t('settings.export'),
       icon: <Download size={18} />,
       onClick: () => {
         onExport();
@@ -54,7 +56,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
     },
     {
       id: 'import',
-      label: 'Import Data',
+      label: t('settings.import'),
       icon: <Upload size={18} />,
       onClick: () => {
         onImport();
@@ -64,7 +66,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
     ...(onOptimizeImages ? [
       {
         id: 'optimize-images',
-        label: 'Optimize Images',
+        label: t('settings.optimizeImages'),
         icon: <ImageDown size={18} />,
         onClick: () => {
           onOptimizeImages();
@@ -79,7 +81,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
       },
       {
         id: 'check-updates',
-        label: 'Check for Updates',
+        label: t('settings.checkUpdates'),
         icon: <RefreshCw size={18} />,
         onClick: () => {
           onCheckUpdates();
@@ -94,7 +96,7 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
       },
       {
         id: 'sign-out',
-        label: 'Sign Out',
+        label: t('settings.signOut'),
         icon: <LogOut size={18} />,
         onClick: () => {
           onSignOut();
@@ -109,8 +111,8 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="p-2.5 rounded-lg bg-elevated hover:bg-elevated border border-content/15 text-muted hover:text-content transition-all group"
-        title="Settings"
-        aria-label="Settings Menu"
+        title={t('settings.title')}
+        aria-label={t('settings.menu')}
       >
         <Settings size={20} className={`transition-transform duration-500 ${isOpen ? 'text-primary rotate-45' : ''}`} />
       </button>
@@ -122,8 +124,33 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.1, ease: "easeOut" }}
-            className="absolute right-0 mt-3 w-64 py-2 bg-base border border-content/25 rounded-xl shadow-2xl z-50 overflow-hidden"
+            className="absolute right-0 mt-3 w-72 py-2 bg-base border border-content/25 rounded-xl shadow-2xl z-50 overflow-hidden"
           >
+            <div className="flex items-center gap-2 px-4 py-2">
+              <span className="text-content/50">
+                <Languages size={18} />
+              </span>
+              <span className="text-sm font-medium text-muted flex-1">{t('lang.name')}</span>
+              <div className="flex bg-elevated rounded-lg p-0.5 border border-content/15">
+                {LANGUAGES.map((option) => (
+                  <button
+                    key={option.code}
+                    onClick={() => setLang(option.code)}
+                    aria-pressed={lang === option.code}
+                    title={option.name}
+                    className={`px-2.5 py-1 text-xs font-bold rounded-md transition-colors ${
+                      lang === option.code
+                        ? 'bg-primary/15 text-primary'
+                        : 'text-muted hover:text-content'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="border-b border-content/15 my-1" />
+
             {menuItems.map((item) => (
               item.isDivider ? (
                 <div key={item.id} className="border-b border-content/15 my-1" />

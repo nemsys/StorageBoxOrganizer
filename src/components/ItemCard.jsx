@@ -2,8 +2,10 @@ import { Package, PackageMinus, Edit, Trash2, Tag, ChevronRight, ZoomIn } from '
 import { ImageSlider } from './ImageSlider';
 import { OverflowMenu } from './OverflowMenu';
 import { getImageRefs, refsToThumbs } from '../utils/imageUtils';
+import { useTranslation } from '../translations';
 
 export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onBoxClick, onImageClick, showNavigation = false }) {
+    const { t } = useTranslation();
     // Browse from inline thumbnails; full-res is fetched on demand (fullscreen).
     const imageRefs = getImageRefs(item);
     const displayImages = refsToThumbs(imageRefs);
@@ -40,9 +42,9 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                         }}
                         className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         style={{ background: 'rgba(0,0,0,0.35)', cursor: 'zoom-in' }}
-                        title="View fullscreen"
+                        title={t('photo.viewFullscreen')}
                         role="button"
-                        aria-label={`View ${item.name} image fullscreen`}
+                        aria-label={t('item.viewFullscreen', { name: item.name })}
                     >
                         <div className="p-2 bg-base/70 rounded-full backdrop-blur-sm">
                             <ZoomIn size={22} className="text-content" />
@@ -71,8 +73,8 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                             role="button"
                             tabIndex={0}
                             className="flex-1 min-w-0 cursor-pointer rounded-lg -mx-1 -mt-1 px-1 pt-1 hover:bg-primary/10 transition-colors"
-                            title="Edit Item"
-                            aria-label={`Edit ${item.name}`}
+                            title={t('item.edit')}
+                            aria-label={t('item.editAria', { name: item.name })}
                         >
                             <h3 className="text-[15px] font-semibold text-content whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
                             <p className="text-sm text-muted mb-3 line-clamp-1">{item.description}</p>
@@ -87,13 +89,13 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                     {(onEdit || onRemoveFromBox || onDelete) && (
                         <div className="flex-shrink-0">
                             <OverflowMenu
-                                label="Item actions"
+                                label={t('item.actions')}
                                 buttonClassName="p-3 rounded-lg text-muted hover:bg-elevated hover:text-content transition-colors flex items-center justify-center"
                                 items={[
-                                    onEdit && { id: 'edit', label: 'Edit Item', icon: <Edit size={18} />, onClick: () => onEdit(item) },
+                                    onEdit && { id: 'edit', label: t('item.edit'), icon: <Edit size={18} />, onClick: () => onEdit(item) },
                                     (onEdit && (onRemoveFromBox || onDelete)) && { id: 'divider', isDivider: true },
-                                    onRemoveFromBox && { id: 'remove', label: 'Remove from Box', icon: <PackageMinus size={18} />, onClick: () => onRemoveFromBox(item.id) },
-                                    onDelete && { id: 'delete', label: 'Delete Item', icon: <Trash2 size={18} />, danger: true, onClick: () => onDelete(item.id) },
+                                    onRemoveFromBox && { id: 'remove', label: t('item.removeFromBox'), icon: <PackageMinus size={18} />, onClick: () => onRemoveFromBox(item.id) },
+                                    onDelete && { id: 'delete', label: t('item.delete'), icon: <Trash2 size={18} />, danger: true, onClick: () => onDelete(item.id) },
                                 ].filter(Boolean)}
                             />
                         </div>
@@ -130,7 +132,7 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                 ) : (
                     <div className="card-footer card-footer--static">
                         <Package size={14} className="shrink-0" />
-                        <span>Unassigned</span>
+                        <span>{t('box.unassigned')}</span>
                     </div>
                 )
             )}

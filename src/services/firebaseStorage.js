@@ -325,6 +325,8 @@ export const firebaseStorage = {
     const totalSteps = (boxes?.length || 0) + (items?.length || 0);
     let completedSteps = 0;
 
+    // `phase` is a { key, params } pair rather than a sentence: this layer has no
+    // access to the active language, so the UI translates it when it renders.
     const reportProgress = (phase) => {
       completedSteps++;
       if (onProgress) {
@@ -354,7 +356,7 @@ export const firebaseStorage = {
           images: refs,
           image: refs[0]?.thumb || null,
         });
-        reportProgress(`Processing box: ${box.name}`);
+        reportProgress({ key: 'import.phase.box', params: { name: box.name } });
       }
     }
 
@@ -374,7 +376,7 @@ export const firebaseStorage = {
           images: refs,
           image: refs[0]?.thumb || null,
         });
-        reportProgress(`Processing item: ${item.name}`);
+        reportProgress({ key: 'import.phase.item', params: { name: item.name } });
       }
     }
   },
@@ -412,7 +414,10 @@ export const firebaseStorage = {
       if (onProgress) {
         onProgress({
           progress: total > 0 ? Math.round((done / total) * 100) : 100,
-          phase: `Optimizing ${ownerType}: ${entity.name || ''}`,
+          phase: {
+            key: ownerType === 'box' ? 'import.phase.optimizingBox' : 'import.phase.optimizingItem',
+            params: { name: entity.name || '' },
+          },
           current: done,
           total,
         });

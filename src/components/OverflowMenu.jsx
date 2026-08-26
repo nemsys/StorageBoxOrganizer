@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MoreVertical } from 'lucide-react';
+import { useTranslation } from '../translations';
 
 /**
  * Reusable "⋮" overflow menu.
@@ -11,10 +12,12 @@ import { MoreVertical } from 'lucide-react';
  *
  * @param {Array} items - [{ id, label, icon, onClick, danger, isDivider }]
  * @param {'right'|'left'} [align='right'] - which edge the dropdown aligns to
- * @param {string} [label='More actions'] - accessible label for the trigger
+ * @param {string} [label] - accessible label for the trigger (defaults to a generic one)
  * @param {string} [buttonClassName] - override for the trigger button styles
  */
-export const OverflowMenu = ({ items = [], align = 'right', label = 'More actions', buttonClassName }) => {
+export const OverflowMenu = ({ items = [], align = 'right', label, buttonClassName }) => {
+  const { t } = useTranslation();
+  const triggerLabel = label ?? t('common.moreActions');
   const [isOpen, setIsOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0, right: 0 });
   const triggerRef = useRef(null);
@@ -72,8 +75,8 @@ export const OverflowMenu = ({ items = [], align = 'right', label = 'More action
       <button
         onClick={(e) => { e.stopPropagation(); setIsOpen((v) => !v); }}
         className={buttonClassName || 'p-2.5 rounded-xl text-muted hover:bg-elevated hover:text-content transition-all hover:scale-105 active:scale-95'}
-        title={label}
-        aria-label={label}
+        title={triggerLabel}
+        aria-label={triggerLabel}
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >

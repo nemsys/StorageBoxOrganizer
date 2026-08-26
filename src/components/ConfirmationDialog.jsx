@@ -1,4 +1,5 @@
 import { Modal } from './Modal';
+import { useTranslation } from '../translations';
 
 export const ConfirmationDialog = ({ 
   isOpen, 
@@ -6,10 +7,11 @@ export const ConfirmationDialog = ({
   title, 
   message, 
   onConfirm, 
-  confirmLabel = 'Confirm', 
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   type = 'danger' // 'danger' | 'primary'
 }) => {
+  const { t } = useTranslation();
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
       <div>
@@ -23,7 +25,7 @@ export const ConfirmationDialog = ({
             className="btn btn-ghost"
             style={{ flex: 1 }}
           >
-            {cancelLabel}
+            {cancelLabel ?? t('common.cancel')}
           </button>
           <button
             onClick={() => {
@@ -33,7 +35,7 @@ export const ConfirmationDialog = ({
             className={`btn ${type === 'danger' ? 'btn-danger' : 'btn-primary'}`}
             style={{ flex: 1 }}
           >
-            {confirmLabel}
+            {confirmLabel ?? t('common.confirm')}
           </button>
         </div>
       </div>

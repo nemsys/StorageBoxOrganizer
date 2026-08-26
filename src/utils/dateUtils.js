@@ -1,5 +1,7 @@
+// A missing timestamp renders as a dash rather than a word, so these helpers
+// stay outside the translation layer.
 export function formatDate(timestamp) {
-    if (!timestamp) return 'Unknown';
+    if (!timestamp) return '—';
     const date = new Date(timestamp);
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -8,7 +10,7 @@ export function formatDate(timestamp) {
 }
 
 export function formatDateTime(timestamp) {
-    if (!timestamp) return 'Unknown';
+    if (!timestamp) return '—';
     const date = new Date(timestamp);
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');

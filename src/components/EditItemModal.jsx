@@ -7,8 +7,10 @@ import { Upload, Trash2, Calendar, History, Camera } from 'lucide-react';
 import { makeDerivatives, getImageRefs, refsToThumbs } from '../utils/imageUtils';
 import { formatDate, formatDateTime } from '../utils/dateUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
+import { useTranslation } from '../translations';
 
 export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], availableTags = [], askConfirm }) {
+    const { t } = useTranslation();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [images, setImages] = useState([]);
@@ -86,8 +88,8 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
     const requestRemoveImage = (index) => {
         if (typeof askConfirm === 'function') {
             askConfirm({
-                title: 'Remove image?',
-                message: 'Your changes are not saved until you tap Save Changes.',
+                title: t('photo.removeTitle'),
+                message: t('photo.removeMessageSave', { save: t('common.save') }),
                 type: 'danger',
                 onConfirm: () => handleRemoveImage(index)
             });
@@ -111,28 +113,28 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={handleClose} title="Edit Item">
+        <Modal isOpen={isOpen} onClose={handleClose} title={t('item.editTitle')}>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-muted mb-1">Name</label>
+                    <label className="block text-sm font-medium text-muted mb-1">{t('common.name')}</label>
                     <input
                         type="text"
                         required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="input"
-                        placeholder="e.g., Hammer"
+                        placeholder={t('item.namePlaceholder')}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-muted mb-1">Box</label>
+                    <label className="block text-sm font-medium text-muted mb-1">{t('box.label')}</label>
                     <select
                         value={selectedBoxId}
                         onChange={(e) => setSelectedBoxId(e.target.value)}
                         className="input"
                     >
-                        <option value="">Unassigned (No Box)</option>
+                        <option value="">{t('box.unassignedOption')}</option>
                         {boxes.map(box => (
                             <option key={box.id} value={box.id}>
                                 {box.name}
@@ -142,17 +144,17 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-muted mb-1">Description</label>
+                    <label className="block text-sm font-medium text-muted mb-1">{t('common.description')}</label>
                     <textarea
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         className="input min-h-[100px]"
-                        placeholder="Details about the item..."
+                        placeholder={t('item.descriptionPlaceholder')}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-muted mb-1">Images</label>
+                    <label className="block text-sm font-medium text-muted mb-1">{t('common.images')}</label>
 
                     {/* Image Previews Grid */}
                     {imagePreviews.length > 0 && (
@@ -161,7 +163,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                                 <div key={index} className="relative group aspect-square">
                                     <img
                                         src={preview}
-                                        alt={`Preview ${index + 1}`}
+                                        alt={t('photo.preview', { index: index + 1 })}
                                         onClick={() => setViewerIndex(index)}
                                         className="w-full h-full object-cover rounded-lg cursor-pointer"
                                     />
@@ -169,8 +171,8 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                                         type="button"
                                         onClick={() => requestRemoveImage(index)}
                                         className="img-delete-btn"
-                                        title="Remove image"
-                                        aria-label="Remove image"
+                                        title={t('photo.remove')}
+                                        aria-label={t('photo.remove')}
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -190,14 +192,14 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                             className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-surface/50 transition-colors"
                         >
                             <Camera size={28} className="text-content/50 mb-2" />
-                            <span className="text-sm text-muted">Take Photo</span>
+                            <span className="text-sm text-muted">{t('photo.take')}</span>
                         </button>
                         {/* Gallery: capture-free so the OS shows its lighter multi-select
                             picker (the intentional default — see draftStorage.js). */}
                         <label className="flex flex-col items-center justify-center flex-1 h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-surface/50 transition-colors">
                             <Upload size={28} className="text-content/50 mb-2" />
                             <span className="text-sm text-muted">
-                                {imagePreviews.length > 0 ? 'Add more' : 'Gallery'}
+                                {imagePreviews.length > 0 ? t('photo.addMore') : t('photo.gallery')}
                             </span>
                             <input
                                 type="file"
@@ -209,7 +211,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                             />
                         </label>
                     </div>
-                    <p className="text-xs text-content/50 mt-1">Take a photo or upload from your gallery</p>
+                    <p className="text-xs text-content/50 mt-1">{t('photo.hint')}</p>
                     <CameraCaptureModal
                         isOpen={cameraOpen}
                         onClose={() => setCameraOpen(false)}
@@ -229,8 +231,8 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
 
                 <div>
                     <div className="flex justify-between items-end mb-1">
-                        <label className="block text-sm font-medium text-muted">Tags</label>
-                        <span className="text-[10px] text-content/50 uppercase tracking-wider">Tap chips to add</span>
+                        <label className="block text-sm font-medium text-muted">{t('common.tags')}</label>
+                        <span className="text-[10px] text-content/50 uppercase tracking-wider">{t('item.tagsHint')}</span>
                     </div>
 
                     {/* Tag Ribbon - Horizontal Scrollable Suggestions */}
@@ -280,7 +282,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                         value={tags}
                         onChange={(e) => setTags(e.target.value)}
                         className="input"
-                        placeholder="tool, heavy, metal..."
+                        placeholder={t('item.tagsPlaceholder')}
                     />
                 </div>
 
@@ -288,19 +290,19 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                 <div className="pt-6 mt-2 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-content/50">
                     <div className="flex items-center gap-1.5">
                         <Calendar size={12} className="text-content/40" />
-                        <span>Created: {formatDate(item?.createdAt)}</span>
+                        <span>{t('item.createdOn', { date: formatDate(item?.createdAt) })}</span>
                     </div>
                     {item?.modifiedAt && (
                         <div className="flex items-center gap-1.5">
                             <History size={12} className="text-content/40" />
-                            <span>Modified: {formatDateTime(item.modifiedAt)}</span>
+                            <span>{t('item.modifiedOn', { date: formatDateTime(item.modifiedAt) })}</span>
                         </div>
                     )}
                 </div>
 
                 <div className="pt-4 flex justify-end gap-3">
-                    <button type="button" onClick={handleClose} className="btn btn-ghost">Cancel</button>
-                    <button type="submit" className="btn btn-primary">Save Changes</button>
+                    <button type="button" onClick={handleClose} className="btn btn-ghost">{t('common.cancel')}</button>
+                    <button type="submit" className="btn btn-primary">{t('common.save')}</button>
                 </div>
             </form>
         </Modal>

@@ -8,6 +8,7 @@
     "build": "vite build",
     "deploy": "vite build && firebase deploy",
     "lint": "eslint .",
+    "translations:check": "node scripts/check-translations.js",
     "preview": "vite preview",
     "backup": "node scripts/backup-firestore.js",
     "import": "node scripts/import-firestore.js",

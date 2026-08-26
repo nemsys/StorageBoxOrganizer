@@ -2,8 +2,23 @@ import { useState } from 'react';
 import { auth } from '../firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { X, Mail, Lock, LogIn, UserPlus } from 'lucide-react';
+import { useTranslation } from '../translations';
+
+// Firebase reports its own English text; map the codes we can actually hit onto
+// translated messages and keep a generic fallback for everything else.
+const AUTH_ERROR_KEYS = {
+    'auth/invalid-email': 'auth.error.invalidEmail',
+    'auth/invalid-credential': 'auth.error.invalidCredential',
+    'auth/user-not-found': 'auth.error.userNotFound',
+    'auth/wrong-password': 'auth.error.wrongPassword',
+    'auth/email-already-in-use': 'auth.error.emailInUse',
+    'auth/weak-password': 'auth.error.weakPassword',
+    'auth/too-many-requests': 'auth.error.tooManyRequests',
+    'auth/network-request-failed': 'auth.error.networkFailed',
+};
 
 export function AuthModal({ isOpen, onClose }) {
+    const { t } = useTranslation();
     const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -26,7 +41,7 @@ export function AuthModal({ isOpen, onClose }) {
             onClose();
         } catch (err) {
             console.error(err);
-            setError(err.message.replace('Firebase: ', ''));
+            setError(t(AUTH_ERROR_KEYS[err.code] ?? 'auth.error.generic'));
         } finally {
             setLoading(false);
         }
@@ -38,7 +53,7 @@ export function AuthModal({ isOpen, onClose }) {
                 <div className="p-6 border-b border-border flex justify-between items-center bg-surface/50">
                     <h2 className="text-xl font-bold text-content flex items-center gap-2">
                         {isSignUp ? <UserPlus size={24} className="text-primary" /> : <LogIn size={24} className="text-primary" />}
-                        {isSignUp ? 'Create Account' : 'Welcome Back'}
+                        {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
                     </h2>
                 </div>
 
@@ -50,7 +65,7 @@ export function AuthModal({ isOpen, onClose }) {
                     )}
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted">Email</label>
+                        <label className="text-sm font-medium text-muted">{t('auth.email')}</label>
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-content/50" size={18} />
                             <input
@@ -66,7 +81,7 @@ export function AuthModal({ isOpen, onClose }) {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted">Password</label>
+                        <label className="text-sm font-medium text-muted">{t('auth.password')}</label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-content/50" size={18} />
                             <input
@@ -91,7 +106,7 @@ export function AuthModal({ isOpen, onClose }) {
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                             <>
-                                {isSignUp ? 'Sign Up' : 'Sign In'}
+                                {isSignUp ? t('auth.signUp') : t('auth.signIn')}
                             </>
                         )}
                     </button>
@@ -102,7 +117,7 @@ export function AuthModal({ isOpen, onClose }) {
                             onClick={() => setIsSignUp(!isSignUp)}
                             className="text-sm text-muted hover:text-primary transition-colors"
                         >
-                            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+                            {isSignUp ? t('auth.haveAccount') : t('auth.noAccount')}
                         </button>
                     </div>
                 </form>
