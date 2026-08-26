@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.6.3...v1.7.0) (2026-08-26)
+
+
+### Features
+
+* translate the UI into Bulgarian with an EN/BG switcher ([#12](https://github.com/nemsys/StorageBoxOrganizer/issues/12)) ([c2bdf8c](https://github.com/nemsys/StorageBoxOrganizer/commit/c2bdf8c0f60b95cc20b145721058b5723f7c069c))
+
 ### [1.6.3](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.6.2...v1.6.3) (2026-08-26)
 
 ### [1.6.2](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.6.1...v1.6.2) (2026-07-30)
