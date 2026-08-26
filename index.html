@@ -7,7 +7,20 @@
   <link rel="icon" type="image/svg+xml" href="/box.svg" />
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0f172a" />
+
+  <!-- Installable web app: added to the home screen it launches standalone,
+       without the browser's address bar. Icons are generated from the same
+       source as the native Android launcher icon (assets/icon-*.png). -->
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Boxes" />
+
+  <!-- Follows the in-app theme so the system bars don't clash with the page. -->
+  <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
   <title>storage-box-organizer</title>
 </head>
 
