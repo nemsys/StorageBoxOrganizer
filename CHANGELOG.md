@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.8.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.8.0...v1.8.1) (2026-08-26)
+
+
+### Bug Fixes
+
+* **ui:** keep the Gallery button labelled Gallery after picking a photo ([#14](https://github.com/nemsys/StorageBoxOrganizer/issues/14)) ([6ecc4cf](https://github.com/nemsys/StorageBoxOrganizer/commit/6ecc4cfd6f7be2b1c87b2a11b69ae143d00bd59c))
+
 ## [1.8.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.7.0...v1.8.0) (2026-08-26)
 
 
