@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.8.2...v1.9.0) (2026-08-27)
+
+
+### Features
+
+* **ui:** add an About dialog with version, author and contact ([#16](https://github.com/nemsys/StorageBoxOrganizer/issues/16)) ([1c39142](https://github.com/nemsys/StorageBoxOrganizer/commit/1c391425d53ad4a6d1fff6cb24b3b83e2c6e5483))
+
 ### [1.8.2](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.8.1...v1.8.2) (2026-08-27)
 
 ### [1.8.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.8.0...v1.8.1) (2026-08-26)
