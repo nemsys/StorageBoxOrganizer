@@ -4,6 +4,7 @@ import { APP_VERSION, BUILD_ID } from '../native/updates';
 import { useTranslation } from '../translations';
 
 const AUTHOR = 'SciScend';
+const AUTHOR_URL = 'https://sciscend.com/';
 const CONTACT_EMAIL = 'ivapopova@sciscend.com';
 
 /**
@@ -20,7 +21,7 @@ export function AboutModal({ isOpen, onClose }) {
     const rows = [
         { label: t('about.version'), value: APP_VERSION },
         { label: t('about.build'), value: BUILD_ID },
-        { label: t('about.author'), value: AUTHOR },
+        { label: t('about.author'), value: AUTHOR, href: AUTHOR_URL },
     ];
 
     return (
@@ -35,10 +36,23 @@ export function AboutModal({ isOpen, onClose }) {
                 </div>
 
                 <dl className="rounded-lg border border-border bg-surface/50 divide-y divide-border">
-                    {rows.map(({ label, value }) => (
+                    {rows.map(({ label, value, href }) => (
                         <div key={label} className="flex items-baseline justify-between gap-4 px-3 py-2">
                             <dt className="text-xs text-muted shrink-0">{label}</dt>
-                            <dd className="text-sm text-content font-medium break-all text-right">{value}</dd>
+                            <dd className="text-sm font-medium break-all text-right">
+                                {href ? (
+                                    <a
+                                        href={href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-primary underline underline-offset-2 rounded-sm hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-colors"
+                                    >
+                                        {value}
+                                    </a>
+                                ) : (
+                                    <span className="text-content">{value}</span>
+                                )}
+                            </dd>
                         </div>
                     ))}
                 </dl>
