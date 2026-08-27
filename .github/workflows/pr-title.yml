@@ -1,0 +1,31 @@
+name: PR title
+
+# PRs are squash-merged, so GitHub builds the squash commit's subject from the
+# PR title — and that subject is the only thing the release tooling reads. A
+# wrong title means a wrong version and an empty changelog entry, which is how
+# v1.8.2 shipped a feature as a patch with nothing written down.
+#
+# `edited` is in the trigger list so retitling a PR re-runs the check rather
+# than leaving a stale red (or stale green) result.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  conventional:
+    name: Conventional Commit title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # need the branch's commits to compare against the title
+
+      - name: Check the title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: .github/scripts/check-pr-title.sh "$PR_TITLE" "$BASE_SHA" "$HEAD_SHA"

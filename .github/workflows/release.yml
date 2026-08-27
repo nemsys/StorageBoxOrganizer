@@ -4,6 +4,16 @@ on:
   push:
     branches:
       - main
+    # A release must mean the shipped app changed. These paths cannot affect the
+    # build, so a push touching only them produces no version bump and no tag —
+    # otherwise the version climbs while the changelog entry comes out empty.
+    # A mixed push (code + docs) still releases: paths-ignore skips a run only
+    # when every changed file matches.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.github/**'
 
 jobs:
   release:

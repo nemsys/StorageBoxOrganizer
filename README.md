@@ -305,6 +305,38 @@ npm run build
 firebase deploy --only hosting
 ```
 
+### Releases and versioning
+
+Merging to `main` triggers `.github/workflows/release.yml`, which runs
+[standard-version](https://github.com/conventional-changelog/standard-version):
+it bumps the version in `package.json`, writes `CHANGELOG.md`, tags the commit
+and pushes. It does **not** deploy — run `npm run deploy` after the merge, or the
+live app stays on the previous build.
+
+Two things keep the version honest, and both exist because they were once
+missing:
+
+**Only code releases.** The workflow ignores pushes that touch nothing but
+`**/*.md`, `docs/**`, `LICENSE` or `.github/**`. `standard-version` bumps a patch for *any*
+commit type, so without this a typo fix in a README produced a new version whose
+changelog entry was empty. A mixed push still releases normally — `paths-ignore`
+skips a run only when every changed file matches.
+
+**The PR title is the release note.** PRs are squash-merged, and GitHub builds
+the squash commit's subject from the PR title. That subject is the only thing
+`standard-version` reads, so a branch full of well-formed `feat:` commits still
+ships as a patch with an empty changelog if the title says `chore:`. Title the
+PR after the most significant change in it.
+
+`.github/workflows/pr-title.yml` enforces both halves of that: the title must be
+a Conventional Commit, and it must not claim a smaller bump than its own commits
+do. You can run the same check locally:
+
+```bash
+.github/scripts/check-pr-title.sh "feat(ui): add an About dialog"
+.github/scripts/check-pr-title.sh "chore: tidy up" main HEAD   # also compares commits
+```
+
 ---
 
 ## 🗺️ Architecture notes

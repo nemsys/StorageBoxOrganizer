@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [1.9.2](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.9.1...v1.9.2) (2026-08-27)
 
+> Backfilled by hand. Documentation only — no application code changed, so this
+> version is identical to 1.9.1. Releases like this no longer happen: the Release
+> workflow now ignores pushes that touch only Markdown, `docs/` or `LICENSE`.
+
+* **i18n:** record the rule for sentences with a clickable part ([#18](https://github.com/nemsys/StorageBoxOrganizer/issues/18)) ([a70fd78](https://github.com/nemsys/StorageBoxOrganizer/commit/a70fd7848eebecb0c858ad36529b4b1526c26df2))
+
 ### [1.9.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.9.0...v1.9.1) (2026-08-27)
 
 
@@ -19,6 +25,24 @@ All notable changes to this project will be documented in this file. See [standa
 * **ui:** add an About dialog with version, author and contact ([#16](https://github.com/nemsys/StorageBoxOrganizer/issues/16)) ([1c39142](https://github.com/nemsys/StorageBoxOrganizer/commit/1c391425d53ad4a6d1fff6cb24b3b83e2c6e5483))
 
 ### [1.8.2](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.8.1...v1.8.2) (2026-08-27)
+
+> Backfilled by hand. This PR was squash-merged under a `chore:` title, so the
+> tooling saw only that: it recorded nothing and released a feature as a patch.
+> Everything below actually shipped in this version. The version number is left
+> as it was released — only the record is corrected. A CI check now rejects a PR
+> title that under-claims the changes on its branch.
+
+### Features
+
+* **auth:** require an approval claim for all Firestore access — signing in no longer grants data access; the owner approves accounts with `npm run access grant` ([#15](https://github.com/nemsys/StorageBoxOrganizer/issues/15)) ([8ee4447](https://github.com/nemsys/StorageBoxOrganizer/commit/8ee44470cd4cf0ccac66e4c1dcad9acebbab34d5))
+
+### Bug Fixes
+
+* **auth:** let permission-denied reach the approval gate ([#15](https://github.com/nemsys/StorageBoxOrganizer/issues/15))
+
+### Miscellaneous
+
+* add MIT LICENSE, remove GPS-tagged sample images, and stop linting generated `android/` output ([#15](https://github.com/nemsys/StorageBoxOrganizer/issues/15))
 
 ### [1.8.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.8.0...v1.8.1) (2026-08-26)
 
