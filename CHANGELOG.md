@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.9.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.9.0...v1.9.1) (2026-08-27)
+
+
+### Bug Fixes
+
+* **auth:** make the sign-in/sign-up toggle look clickable ([#17](https://github.com/nemsys/StorageBoxOrganizer/issues/17)) ([2df8e3f](https://github.com/nemsys/StorageBoxOrganizer/commit/2df8e3f342ebb1adc5b1c2d9124f40ffac81c584))
+
 ## [1.9.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.8.2...v1.9.0) (2026-08-27)
 
 
