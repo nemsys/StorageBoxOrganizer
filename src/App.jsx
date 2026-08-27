@@ -16,6 +16,7 @@ import { TagManagementModal } from './components/TagManagementModal';
 import { SettingsMenu } from './components/SettingsMenu';
 import { OverflowMenu } from './components/OverflowMenu';
 import { ImportProgressModal } from './components/ImportProgressModal';
+import { AboutModal } from './components/AboutModal';
 import { Toast } from './components/Toast';
 import { ConfirmationDialog } from './components/ConfirmationDialog';
 import { ArrowLeft, PackageOpen, LogOut, Package, Edit, Trash2, Calendar, History, Plus } from 'lucide-react';
@@ -105,6 +106,7 @@ function App() {
   const [selectedBoxTag, setSelectedBoxTag] = useState('');
 
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, refs: [], name: '' });
   const [toasts, setToasts] = useState([]);
   const [confirmDialog, setConfirmDialog] = useState({
@@ -1025,6 +1027,7 @@ function App() {
   return (
     <div className="min-h-screen app-safe-bottom">
       <AuthModal isOpen={!user} onClose={() => { }} />
+      <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
 
       {/* Global Navigation Wrap */}
       <div className="sticky top-0 z-40 app-safe-top bg-base/80 backdrop-blur-md border-b border-content/15">
@@ -1043,6 +1046,7 @@ function App() {
                   theme={theme}
                   onToggleTheme={toggleTheme}
                   onCheckUpdates={handleCheckForUpdates}
+                  onAbout={() => setIsAboutModalOpen(true)}
                   onSignOut={handleSignOut}
                 />
               </div>

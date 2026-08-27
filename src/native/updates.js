@@ -1,7 +1,10 @@
-/* global __BUILD_ID__ */
+/* global __BUILD_ID__, __APP_VERSION__ */
 
 // Injected at build time by vite (see vite.config.js); 'dev' under the dev server.
 export const BUILD_ID = typeof __BUILD_ID__ !== 'undefined' ? __BUILD_ID__ : 'dev';
+
+// The release version from package.json, bumped by the release workflow.
+export const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
 
 /**
  * Compare the running build against the latest deployed one. Because the app
