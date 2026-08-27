@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.10.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.9.2...v1.10.0) (2026-08-27)
+
+
+### Features
+
+* **ui:** link the author name in About to sciscend.com ([#20](https://github.com/nemsys/StorageBoxOrganizer/issues/20)) ([21bfb70](https://github.com/nemsys/StorageBoxOrganizer/commit/21bfb70484e353d9ee49addc7dae441aa39d29d6))
+
 ### [1.9.2](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.9.1...v1.9.2) (2026-08-27)
 
 > Backfilled by hand. Documentation only — no application code changed, so this
