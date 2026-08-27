@@ -2,10 +2,18 @@ rules_version = '2';
 
 // Firestore security rules for Storage Box Organizer.
 //
-// Every document carries a `userId`; a signed-in client may only touch its own.
-// This is what makes several people share one Firebase project safely — each
-// signs up with their own account and the database itself, not just the UI,
-// keeps the data apart.
+// Two gates, both enforced here rather than in the UI:
+//
+//   1. Approval — the account must carry the `approved` custom claim. Firebase
+//      Auth lets anyone in the world create an account with the (necessarily
+//      public) web API key, so "signed in" is not a permission. Nothing in this
+//      database is reachable until the project owner grants the claim with
+//      `npm run access grant <email>`. This is what keeps strangers off the
+//      free-tier read/write quota.
+//   2. Ownership — every document carries a `userId`, and an approved client may
+//      only touch its own. This is what lets several approved people share one
+//      Firebase project safely: the database itself, not just the UI, keeps
+//      their data apart.
 //
 // Deployed with `firebase deploy --only firestore:rules` (or as part of
 // `npm run deploy`). Kept in the repo so the live ruleset is versioned and
@@ -15,8 +23,9 @@ service cloud.firestore {
 
     // Reusable checks
     function isSignedIn() { return request.auth != null; }
-    function owns(res)    { return isSignedIn() && request.auth.uid == res.data.userId; }
-    function ownsNew()    { return isSignedIn() && request.resource.data.userId == request.auth.uid; }
+    function approved()   { return isSignedIn() && request.auth.token.approved == true; }
+    function owns(res)    { return approved() && request.auth.uid == res.data.userId; }
+    function ownsNew()    { return approved() && request.resource.data.userId == request.auth.uid; }
 
     match /boxes/{boxId} {
       allow read, delete: if owns(resource);

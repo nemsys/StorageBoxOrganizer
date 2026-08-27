@@ -26,6 +26,19 @@ function getUserId() {
   return user.uid;
 }
 
+// The read helpers below swallow failures and return an empty result so that
+// one bad fetch never blanks the UI. A permission-denied is different in kind:
+// it means the account is not approved, and App.jsx needs to see it so it can
+// swap in AccessPendingScreen.
+//
+// Only the three list reads that refreshData() drives use this. The on-demand
+// single-document reads (getBox, getFullImage) stay soft, because their callers
+// rely on a null return rather than catching — and they are unreachable anyway
+// once the pending screen is up.
+function rethrowIfDenied(e) {
+  if (e?.code === 'permission-denied') throw e;
+}
+
 // --- Image collection helpers -------------------------------------------------
 // Full-size images live in their own collection (one doc each) so entity docs
 // stay tiny (just inline thumbnails) and full bytes are fetched only on demand.
@@ -119,6 +132,7 @@ export const firebaseStorage = {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
+      rethrowIfDenied(e);
       console.error("Error fetching boxes:", e);
       return [];
     }
@@ -230,6 +244,7 @@ export const firebaseStorage = {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
+      rethrowIfDenied(e);
       console.error("Error fetching items:", e);
       return [];
     }
@@ -245,6 +260,7 @@ export const firebaseStorage = {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
+      rethrowIfDenied(e);
       console.error("Error fetching all items:", e);
       return [];
     }

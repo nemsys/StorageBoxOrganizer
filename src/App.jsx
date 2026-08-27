@@ -9,6 +9,7 @@ import { EditBoxModal } from './components/EditBoxModal';
 import { EditItemModal } from './components/EditItemModal';
 import { SearchBar } from './components/SearchBar';
 import { AuthModal } from './components/AuthModal';
+import { AccessPendingScreen } from './components/AccessPendingScreen';
 import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { ImageSlider } from './components/ImageSlider';
 import { TagManagementModal } from './components/TagManagementModal';
@@ -58,6 +59,9 @@ const MOCK_ITEMS = [
 function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  // Signed in, but Firestore refuses everything: the account has not been
+  // granted the `approved` claim. See AccessPendingScreen.
+  const [accessDenied, setAccessDenied] = useState(false);
   const { t } = useTranslation();
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
 
@@ -189,6 +193,7 @@ function App() {
       setBoxes([]);
       setItems([]);
       setAllItems([]);
+      setAccessDenied(false);
     }
   }, [user]);
 
@@ -267,8 +272,11 @@ function App() {
     else clearDraft('active_modal');
   }, [isAddBoxModalOpen, isAddItemModalOpen, editingItem, editingBox]);
 
+  // Resolves to true when the data is loaded, false when the account is not
+  // allowed to read it. AccessPendingScreen re-runs this after a token refresh
+  // to find out whether approval has come through.
   const refreshData = async () => {
-    if (!user) return;
+    if (!user) return true;
     const params = new URLSearchParams(window.location.search);
     if (params.get('mock-auth') === 'true') {
       setBoxes(MOCK_BOXES);
@@ -278,23 +286,37 @@ function App() {
       } else {
         setItems(MOCK_ITEMS);
       }
-      return;
+      return true;
     }
 
-    const loadedBoxes = await firebaseStorage.getBoxes();
-    setBoxes(loadedBoxes);
+    try {
+      const loadedBoxes = await firebaseStorage.getBoxes();
+      setBoxes(loadedBoxes);
 
-    // Always load all items for selection purposes
-    const allItemsData = await firebaseStorage.getAllItems();
-    const sortedAllItems = [...allItemsData].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    setAllItems(sortedAllItems);
+      // Always load all items for selection purposes
+      const allItemsData = await firebaseStorage.getAllItems();
+      const sortedAllItems = [...allItemsData].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      setAllItems(sortedAllItems);
 
-    if (currentBox) {
-      const loadedItems = await firebaseStorage.getItems(currentBox.id);
-      const sortedItems = [...loadedItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-      setItems(sortedItems);
-    } else {
-      setItems(sortedAllItems);
+      if (currentBox) {
+        const loadedItems = await firebaseStorage.getItems(currentBox.id);
+        const sortedItems = [...loadedItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        setItems(sortedItems);
+      } else {
+        setItems(sortedAllItems);
+      }
+
+      setAccessDenied(false);
+      return true;
+    } catch (err) {
+      // The security rules reject every read until the account is approved.
+      if (err?.code === 'permission-denied') {
+        setAccessDenied(true);
+        return false;
+      }
+      console.error('Failed to load data', err);
+      addToast(t('data.loadFailed'), 'error');
+      return false;
     }
   };
 
@@ -994,6 +1016,10 @@ function App() {
         <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
       </div>
     );
+  }
+
+  if (user && accessDenied) {
+    return <AccessPendingScreen user={user} onRecheck={refreshData} />;
   }
 
   return (

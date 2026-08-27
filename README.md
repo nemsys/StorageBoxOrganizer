@@ -16,7 +16,7 @@ A clean, cloud-synced web app for cataloguing your physical storage boxes and th
 - **Dark & Light Theme** — Toggle between themes; preference is saved per browser
 - **Import / Export** — Back up your data as a JSON file and restore it with a progress modal
 - **Browser History** — Deep-linkable views via URL hashes (`#box/<id>`, `#all-items`)
-- **Secure by Default** — All data is scoped to the authenticated user; no one else can see your boxes
+- **Invite-only** — Anyone can create an account, but nothing is readable until the owner approves it; data is then scoped per user, enforced by Firestore rules
 
 ---
 
@@ -122,33 +122,50 @@ const firebaseConfig = {
 };
 ```
 
-> **Security note:** These are client-side config values — they are safe to commit. Actual data access is controlled by Firestore Security Rules, not by keeping the config secret.
+> **Security note:** These are client-side config values, and they ship inside the JavaScript bundle of every deployment — they are not secrets and are safe to commit. What protects the data is the Firestore Security Rules, not the config being hidden.
 
-#### Firestore Security Rules (recommended)
+#### Firestore Security Rules
 
-```js
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /boxes/{boxId} {
-      allow read, write: if request.auth != null
-        && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.userId;
-    }
-    match /items/{itemId} {
-      allow read, write: if request.auth != null
-        && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.userId;
-    }
-  }
-}
+The live ruleset lives in [`firestore.rules`](firestore.rules) and is deployed with `firebase deploy --only firestore:rules` (or as part of `npm run deploy`). It enforces two independent gates:
+
+1. **Approval** — the account must carry the `approved` custom claim (see [Access control](#access-control) below).
+2. **Ownership** — every document carries a `userId`, and an approved account may only touch its own.
+
+Both are covered by tests you can run without touching a real project:
+
+```bash
+npm run test:rules     # spins up the Firestore emulator, needs Java
 ```
 
 #### Firebase Authentication
 
-Enable the sign-in providers you want in the Firebase Console → Authentication → Sign-in method. The `AuthModal` component handles both **Google** and **email/password** out of the box.
+Only **email/password** is enabled — `AuthModal` has no other provider wired up. Turn it on in Firebase Console → Authentication → Sign-in method.
+
+### Access control
+
+Firebase Auth accepts a sign-up from anyone holding the web API key, and that key is public by necessity — it is in the bundle every visitor downloads. So *signed in* cannot mean *allowed*, and on the free Spark plan a stranger creating accounts is a stranger spending your daily read/write quota.
+
+The rules therefore refuse **everything** until an account is granted the `approved` custom claim:
+
+```bash
+npm run access                          # list every account and its status
+npm run access grant you@example.com    # let someone in
+npm run access revoke them@example.com  # lock someone out
+```
+
+An unapproved account gets a "waiting for approval" screen showing its email and account ID, plus a **Check again** button that forces a token refresh. Granting takes effect on the next refresh — that button, or signing out and back in.
+
+> **Before you deploy these rules for the first time**, approve yourself. A ruleset that nobody is approved for locks everyone out, including you:
+>
+> ```bash
+> npm run access grant you@example.com   # first
+> firebase deploy --only firestore:rules # then
+> ```
+
+#### Further hardening (optional, both free)
+
+- **Restrict the API key** — Google Cloud Console → APIs & Services → Credentials → your browser key → *Website restrictions*, limited to your Hosting domain. The Android build loads the app from that same origin (`capacitor.config.json` → `server.url`), so it keeps working.
+- **Enable App Check** — reCAPTCHA v3 for web, Play Integrity for Android. Blocks requests that do not come from your app at all.
 
 ### Available scripts
 
@@ -159,6 +176,9 @@ Enable the sign-in providers you want in the Firebase Console → Authentication
 | `npm run preview` | Preview the production build locally |
 | `npm run deploy` | Build and deploy to Firebase Hosting |
 | `npm run lint` | Run ESLint |
+| `npm run translations:check` | Verify `en`/`bg` string files agree with each other and with the code |
+| `npm run test:rules` | Run the Firestore security-rules tests against the emulator (needs Java) |
+| `npm run access` | List / grant / revoke account approval (requires service account) |
 | `npm run backup` | Dump all Firestore collections to `.backups/` (requires service account) |
 | `npm run import` | Import a backup JSON into Firestore (requires service account) |
 
@@ -168,6 +188,8 @@ Enable the sign-in providers you want in the Firebase Console → Authentication
 storage-box-organizer/
 ├── public/                  # Static assets (SVG icons)
 ├── scripts/                 # Node.js admin scripts (Firebase Admin SDK)
+│   ├── lib/admin.js         # Shared Admin SDK bootstrap + key lookup
+│   ├── grant-access.js      # List / grant / revoke the `approved` claim
 │   ├── backup-firestore.js  # Dump Firestore → .backups/*.json
 │   ├── import-firestore.js  # Restore from backup JSON
 │   ├── delete-user-data.js  # Remove all data for a given UID
@@ -203,6 +225,8 @@ storage-box-organizer/
 │   ├── index.css               # Global styles and CSS custom properties
 │   └── main.jsx                # React entry point
 ├── firebase.json               # Firebase Hosting config
+├── firestore.rules             # Firestore Security Rules (deployed from here)
+├── firestore.rules.test.mjs    # Emulator tests for the rules
 ├── .firebaserc                 # Firebase project alias
 ├── vite.config.js
 └── package.json
@@ -252,8 +276,7 @@ Images are resized client-side (max **800 × 800 px**, JPEG quality **0.7**) usi
 The scripts in `scripts/` use the **Firebase Admin SDK** and require a service account key:
 
 1. Firebase Console → Project Settings → Service Accounts → **Generate new private key**.
-2. Save the JSON file to `.secrets/<your-key-file>.json`.
-3. Update the `serviceAccountPath` in each script accordingly.
+2. Save the JSON file to `.secrets/`. That is all — `scripts/lib/admin.js` picks up the first `*.json` it finds there, or the file `$GOOGLE_APPLICATION_CREDENTIALS` points at.
 
 ```bash
 # Backup all data
@@ -263,7 +286,7 @@ npm run backup
 node scripts/import-firestore.js .backups/firestore-backup-<timestamp>.json
 ```
 
-> `.secrets/` and `.backups/` are git-ignored. Never commit service account keys.
+> `.secrets/` and `.backups/` are git-ignored. Never commit service account keys — unlike the web config above, these *are* real credentials, and they grant full admin access to the project.
 
 ### Deploying
 

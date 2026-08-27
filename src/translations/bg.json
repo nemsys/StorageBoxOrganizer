@@ -153,6 +153,15 @@
   "auth.error.networkFailed": "Няма връзка със сървъра. Провери интернета си.",
   "auth.error.generic": "Влизането не успя. Опитай пак.",
 
+  "access.pending.title": "Достъпът още не е одобрен",
+  "access.pending.body": "Профилът ти е създаден, но собственикът на приложението още не му е дал достъп. Изпрати му данните по-долу и провери отново, след като потвърди.",
+  "access.pending.accountLabel": "Профил",
+  "access.pending.idLabel": "Номер на профила",
+  "access.pending.recheck": "Провери отново",
+  "access.pending.stillBlocked": "Все още няма достъп. Помоли собственика да одобри профила и провери отново.",
+
+  "data.loadFailed": "Данните не можаха да се заредят. Провери връзката си и опитай пак.",
+
   "tags.title": "Управление на {{tag.theMany}}",
   "tags.found_one": "{{^tag.found}} {{count}} {{tag.one}}",
   "tags.found_other": "Намерени {{count}} {{tag.counted}}",
