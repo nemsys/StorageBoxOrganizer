@@ -111,15 +111,18 @@ export function AuthModal({ isOpen, onClose }) {
                         )}
                     </button>
 
-                    <div className="text-center mt-4">
+                    {/* The prompt is plain text; only the action that switches mode is a
+                        link, so it reads as the one clickable thing in the sentence. */}
+                    <p className="text-center text-sm text-muted mt-4">
+                        {isSignUp ? t('auth.haveAccount') : t('auth.noAccount')}{' '}
                         <button
                             type="button"
                             onClick={() => setIsSignUp(!isSignUp)}
-                            className="text-sm text-muted hover:text-primary transition-colors"
+                            className="font-medium text-primary underline underline-offset-2 rounded-sm hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-colors"
                         >
-                            {isSignUp ? t('auth.haveAccount') : t('auth.noAccount')}
+                            {isSignUp ? t('auth.haveAccountAction') : t('auth.noAccountAction')}
                         </button>
-                    </div>
+                    </p>
                 </form>
             </div>
         </div>
