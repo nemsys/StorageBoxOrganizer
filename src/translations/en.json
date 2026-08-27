@@ -31,6 +31,7 @@
   "settings.optimizeImages": "Optimize Images",
   "settings.checkUpdates": "Check for Updates",
   "settings.signOut": "Sign Out",
+  "settings.about": "About",
 
   "box.title": "{{^box.many}}",
   "box.label": "{{^box.one}}",
@@ -161,6 +162,13 @@
   "access.pending.stillBlocked": "Still no access. Ask the owner to approve this account, then check again.",
 
   "data.loadFailed": "Couldn't load your data. Check your connection and try again.",
+
+  "about.title": "About",
+  "about.tagline": "Know what is in your {{box.many}}.",
+  "about.version": "Version",
+  "about.build": "Build",
+  "about.author": "Made by",
+  "about.contact": "Contact",
 
   "tags.title": "Manage {{^tag.many}}",
   "tags.found_one": "{{count}} {{tag.one}} {{tag.found}}",

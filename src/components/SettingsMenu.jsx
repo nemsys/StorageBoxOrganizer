@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw, ImageDown, LogOut, Languages } from 'lucide-react';
+import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw, ImageDown, LogOut, Languages, Info } from 'lucide-react';
 import { useTranslation, LANGUAGES } from '../translations';
 
-export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImages, theme, onToggleTheme, onCheckUpdates, onSignOut }) => {
+export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImages, theme, onToggleTheme, onCheckUpdates, onAbout, onSignOut }) => {
   const { t, lang, setLang } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -85,6 +85,17 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
         icon: <RefreshCw size={18} />,
         onClick: () => {
           onCheckUpdates();
+          setIsOpen(false);
+        }
+      }
+    ] : []),
+    ...(onAbout ? [
+      {
+        id: 'about',
+        label: t('settings.about'),
+        icon: <Info size={18} />,
+        onClick: () => {
+          onAbout();
           setIsOpen(false);
         }
       }

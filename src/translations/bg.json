@@ -31,6 +31,7 @@
   "settings.optimizeImages": "Оптимизирай снимките",
   "settings.checkUpdates": "Провери за обновления",
   "settings.signOut": "Изход",
+  "settings.about": "Информация",
 
   "box.title": "{{^box.many}}",
   "box.label": "{{^box.one}}",
@@ -161,6 +162,13 @@
   "access.pending.stillBlocked": "Все още няма достъп. Помоли собственика да одобри профила и провери отново.",
 
   "data.loadFailed": "Данните не можаха да се заредят. Провери връзката си и опитай пак.",
+
+  "about.title": "Информация",
+  "about.tagline": "Знай какво има в {{box.theMany}}.",
+  "about.version": "Версия",
+  "about.build": "Компилация",
+  "about.author": "Разработено от",
+  "about.contact": "Контакт",
 
   "tags.title": "Управление на {{tag.theMany}}",
   "tags.found_one": "{{^tag.found}} {{count}} {{tag.one}}",
