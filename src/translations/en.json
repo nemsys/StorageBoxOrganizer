@@ -153,6 +153,15 @@
   "auth.error.networkFailed": "No connection to the server. Check your internet.",
   "auth.error.generic": "Sign-in failed. Please try again.",
 
+  "access.pending.title": "Access not approved yet",
+  "access.pending.body": "Your account has been created, but the owner of this app has not granted it access yet. Send them the details below, then check again once they confirm.",
+  "access.pending.accountLabel": "Account",
+  "access.pending.idLabel": "Account ID",
+  "access.pending.recheck": "Check again",
+  "access.pending.stillBlocked": "Still no access. Ask the owner to approve this account, then check again.",
+
+  "data.loadFailed": "Couldn't load your data. Check your connection and try again.",
+
   "tags.title": "Manage {{^tag.many}}",
   "tags.found_one": "{{count}} {{tag.one}} {{tag.found}}",
   "tags.found_other": "{{count}} {{tag.counted}} {{tag.found}}",

@@ -1,31 +1,5 @@
-import { initializeApp, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
-import { getAuth } from 'firebase-admin/auth';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { db, auth } from './lib/admin.js';
 import readline from 'readline';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Path to your service account key
-const serviceAccountPath = path.resolve(__dirname, '../.secrets/storageboxorganizer-42466-firebase-adminsdk-fbsvc-a57f8f5307.json');
-
-if (!fs.existsSync(serviceAccountPath)) {
-    console.error('Service account key not found at:', serviceAccountPath);
-    process.exit(1);
-}
-
-const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
-
-// Initialize Firebase Admin
-const app = initializeApp({
-    credential: cert(serviceAccount)
-});
-
-const db = getFirestore(app);
-const auth = getAuth(app);
 
 const rl = readline.createInterface({
     input: process.stdin,
