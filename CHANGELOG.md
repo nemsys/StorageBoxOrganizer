@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.11.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.10.1...v1.11.0) (2026-08-28)
+
+
+### Features
+
+* **tags:** case-insensitive tags, with reachable rename and delete ([#22](https://github.com/nemsys/StorageBoxOrganizer/issues/22)) ([45d481b](https://github.com/nemsys/StorageBoxOrganizer/commit/45d481b32b0d5a3554da67216d7199620a7bd0ee))
+
 ### [1.10.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.10.0...v1.10.1) (2026-08-28)
 
 
