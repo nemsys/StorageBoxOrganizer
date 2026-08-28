@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Modal } from './Modal';
 import { Tag, Edit2, Trash2, Check, X } from 'lucide-react';
 import { useTranslation } from '../translations';
+import { normalizeTag } from '../utils/tagUtils';
 
 export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onDeleteTag, addToast, askConfirm }) {
     const { t } = useTranslation();
@@ -9,14 +10,18 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
     const [isProcessing, setIsProcessing] = useState(false);
     const [tagSortOrder, setTagSortOrder] = useState('alpha'); // 'alpha' | 'count'
 
+    // Tags are case-insensitive, so a legacy "Books" and a current "books" are
+    // counted and listed as one row under the canonical (lowercase) name.
     const tagCounts = useMemo(() => {
         const counts = {};
         allItems.forEach(item => {
-            if (item.tags) {
-                item.tags.forEach(tag => {
-                    counts[tag] = (counts[tag] || 0) + 1;
-                });
-            }
+            const seen = new Set();
+            (item.tags || []).forEach(raw => {
+                const tag = normalizeTag(raw);
+                if (!tag || seen.has(tag)) return;
+                seen.add(tag);
+                counts[tag] = (counts[tag] || 0) + 1;
+            });
         });
         return Object.entries(counts).sort((a, b) => {
             if (tagSortOrder === 'alpha') {
@@ -36,21 +41,14 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
         setEditingTag(null);
     };
 
-    const handleConfirmRename = async () => {
-        if (!editingTag || !editingTag.newName.trim()) {
-            setEditingTag(null);
-            return;
-        }
-
-        if (editingTag.newName.trim() === editingTag.oldName) {
-            setEditingTag(null);
-            return;
-        }
-
+    const applyRename = async (oldName, newName, merged) => {
         setIsProcessing(true);
         try {
-            await onRenameTag(editingTag.oldName, editingTag.newName.trim());
-            addToast(t('tags.renamed', { name: editingTag.newName.trim() }), "success");
+            await onRenameTag(oldName, newName);
+            addToast(
+                merged ? t('tags.merged', { name: newName }) : t('tags.renamed', { name: newName }),
+                "success"
+            );
             setEditingTag(null);
         } catch (err) {
             console.error("Failed to rename tag:", err);
@@ -58,6 +56,31 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
         } finally {
             setIsProcessing(false);
         }
+    };
+
+    const handleConfirmRename = async () => {
+        if (!editingTag) return;
+
+        const newName = normalizeTag(editingTag.newName);
+        if (!newName || newName === editingTag.oldName) {
+            setEditingTag(null);
+            return;
+        }
+
+        // Renaming onto an existing tag folds the two together — say so first.
+        const isMerge = tagCounts.some(([tag]) => tag === newName);
+        if (isMerge) {
+            const { oldName } = editingTag;
+            askConfirm({
+                title: t('tags.mergeTitle'),
+                message: t('tags.mergeMessage', { name: newName, oldName }),
+                type: 'primary',
+                onConfirm: () => applyRename(oldName, newName, true)
+            });
+            return;
+        }
+
+        await applyRename(editingTag.oldName, newName, false);
     };
 
     const handleDelete = async (tag, count) => {
@@ -88,7 +111,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
         <Modal isOpen={isOpen} onClose={onClose} title={t('tags.title')}>
             <div className="space-y-4">
                 {tagCounts.length > 0 && (
-                    <div className="flex items-center justify-between pb-2 border-b border-content/15">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-content/15">
                         <span className="text-xs font-medium text-muted uppercase tracking-wider">
                             {t('tags.found', { count: tagCounts.length })}
                         </span>
@@ -115,81 +138,81 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                         <p className="text-xs text-content/50 mt-1">{t('tags.emptyHint')}</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-white/5">
+                    <div className="divide-y divide-content/10">
                         {tagCounts.map(([tag, count]) => (
-                            <div key={tag} className="py-3 flex items-center justify-between group">
-                                <div className="flex-1 flex items-center gap-3 overflow-hidden">
-                                    {editingTag?.oldName === tag ? (
-                                        <div className="flex flex-1 items-center gap-2">
-                                            <input
-                                                autoFocus
-                                                type="text"
-                                                value={editingTag.newName}
-                                                onChange={(e) => setEditingTag({ ...editingTag, newName: e.target.value })}
-                                                className="input py-1.5 text-sm flex-1 bg-surface/50 border-primary/30"
+                            <div key={tag} className="py-2 flex items-center gap-2">
+                                {editingTag?.oldName === tag ? (
+                                    <>
+                                        <input
+                                            autoFocus
+                                            type="text"
+                                            value={editingTag.newName}
+                                            onChange={(e) => setEditingTag({ ...editingTag, newName: e.target.value })}
+                                            className="input py-1.5 text-sm flex-1 min-w-0 bg-surface/50 border-primary/30"
+                                            disabled={isProcessing}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleConfirmRename();
+                                                if (e.key === 'Escape') handleCancelRename();
+                                            }}
+                                        />
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            <button
+                                                onClick={handleConfirmRename}
+                                                className="p-2 text-success hover:bg-success/10 rounded-lg transition-colors outline-none focus:ring-2 focus:ring-success/50"
                                                 disabled={isProcessing}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') handleConfirmRename();
-                                                    if (e.key === 'Escape') handleCancelRename();
-                                                }}
-                                            />
-                                            <div className="flex items-center gap-1">
-                                                <button 
-                                                    onClick={handleConfirmRename}
-                                                    className="p-1.5 text-success hover:bg-success/10 rounded-md transition-colors"
-                                                    disabled={isProcessing}
-                                                    title={t('tags.confirmRename')}
-                                                >
-                                                    <Check size={18} />
-                                                </button>
-                                                <button 
-                                                    onClick={handleCancelRename}
-                                                    className="p-1.5 text-muted hover:bg-elevated rounded-md transition-colors"
-                                                    disabled={isProcessing}
-                                                    title={t('tags.cancelRename')}
-                                                >
-                                                    <X size={18} />
-                                                </button>
-                                            </div>
+                                                title={t('tags.confirmRename')}
+                                                aria-label={t('tags.confirmRename')}
+                                            >
+                                                <Check size={18} />
+                                            </button>
+                                            <button
+                                                onClick={handleCancelRename}
+                                                className="p-2 text-muted hover:bg-elevated rounded-lg transition-colors outline-none focus:ring-2 focus:ring-primary/50"
+                                                disabled={isProcessing}
+                                                title={t('tags.cancelRename')}
+                                                aria-label={t('tags.cancelRename')}
+                                            >
+                                                <X size={18} />
+                                            </button>
                                         </div>
-                                    ) : (
-                                        <>
-                                            <span className="text-content font-medium truncate">{tag}</span>
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-surface text-muted px-2 py-0.5 rounded-md border border-content/15 shrink-0">
-                                                {t('tags.itemCount', { count })}
-                                            </span>
-                                        </>
-                                    )}
-                                </div>
-                                
-                                {editingTag?.oldName !== tag && (
-                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
-                                        <button 
-                                            onClick={() => handleStartRename(tag)}
-                                            className="p-2 text-muted hover:text-content hover:bg-elevated rounded-lg transition-colors outline-none focus:ring-2 focus:ring-primary/50"
-                                            title={t('tags.rename')}
-                                            disabled={isProcessing}
-                                        >
-                                            <Edit2 size={16} />
-                                        </button>
-                                        <button 
-                                            onClick={() => handleDelete(tag, count)}
-                                            className="p-2 text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors outline-none focus:ring-2 focus:ring-danger/50"
-                                            title={t('tags.delete')}
-                                            disabled={isProcessing}
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="flex-1 min-w-0 text-content font-medium truncate">{tag}</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider bg-surface text-muted px-2 py-0.5 rounded-md border border-content/15 shrink-0">
+                                            {t('tags.itemCount', { count })}
+                                        </span>
+                                        {/* Always visible: on touch there is no hover to reveal them. */}
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            <button
+                                                onClick={() => handleStartRename(tag)}
+                                                className="p-2 text-muted hover:text-content hover:bg-elevated rounded-lg transition-colors outline-none focus:ring-2 focus:ring-primary/50"
+                                                title={t('tags.rename')}
+                                                aria-label={t('tags.rename')}
+                                                disabled={isProcessing}
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(tag, count)}
+                                                className="p-2 text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors outline-none focus:ring-2 focus:ring-danger/50"
+                                                title={t('tags.delete')}
+                                                aria-label={t('tags.delete')}
+                                                disabled={isProcessing}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         ))}
                     </div>
                 )}
             </div>
-            
+
             {isProcessing && (
-                <div className="absolute inset-0 bg-base flex items-center justify-center rounded-xl z-50 pointer-events-auto">
+                <div className="absolute inset-0 bg-base/70 backdrop-blur-sm flex items-center justify-center rounded-xl z-50 pointer-events-auto">
                     <div className="bg-base border border-content/25 p-4 rounded-2xl shadow-2xl flex items-center gap-3">
                         <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
                         <span className="text-sm font-medium text-content/90">{t('tags.updating')}</span>

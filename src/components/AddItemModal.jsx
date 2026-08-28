@@ -6,6 +6,7 @@ import { makeDerivatives, refsToThumbs } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
 import { usePhotoCapture } from '../native/usePhotoCapture';
 import { useTranslation } from '../translations';
+import { parseTagInput } from '../utils/tagUtils';
 
 export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId = '', availableItems = [], availableTags = [], onSelectExisting, askConfirm }) {
     const { t } = useTranslation();
@@ -144,7 +145,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
             name,
             description,
             images,
-            tags: tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
+            tags: parseTagInput(tags),
             boxId: selectedBoxId
         });
         // reset
