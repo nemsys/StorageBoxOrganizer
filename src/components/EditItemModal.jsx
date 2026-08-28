@@ -8,6 +8,7 @@ import { makeDerivatives, getImageRefs, refsToThumbs } from '../utils/imageUtils
 import { formatDate, formatDateTime } from '../utils/dateUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
 import { useTranslation } from '../translations';
+import { parseTagInput } from '../utils/tagUtils';
 
 export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], availableTags = [], askConfirm }) {
     const { t } = useTranslation();
@@ -105,7 +106,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
             name,
             description,
             images,
-            tags: tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
+            tags: parseTagInput(tags),
             boxId: selectedBoxId
         });
         clearDraft(draftKey);

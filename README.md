@@ -53,7 +53,8 @@ The app is deployed on Firebase Hosting. Sign in with your Google account or ema
 ### Tags
 
 - Add tags to any item when creating or editing it.
-- Use **Settings → Manage Tags** to rename a tag across all items at once, or delete it entirely.
+- Tags are **case-insensitive** and stored in lowercase — `Books` and `books` are the same tag.
+- Use **Settings → Manage Tags** to rename a tag across all items at once, or delete it entirely. Renaming a tag to one that already exists merges the two.
 - Filter any view by tag using the **Filter** dropdown in the controls bar.
 
 ### Backup & restore

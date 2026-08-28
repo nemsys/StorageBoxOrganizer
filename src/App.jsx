@@ -30,6 +30,7 @@ import { checkForUpdate, applyUpdate } from './native/updates';
 import { v4 as uuidv4 } from 'uuid';
 import { loadDraft, saveDraft, clearDraft } from './utils/draftStorage';
 import { useTranslation } from './translations';
+import { normalizeTag, normalizeTags, tagVariants, hasTag } from './utils/tagUtils';
 
 const MOCK_BOXES = [
   {
@@ -677,31 +678,45 @@ function App() {
     }
   };
 
-  // Handle Tag Management
+  // Handle Tag Management. Tags are case-insensitive, so both operations act on
+  // every stored spelling of the tag, not just the one the list happens to show.
   const handleRenameTag = async (oldName, newName) => {
-    await firebaseStorage.renameTag(oldName, newName);
+    const canonical = normalizeTag(newName);
+    const variants = tagVariants(allItems, oldName);
+    const matches = new Set(variants.map(normalizeTag));
+    await firebaseStorage.renameTag(variants, canonical);
     // Update local state for all items
     const updateItemTags = (item) => {
-      if (item.tags && item.tags.includes(oldName)) {
-        return { ...item, tags: item.tags.map(t => t === oldName ? newName : t) };
-      }
-      return item;
+      if (!(item.tags || []).some(t => matches.has(normalizeTag(t)))) return item;
+      return {
+        ...item,
+        tags: normalizeTags(item.tags.map(t => matches.has(normalizeTag(t)) ? canonical : t))
+      };
     };
     setAllItems(prev => prev.map(updateItemTags));
     setItems(prev => prev.map(updateItemTags));
+
+    // The filter pills may still point at the old name.
+    const renamePill = (prev) => (matches.has(normalizeTag(prev)) ? canonical : prev);
+    setSelectedTag(renamePill);
+    setSelectedBoxTag(renamePill);
   };
 
   const handleDeleteTag = async (tagName) => {
-    await firebaseStorage.deleteTag(tagName);
+    const variants = tagVariants(allItems, tagName);
+    const matches = new Set(variants.map(normalizeTag));
+    await firebaseStorage.deleteTag(variants);
     // Update local state for all items
     const removeItemTag = (item) => {
-      if (item.tags && item.tags.includes(tagName)) {
-        return { ...item, tags: item.tags.filter(t => t !== tagName) };
-      }
-      return item;
+      if (!(item.tags || []).some(t => matches.has(normalizeTag(t)))) return item;
+      return { ...item, tags: item.tags.filter(t => !matches.has(normalizeTag(t))) };
     };
     setAllItems(prev => prev.map(removeItemTag));
     setItems(prev => prev.map(removeItemTag));
+
+    const clearPill = (prev) => (matches.has(normalizeTag(prev)) ? '' : prev);
+    setSelectedTag(clearPill);
+    setSelectedBoxTag(clearPill);
   };
 
   // Handle Select Existing Item
@@ -889,7 +904,7 @@ function App() {
     if (selectedBoxTag) {
       result = result.filter(box => {
         // Find if this box has any items with the selected tag
-        return allItems.some(item => item.boxId === box.id && item.tags && item.tags.includes(selectedBoxTag));
+        return allItems.some(item => item.boxId === box.id && hasTag(item, selectedBoxTag));
       });
     }
 
@@ -943,13 +958,12 @@ function App() {
     }
   };
 
-  // Compute all unique tags from all items (global)
+  // Compute all unique tags from all items (global). Normalised, so a legacy
+  // "Books" and a current "books" collapse into a single entry.
   const allTags = useMemo(() => {
     const tagSet = new Set();
     allItems.forEach(item => {
-      if (item.tags && Array.isArray(item.tags)) {
-        item.tags.forEach(tag => tagSet.add(tag));
-      }
+      normalizeTags(item.tags).forEach(tag => tagSet.add(tag));
     });
     return Array.from(tagSet).sort();
   }, [allItems]);
@@ -962,9 +976,7 @@ function App() {
 
     // Filter by tag
     if (selectedTag) {
-      result = result.filter(item =>
-        item.tags && item.tags.includes(selectedTag)
-      );
+      result = result.filter(item => hasTag(item, selectedTag));
     }
 
     // Filter by search query

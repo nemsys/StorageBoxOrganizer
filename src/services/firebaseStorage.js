@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { makeDerivatives } from '../utils/imageUtils';
 import { imageCache } from '../utils/imageCache';
+import { normalizeTag, normalizeTags } from '../utils/tagUtils';
 
 const BOXES_COLL = 'boxes';
 const ITEMS_COLL = 'items';
@@ -123,6 +124,25 @@ export function resolveImportId(rawId, uid, ownedIds) {
   if (id.startsWith(`${uid}_`)) return id;
   if (ownedIds.has(id)) return id;
   return `${uid}_${id}`;
+}
+
+// Items carrying any of the given tag spellings. `array-contains-any` caps at
+// 10 values per query, so the variants are fetched in chunks and de-duplicated.
+async function findItemsWithAnyTag(tags) {
+  const uid = getUserId();
+  const wanted = tags.filter(Boolean);
+  if (wanted.length === 0) return [];
+  const byId = new Map();
+  for (let i = 0; i < wanted.length; i += 10) {
+    const q = query(
+      collection(db, ITEMS_COLL),
+      where('userId', '==', uid),
+      where('tags', 'array-contains-any', wanted.slice(i, i + 10))
+    );
+    const snap = await getDocs(q);
+    snap.docs.forEach((d) => byId.set(d.id, d));
+  }
+  return Array.from(byId.values());
 }
 
 // Whether an entity still holds legacy inline images (needs migration).
@@ -312,36 +332,38 @@ export const firebaseStorage = {
     await deleteDoc(doc(db, ITEMS_COLL, id));
   },
 
-  renameTag: async (oldName, newName) => {
-    const uid = getUserId();
-    const q = query(
-      collection(db, ITEMS_COLL),
-      where("userId", "==", uid),
-      where("tags", "array-contains", oldName)
-    );
-    const snapshot = await getDocs(q);
-    const updatePromises = snapshot.docs.map(docSnap => {
+  /**
+   * Rename a tag across every item. `oldNames` is the list of stored spellings
+   * that map to the tag (see tagVariants) — Firestore array queries are
+   * case-sensitive, so a legacy "Books" would be missed by a query for "books".
+   * The result is re-normalised, which merges the tag into an existing one when
+   * `newName` already exists on the same item.
+   */
+  renameTag: async (oldNames, newName) => {
+    const canonical = normalizeTag(newName);
+    if (!canonical) return;
+    const targets = Array.isArray(oldNames) ? oldNames : [oldNames];
+    const docs = await findItemsWithAnyTag(targets);
+    const matches = new Set(targets.map(normalizeTag));
+    await Promise.all(docs.map(docSnap => {
       const data = docSnap.data();
-      const updatedTags = data.tags.map(t => t === oldName ? newName : t);
+      const updatedTags = normalizeTags(
+        (data.tags || []).map(t => matches.has(normalizeTag(t)) ? canonical : t)
+      );
       return setDoc(doc(db, ITEMS_COLL, docSnap.id), { ...data, tags: updatedTags, modifiedAt: Date.now() });
-    });
-    await Promise.all(updatePromises);
+    }));
   },
 
-  deleteTag: async (tagName) => {
-    const uid = getUserId();
-    const q = query(
-      collection(db, ITEMS_COLL),
-      where("userId", "==", uid),
-      where("tags", "array-contains", tagName)
-    );
-    const snapshot = await getDocs(q);
-    const updatePromises = snapshot.docs.map(docSnap => {
+  /** Remove a tag — and any other-cased spelling of it — from every item. */
+  deleteTag: async (tagNames) => {
+    const targets = Array.isArray(tagNames) ? tagNames : [tagNames];
+    const docs = await findItemsWithAnyTag(targets);
+    const matches = new Set(targets.map(normalizeTag));
+    await Promise.all(docs.map(docSnap => {
       const data = docSnap.data();
-      const updatedTags = data.tags.filter(t => t !== tagName);
+      const updatedTags = (data.tags || []).filter(t => !matches.has(normalizeTag(t)));
       return setDoc(doc(db, ITEMS_COLL, docSnap.id), { ...data, tags: updatedTags, modifiedAt: Date.now() });
-    });
-    await Promise.all(updatePromises);
+    }));
   },
 
   seed: async () => {
@@ -420,6 +442,8 @@ export const firebaseStorage = {
           id: newItemId,
           boxId: newBoxId,
           userId: uid,
+          // Backups can predate case-insensitive tags, or come from elsewhere.
+          tags: normalizeTags(item.tags),
           images: refs,
           image: refs[0]?.thumb || null,
         });
