@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.10.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.10.0...v1.10.1) (2026-08-28)
+
+
+### Bug Fixes
+
+* **import:** stop export/import round trip duplicating everything ([#21](https://github.com/nemsys/StorageBoxOrganizer/issues/21)) ([e40d52b](https://github.com/nemsys/StorageBoxOrganizer/commit/e40d52be1374c6c09edf1b122d78adc679b1757f))
+
 ## [1.10.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.9.2...v1.10.0) (2026-08-27)
 
 
