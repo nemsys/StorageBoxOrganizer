@@ -110,6 +110,21 @@ async function deleteImagesByOwner(ownerId, uid) {
   }));
 }
 
+// Where an imported entity should land:
+//   - already namespaced for this user → keep as-is (don't double-prefix)
+//   - a document we still own          → update it in place, so an export/import
+//                                        round trip on one account is a no-op
+//                                        rather than a second copy of everything
+//   - anything else                    → namespaced, so restoring into a fresh
+//                                        account can't collide with a stranger's id
+export function resolveImportId(rawId, uid, ownedIds) {
+  if (!rawId) return `${uid}_${uuidv4()}`;
+  const id = String(rawId);
+  if (id.startsWith(`${uid}_`)) return id;
+  if (ownedIds.has(id)) return id;
+  return `${uid}_${id}`;
+}
+
 // Whether an entity still holds legacy inline images (needs migration).
 function isLegacyImages(entity) {
   const imgs = entity?.images;
@@ -338,6 +353,22 @@ export const firebaseStorage = {
     const { boxes, items } = data;
     const boxIdMap = {};
 
+    // Which documents this user already holds. Needed to tell a *restore* from a
+    // *re-import*: the export writes each entity's current id, so a backup taken
+    // from this same account carries the un-namespaced ids of documents that are
+    // still here. Writing those to `${uid}_${id}` would file a second copy
+    // alongside the original — which is exactly how an export/import round trip
+    // used to duplicate an entire inventory.
+    //
+    // Scoped by userId, so it never reads a document the rules would deny.
+    const ownedIds = async (coll) => new Set(
+      (await getDocs(query(collection(db, coll), where('userId', '==', uid)))).docs.map(d => d.id)
+    );
+    const ownedBoxIds = await ownedIds(BOXES_COLL);
+    const ownedItemIds = await ownedIds(ITEMS_COLL);
+
+    const resolveId = (rawId, owned) => resolveImportId(rawId, uid, owned);
+
     const totalSteps = (boxes?.length || 0) + (items?.length || 0);
     let completedSteps = 0;
 
@@ -355,12 +386,12 @@ export const firebaseStorage = {
       }
     };
 
-    // Import boxes with deterministic namespaced IDs to prevent duplication.
-    // Re-create their image docs from the (hydrated) backup, replacing any that
-    // already exist so re-importing the same file stays idempotent.
+    // Import boxes under a deterministic ID (see resolveId) to prevent
+    // duplication. Re-create their image docs from the (hydrated) backup,
+    // replacing any that already exist so re-importing stays idempotent.
     if (boxes && Array.isArray(boxes)) {
       for (const box of boxes) {
-        const newBoxId = `${uid}_${box.id}`;
+        const newBoxId = resolveId(box.id, ownedBoxIds);
         boxIdMap[box.id] = newBoxId;
         await deleteImagesByOwner(newBoxId, uid);
         const refs = await rebuildImages(box, 'box', newBoxId, uid);
@@ -376,11 +407,11 @@ export const firebaseStorage = {
       }
     }
 
-    // Import items with deterministic namespaced IDs.
+    // Import items under a deterministic ID (see resolveId).
     if (items && Array.isArray(items)) {
       for (const item of items) {
-        const newItemId = `${uid}_${item.id}`;
-        const newBoxId = boxIdMap[item.boxId] || (item.boxId ? `${uid}_${item.boxId}` : '');
+        const newItemId = resolveId(item.id, ownedItemIds);
+        const newBoxId = boxIdMap[item.boxId] || (item.boxId ? resolveId(item.boxId, ownedBoxIds) : '');
         await deleteImagesByOwner(newItemId, uid);
         const refs = await rebuildImages(item, 'item', newItemId, uid);
         const { image: _legacy, ...rest } = item;
