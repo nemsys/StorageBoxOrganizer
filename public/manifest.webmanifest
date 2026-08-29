@@ -1,6 +1,6 @@
 {
   "name": "Storage Box Organizer",
-  "short_name": "Boxes",
+  "short_name": "Storage Box",
   "description": "Keep track of what is packed in which storage box.",
   "start_url": "/",
   "scope": "/",
