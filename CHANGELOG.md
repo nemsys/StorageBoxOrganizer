@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.14.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.14.0...v1.14.1) (2026-08-29)
+
+
+### Bug Fixes
+
+* **android:** stop the app opening on a white splash ([#27](https://github.com/nemsys/StorageBoxOrganizer/issues/27)) ([a5efed3](https://github.com/nemsys/StorageBoxOrganizer/commit/a5efed378a3de2e3382695dc2533b2d089968411))
+
 ## [1.14.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.13.0...v1.14.0) (2026-08-29)
 
 
