@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { Modal } from './Modal';
+import { TagInput } from './TagInput';
 import { CameraCaptureModal } from './CameraCaptureModal';
 import { FullscreenImageModal } from './FullscreenImageModal';
 import { usePhotoCapture } from '../native/usePhotoCapture';
@@ -212,7 +213,7 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                             />
                         </label>
                     </div>
-                    <p className="text-xs text-content/50 mt-1">{t('photo.hint')}</p>
+                    <p className="text-xs text-muted mt-1">{t('photo.hint')}</p>
                     <CameraCaptureModal
                         isOpen={cameraOpen}
                         onClose={() => setCameraOpen(false)}
@@ -233,62 +234,20 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
                 <div>
                     <div className="flex justify-between items-end mb-1">
                         <label className="block text-sm font-medium text-muted">{t('common.tags')}</label>
-                        <span className="text-[10px] text-content/50 uppercase tracking-wider">{t('item.tagsHint')}</span>
+                        <span className="text-[10px] text-muted uppercase tracking-wider">{t('item.tagsHint')}</span>
                     </div>
 
-                    {/* Tag Ribbon - Horizontal Scrollable Suggestions */}
-                    <div className="tag-ribbon">
-                        {availableTags
-                            .filter(t => {
-                                const lastTag = tags.split(',').pop().trim().toLowerCase();
-                                if (!lastTag) return true; // Show all if not typing
-                                return t.toLowerCase().includes(lastTag);
-                            })
-                            .map(suggestion => {
-                                const currentTags = tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
-                                const isActive = currentTags.includes(suggestion.toLowerCase());
-
-                                return (
-                                    <button
-                                        key={suggestion}
-                                        type="button"
-                                        className={`tag-chip ${isActive ? 'active' : ''}`}
-                                        onClick={() => {
-                                            const parts = tags.split(',').map(t => t.trim()).filter(Boolean);
-                                            const lowerSuggestion = suggestion.toLowerCase();
-
-                                            if (isActive) {
-                                                // Remove tag
-                                                setTags(parts.filter(p => p.toLowerCase() !== lowerSuggestion).join(', ') + (parts.length > 1 ? ', ' : ' '));
-                                            } else {
-                                                // Add tag - replace the last partial tag if it matches
-                                                const lastPartial = parts[parts.length - 1] || '';
-                                                if (suggestion.toLowerCase().startsWith(lastPartial.toLowerCase())) {
-                                                    parts.pop();
-                                                }
-                                                parts.push(suggestion);
-                                                setTags(parts.join(', ') + ', ');
-                                            }
-                                        }}
-                                    >
-                                        {suggestion}
-                                    </button>
-                                );
-                            })
-                        }
-                    </div>
-
-                    <input
-                        type="text"
+                    <TagInput
                         value={tags}
-                        onChange={(e) => setTags(e.target.value)}
-                        className="input"
+                        onChange={setTags}
+                        suggestions={availableTags}
                         placeholder={t('item.tagsPlaceholder')}
+                        hint={{ remove: (tag) => t('tags.remove', { tag }) }}
                     />
                 </div>
 
 
-                <div className="pt-6 mt-2 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-content/50">
+                <div className="pt-6 mt-2 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-muted">
                     <div className="flex items-center gap-1.5">
                         <Calendar size={12} className="text-content/40" />
                         <span>{t('item.createdOn', { date: formatDate(item?.createdAt) })}</span>

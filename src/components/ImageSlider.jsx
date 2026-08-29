@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Images } from 'lucide-react';
 import { useTranslation } from '../translations';
 
 /**
@@ -33,15 +33,19 @@ export function ImageSlider({ images, alt, onImageClick, className = '', showNav
         setCurrentIndex(index);
     };
 
+    // The viewer opens on whichever slide is showing, not always on the first.
     const handleImageClick = (e) => {
         if (onImageClick) {
             e?.stopPropagation();
-            onImageClick(images, alt);
+            onImageClick(images, alt, currentIndex);
         }
     };
 
     // Only show navigation if there's more than one image AND showNavigationProp is true
     const showNavigation = images.length > 1 && showNavigationProp;
+    // Without the arrows there is nothing to say a card holds several photos,
+    // so the grid views get a count badge instead.
+    const showCountBadge = images.length > 1 && !showNavigationProp;
     const isOverlay = variant === 'overlay';
     const navBtnClass = isOverlay
         ? 'bg-black/45 text-white backdrop-blur-sm hover:bg-black/65'
@@ -63,6 +67,13 @@ export function ImageSlider({ images, alt, onImageClick, className = '', showNav
                     className={`w-full h-full cursor-pointer object-${fit}`}
                 />
             </div>
+
+            {showCountBadge && (
+                <span className="photo-count">
+                    <Images size={10} />
+                    {images.length}
+                </span>
+            )}
 
             {showNavigation && (
                 <>

@@ -116,7 +116,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                             {t('tags.found', { count: tagCounts.length })}
                         </span>
                         <div className="flex items-center gap-2">
-                             <span className="text-xs text-content/50">{t('common.sortBy')}</span>
+                             <span className="text-xs text-muted">{t('common.sortBy')}</span>
                              <select
                                 value={tagSortOrder}
                                 onChange={(e) => setTagSortOrder(e.target.value)}
@@ -135,7 +135,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                             <Tag size={32} className="text-content/50" />
                         </div>
                         <p className="text-muted">{t('tags.emptyTitle')}</p>
-                        <p className="text-xs text-content/50 mt-1">{t('tags.emptyHint')}</p>
+                        <p className="text-xs text-muted mt-1">{t('tags.emptyHint')}</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-content/10">

@@ -1,6 +1,6 @@
 import { ItemCard } from './ItemCard';
 
-export function ItemList({ items, onDeleteItem, onRemoveFromBox, onEditItem, onBoxClick, onImageClick, showItemNavigation = false }) {
+export function ItemList({ items, onDeleteItem, onRemoveFromBox, onEditItem, onBoxClick, onImageClick, onTagClick, showItemNavigation = false }) {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {items.map(item => (
@@ -13,6 +13,7 @@ export function ItemList({ items, onDeleteItem, onRemoveFromBox, onEditItem, onB
                     boxName={item.boxName}
                     onBoxClick={onBoxClick}
                     onImageClick={onImageClick}
+                    onTagClick={onTagClick}
                     showNavigation={showItemNavigation}
                 />
             ))}
