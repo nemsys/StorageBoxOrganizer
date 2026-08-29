@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Kept in step with capacitor.config.json's backgroundColor, splash.png
+         and AppIntro's fixed-dark ground. -->
+    <color name="splashBackground">#0f172a</color>
+</resources>
