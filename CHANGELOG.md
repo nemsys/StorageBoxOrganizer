@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.16.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.0...v1.16.1) (2026-08-29)
+
+
+### Bug Fixes
+
+* **ui:** drop the photo count from box cards ([#33](https://github.com/nemsys/StorageBoxOrganizer/issues/33)) ([226c010](https://github.com/nemsys/StorageBoxOrganizer/commit/226c0104c621fc95cf78fccbc94b0464f7d7c9bf))
+
 ## [1.16.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.15.1...v1.16.0) (2026-08-29)
 
 
