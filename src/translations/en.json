@@ -181,7 +181,7 @@
   "access.pending.stillBlocked": "Still no access. Ask the owner to approve this account, then check again.",
 
   "data.loadFailed": "Couldn't load your data. Check your connection and try again.",
-  "data.refresh": "Refresh",
+  "data.refresh": "Sync data",
   "data.refreshed": "Up to date",
   "data.offline": "Offline — changes are saved and will sync",
   "data.needsConnection": "This needs a connection. Try again when you are back online.",
