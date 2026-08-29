@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.13.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.12.1...v1.13.0) (2026-08-29)
+
+
+### Features
+
+* **ui:** act on the UI/UX review — findability, touch targets, empty states ([#25](https://github.com/nemsys/StorageBoxOrganizer/issues/25)) ([0458125](https://github.com/nemsys/StorageBoxOrganizer/commit/0458125c699e59b4bec4565760918697bb143d6f))
+
 ### [1.12.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.12.0...v1.12.1) (2026-08-29)
 
 
