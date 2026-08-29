@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.15.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.15.0...v1.15.1) (2026-08-29)
+
+
+### Bug Fixes
+
+* **ui:** drop the pencil on item cards and line the ⋮ up with the title ([#31](https://github.com/nemsys/StorageBoxOrganizer/issues/31)) ([7997781](https://github.com/nemsys/StorageBoxOrganizer/commit/799778196ff1fd4f03a114aa88aba276a09fb1dd))
+
 ## [1.15.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.14.3...v1.15.0) (2026-08-29)
 
 
