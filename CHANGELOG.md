@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.16.5](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.4...v1.16.5) (2026-08-29)
+
+
+### Bug Fixes
+
+* **ui:** quieten the item-count badge on box cards ([#37](https://github.com/nemsys/StorageBoxOrganizer/issues/37)) ([ae1d4e1](https://github.com/nemsys/StorageBoxOrganizer/commit/ae1d4e1c4ded9cabeca93544fd057ac3e75fbf5e))
+
 ### [1.16.4](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.3...v1.16.4) (2026-08-29)
 
 
