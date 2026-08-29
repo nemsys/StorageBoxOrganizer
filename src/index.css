@@ -606,17 +606,6 @@
     color: var(--color-bg);
     box-shadow: var(--shadow-md);
   }
-  /* Box-name pill (item cards, in-box view) */
-  .badge-box {
-    padding: 0.25rem 0.625rem;
-    border-radius: var(--radius-md);
-    background-color: rgba(var(--color-bg-rgb), 0.82);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(var(--color-primary-rgb), 0.25);
-    color: var(--color-primary);
-  }
-
   /* Footer "which box" row (item cards, all-items / search view) */
   .card-footer {
     display: flex;

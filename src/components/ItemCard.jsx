@@ -62,13 +62,6 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                 {/* Overlay Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-t from-base via-transparent to-transparent opacity-60 pointer-events-none" />
 
-                {/* Option A — Pill Badge (in-box view: boxName present, no navigation) */}
-                {boxName && !onBoxClick && (
-                    <div className="badge badge-box absolute z-20 bottom-2.5 left-2.5">
-                        <Package size={12} />
-                        <span>{boxName}</span>
-                    </div>
-                )}
             </div>
 
             {/* min-h, not a fixed h-28: the title is allowed two lines now, and
@@ -145,7 +138,9 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                 )}
             </div>
 
-            {/* Option C — Footer Row (All Items / search view: boxName present + navigation available) */}
+            {/* Which box this is in — only in the all-items / search views, where
+                that is not already on screen. Inside a box the name is in the
+                header above, and repeating it on every card was clutter. */}
             {boxName && onBoxClick && (
                 item.boxId ? (
                     <button
