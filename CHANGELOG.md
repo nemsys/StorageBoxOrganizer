@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.16.3](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.2...v1.16.3) (2026-08-29)
+
+
+### Bug Fixes
+
+* **ui:** show only the number in a box's item count ([#35](https://github.com/nemsys/StorageBoxOrganizer/issues/35)) ([a264532](https://github.com/nemsys/StorageBoxOrganizer/commit/a26453226962065b6afc9155e2301c59b3570b18))
+
 ### [1.16.2](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.1...v1.16.2) (2026-08-29)
 
 
