@@ -34,6 +34,7 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
                     alt={box.name}
                     className="absolute inset-0 w-full h-full"
                     showNavigation={false}
+                    showCount={false}
                     fit="cover"
                 />
 

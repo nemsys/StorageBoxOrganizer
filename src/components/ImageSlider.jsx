@@ -6,8 +6,11 @@ import { useTranslation } from '../translations';
  * @param {'default'|'overlay'} [variant] - 'overlay' is for full-bleed hero
  *   images: square corners and dark translucent controls that stay readable on
  *   any photo, in either theme.
+ * @param {boolean} [showCount] - set false where the card already shows a
+ *   number over the photo. A box card carries its item count there, and two
+ *   badges side by side reading different things is worse than no photo count.
  */
-export function ImageSlider({ images, alt, onImageClick, className = '', showNavigation: showNavigationProp = true, fit = 'contain', variant = 'default' }) {
+export function ImageSlider({ images, alt, onImageClick, className = '', showNavigation: showNavigationProp = true, showCount = true, fit = 'contain', variant = 'default' }) {
     const { t } = useTranslation();
     const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -44,8 +47,9 @@ export function ImageSlider({ images, alt, onImageClick, className = '', showNav
     // Only show navigation if there's more than one image AND showNavigationProp is true
     const showNavigation = images.length > 1 && showNavigationProp;
     // Without the arrows there is nothing to say a card holds several photos,
-    // so the grid views get a count badge instead.
-    const showCountBadge = images.length > 1 && !showNavigationProp;
+    // so a grid card gets a count badge instead — unless the caller already has
+    // a number in that corner and a second one would only muddle it.
+    const showCountBadge = showCount && images.length > 1 && !showNavigationProp;
     const isOverlay = variant === 'overlay';
     const navBtnClass = isOverlay
         ? 'bg-black/45 text-white backdrop-blur-sm hover:bg-black/65'
