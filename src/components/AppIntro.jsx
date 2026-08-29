@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { PackageOpen } from 'lucide-react';
 import { useTranslation } from '../translations';
@@ -17,6 +18,14 @@ const AUTHOR_URL = 'https://sciscend.com/';
  */
 export const AppIntro = () => {
     const { t } = useTranslation();
+
+    // Take down index.html's first-paint layer. It draws the same icon on the
+    // same ground in the same place, so this swaps one for the other without a
+    // visible change — and until React got here it was the only thing standing
+    // between the platform's splash and a white page.
+    useEffect(() => {
+        document.getElementById('boot')?.remove();
+    }, []);
 
     return (
         <motion.div
