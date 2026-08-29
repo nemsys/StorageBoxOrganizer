@@ -17,6 +17,10 @@
   --color-surface-hover-rgb: 51, 65, 85;
   --color-primary-rgb: 56, 189, 248;
   --color-primary-hover-rgb: 14, 165, 233;
+  /* The primary hue at a weight that survives being *text*. On dark it is the
+     primary itself; on light the primary is a fill colour and only reaches
+     2.65:1 against the page, which fails at any size. See [data-theme="light"]. */
+  --color-primary-strong-rgb: 56, 189, 248;
   --color-text-rgb: 248, 250, 252;
   --color-text-muted-rgb: 148, 163, 184;
   --color-border-rgb: 51, 65, 85;
@@ -28,6 +32,7 @@
   --color-surface-hover: rgb(var(--color-surface-hover-rgb));
   --color-primary: rgb(var(--color-primary-rgb));
   --color-primary-hover: rgb(var(--color-primary-hover-rgb));
+  --color-primary-strong: rgb(var(--color-primary-strong-rgb));
   --color-text: rgb(var(--color-text-rgb));
   --color-text-muted: rgb(var(--color-text-muted-rgb));
   --color-border: rgb(var(--color-border-rgb));
@@ -56,6 +61,9 @@
   --color-surface-hover-rgb: 241, 245, 249;
   --color-primary-rgb: 14, 165, 233;
   --color-primary-hover-rgb: 2, 132, 199;
+  /* sky-700: 5.7:1 on the light page, where the primary manages 2.65:1 and
+     primary-hover 3.9:1 — neither passes for text. Same hue, readable weight. */
+  --color-primary-strong-rgb: 3, 105, 161;
   --color-text-rgb: 15, 23, 42;
   --color-text-muted-rgb: 100, 116, 139;
   --color-border-rgb: 226, 232, 240;
@@ -80,6 +88,7 @@
   --color-elevated: rgb(var(--color-surface-hover-rgb));
   --color-primary: rgb(var(--color-primary-rgb));
   --color-primary-hover: rgb(var(--color-primary-hover-rgb));
+  --color-primary-strong: rgb(var(--color-primary-strong-rgb));
   --color-content: rgb(var(--color-text-rgb));
   --color-muted: rgb(var(--color-text-muted-rgb));
   --color-border: rgb(var(--color-border-rgb));

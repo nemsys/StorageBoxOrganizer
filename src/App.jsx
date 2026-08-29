@@ -1544,7 +1544,10 @@ function App() {
               >
                 <ArrowLeft size={20} />
               </button>
-              <h2 className="flex-1 min-w-0 text-sm font-semibold text-content truncate">{currentBox.name}</h2>
+              {/* In the primary hue: this bar is the only thing naming the box
+                  once the hero has scrolled away, so it should read as the
+                  heading it replaces rather than as another row of chrome. */}
+              <h2 className="flex-1 min-w-0 text-sm font-semibold text-primary-strong truncate">{currentBox.name}</h2>
               <OverflowMenu label={t('box.actions')} items={boxMenuItems} />
             </div>
           </motion.div>
