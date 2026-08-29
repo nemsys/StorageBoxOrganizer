@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.16.4](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.3...v1.16.4) (2026-08-29)
+
+
+### Bug Fixes
+
+* **ui:** drop the box-name pill from item cards inside a box ([#36](https://github.com/nemsys/StorageBoxOrganizer/issues/36)) ([fcb82e5](https://github.com/nemsys/StorageBoxOrganizer/commit/fcb82e56122d3a2cbfd8cd9e9391d588fd7fb141))
+
 ### [1.16.3](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.2...v1.16.3) (2026-08-29)
 
 
