@@ -20,6 +20,26 @@ const BOXES_COLL = 'boxes';
 const ITEMS_COLL = 'items';
 const IMAGES_COLL = 'images';
 
+/**
+ * Hand a write to Firestore without waiting for the server to acknowledge it.
+ *
+ * setDoc/updateDoc/deleteDoc apply to the local cache synchronously and resolve
+ * the returned promise only once the server has the write. Offline that promise
+ * never settles — so awaiting it, as this file used to, means every mutation
+ * hangs: the modal never closes, no toast, nothing. The data is not lost either
+ * way; the SDK queues the write in IndexedDB and flushes it when the connection
+ * comes back. That queue is the whole of "syncs when it can".
+ *
+ * The rejection is still worth hearing about, just not worth blocking on.
+ */
+function queueWrite(promise) {
+  promise.catch((e) => {
+    // 'unavailable' is the offline case, which is not an error here.
+    if (e?.code !== 'unavailable') console.error('Queued write failed', e);
+  });
+  return promise;
+}
+
 // Get user ID or throw
 function getUserId() {
   const user = auth.currentUser;
@@ -48,14 +68,14 @@ function rethrowIfDenied(e) {
 // owning entity: { id, thumb }.
 async function saveImageInternal({ thumb, full }, { ownerType, ownerId, uid }) {
   const id = uuidv4();
-  await setDoc(doc(db, IMAGES_COLL, id), {
+  queueWrite(setDoc(doc(db, IMAGES_COLL, id), {
     id,
     userId: uid,
     ownerType: ownerType || '',
     ownerId: ownerId || '',
     full,
     createdAt: Date.now(),
-  });
+  }));
   imageCache.set(id, full);
   return { id, thumb };
 }
@@ -105,10 +125,10 @@ async function deleteImagesByOwner(ownerId, uid) {
     where('ownerId', '==', ownerId)
   );
   const snap = await getDocs(q);
-  await Promise.all(snap.docs.map((d) => {
+  snap.docs.forEach((d) => {
     imageCache.del(d.id);
-    return deleteDoc(doc(db, IMAGES_COLL, d.id));
-  }));
+    queueWrite(deleteDoc(doc(db, IMAGES_COLL, d.id)));
+  });
 }
 
 // Where an imported entity should land:
@@ -201,7 +221,8 @@ export const firebaseStorage = {
   deleteImagesByIds: async (ids = []) => {
     await Promise.all((ids || []).filter(Boolean).map((id) => {
       imageCache.del(id);
-      return deleteDoc(doc(db, IMAGES_COLL, id)).catch(() => {});
+      queueWrite(deleteDoc(doc(db, IMAGES_COLL, id)));
+      return undefined;
     }));
   },
 
@@ -222,7 +243,7 @@ export const firebaseStorage = {
     const uid = getUserId();
     const id = box.id || uuidv4();
     const newBox = { ...box, id, userId: uid };
-    await setDoc(doc(db, BOXES_COLL, id), newBox);
+    queueWrite(setDoc(doc(db, BOXES_COLL, id), newBox));
     return newBox;
   },
 
@@ -238,7 +259,7 @@ export const firebaseStorage = {
       userId: uid,
       id, // Ensure ID doesn't change
     };
-    await setDoc(boxRef, updatedBox);
+    queueWrite(setDoc(boxRef, updatedBox));
     return updatedBox;
   },
 
@@ -248,7 +269,7 @@ export const firebaseStorage = {
   // no read, so it stays cheap on the Spark quota.
   touchBox: async (id, updatedAt = Date.now()) => {
     getUserId();
-    await updateDoc(doc(db, BOXES_COLL, id), { updatedAt });
+    queueWrite(updateDoc(doc(db, BOXES_COLL, id), { updatedAt }));
     return updatedAt;
   },
 
@@ -262,10 +283,10 @@ export const firebaseStorage = {
     const snapshot = await getDocs(q);
     await Promise.all(snapshot.docs.map(async (d) => {
       await deleteImagesByOwner(d.id, uid);
-      await deleteDoc(doc(db, ITEMS_COLL, d.id));
+      queueWrite(deleteDoc(doc(db, ITEMS_COLL, d.id)));
     }));
 
-    await deleteDoc(doc(db, BOXES_COLL, id));
+    queueWrite(deleteDoc(doc(db, BOXES_COLL, id)));
   },
 
   getItems: async (boxId) => {
@@ -305,7 +326,7 @@ export const firebaseStorage = {
     const uid = getUserId();
     const id = item.id || uuidv4();
     const newItem = { ...item, id, userId: uid };
-    await setDoc(doc(db, ITEMS_COLL, id), newItem);
+    queueWrite(setDoc(doc(db, ITEMS_COLL, id), newItem));
     return newItem;
   },
 
@@ -322,14 +343,14 @@ export const firebaseStorage = {
       id, // Ensure ID doesn't change
       modifiedAt: Date.now()
     };
-    await setDoc(itemRef, updatedItem);
+    queueWrite(setDoc(itemRef, updatedItem));
     return updatedItem;
   },
 
   deleteItem: async (id) => {
     const uid = getUserId();
     await deleteImagesByOwner(id, uid);
-    await deleteDoc(doc(db, ITEMS_COLL, id));
+    queueWrite(deleteDoc(doc(db, ITEMS_COLL, id)));
   },
 
   /**
@@ -345,13 +366,13 @@ export const firebaseStorage = {
     const targets = Array.isArray(oldNames) ? oldNames : [oldNames];
     const docs = await findItemsWithAnyTag(targets);
     const matches = new Set(targets.map(normalizeTag));
-    await Promise.all(docs.map(docSnap => {
+    docs.forEach(docSnap => {
       const data = docSnap.data();
       const updatedTags = normalizeTags(
         (data.tags || []).map(t => matches.has(normalizeTag(t)) ? canonical : t)
       );
-      return setDoc(doc(db, ITEMS_COLL, docSnap.id), { ...data, tags: updatedTags, modifiedAt: Date.now() });
-    }));
+      queueWrite(setDoc(doc(db, ITEMS_COLL, docSnap.id), { ...data, tags: updatedTags, modifiedAt: Date.now() }));
+    });
   },
 
   /** Remove a tag — and any other-cased spelling of it — from every item. */
@@ -359,11 +380,11 @@ export const firebaseStorage = {
     const targets = Array.isArray(tagNames) ? tagNames : [tagNames];
     const docs = await findItemsWithAnyTag(targets);
     const matches = new Set(targets.map(normalizeTag));
-    await Promise.all(docs.map(docSnap => {
+    docs.forEach(docSnap => {
       const data = docSnap.data();
       const updatedTags = (data.tags || []).filter(t => !matches.has(normalizeTag(t)));
-      return setDoc(doc(db, ITEMS_COLL, docSnap.id), { ...data, tags: updatedTags, modifiedAt: Date.now() });
-    }));
+      queueWrite(setDoc(doc(db, ITEMS_COLL, docSnap.id), { ...data, tags: updatedTags, modifiedAt: Date.now() }));
+    });
   },
 
   seed: async () => {

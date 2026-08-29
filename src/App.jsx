@@ -1085,13 +1085,27 @@ function App() {
     }
   };
 
+  // Import and the image migration are the two operations that genuinely need
+  // the server: they report progress against writes the server has taken, so
+  // unlike an ordinary edit they cannot be queued and forgotten. Refuse them up
+  // front rather than freeze a progress bar that will never move.
+  const requireOnline = () => {
+    if (isOffline) {
+      addToast(t('data.needsConnection'), 'error');
+      return false;
+    }
+    return true;
+  };
+
   const handleImportButtonClick = () => {
+    if (!requireOnline()) return;
     fileInputRef.current?.click();
   };
 
   // One-tap migration of any legacy inline images into the split thumb/full
   // layout. Safe to run repeatedly; already-optimised entities are skipped.
   const handleOptimizeImages = () => {
+    if (!requireOnline()) return;
     askConfirm({
       title: t('optimize.confirmTitle'),
       message: t('optimize.confirmMessage'),
