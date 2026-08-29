@@ -598,13 +598,26 @@
     line-height: 1;
     white-space: nowrap;
   }
-  /* Item-count badge (box cards) */
+  /* Item-count badge (box cards). Dark glass rather than a solid block of
+     primary: at full strength the blue read as the loudest thing on a card
+     whose photo is the point. Same treatment as .zoom-btn and .photo-count, so
+     everything sitting over a photo speaks one language.
+
+     The scrim, not the colour, is what keeps the number legible: at 0.6 the
+     effective background stays below L≈0.13 even over a white photo, which
+     holds white text above 4.5:1 on any image and in either theme. The hairline
+     border is for the other case — a box with no photo, where the pill would
+     otherwise dissolve into the placeholder surface. */
   .badge-count {
     padding: 0.25rem 0.5rem;
     border-radius: var(--radius-sm);
-    background-color: var(--color-primary);
-    color: var(--color-bg);
-    box-shadow: var(--shadow-md);
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
   /* Footer "which box" row (item cards, all-items / search view) */
   .card-footer {
