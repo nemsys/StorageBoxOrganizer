@@ -27,7 +27,15 @@ export const OverflowMenu = ({ items = [], align = 'right', label, buttonClassNa
     const el = triggerRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    setCoords({ top: r.bottom + 8, left: r.left, right: window.innerWidth - r.right });
+    // Keep the panel off the screen edges: a trigger sitting flush against the
+    // viewport edge would otherwise push long labels (Bulgarian ones are wide)
+    // out of sight.
+    const gutter = 12;
+    setCoords({
+      top: r.bottom + 8,
+      left: Math.max(gutter, r.left),
+      right: Math.max(gutter, window.innerWidth - r.right),
+    });
   };
 
   useLayoutEffect(() => {
@@ -93,8 +101,8 @@ export const OverflowMenu = ({ items = [], align = 'right', label, buttonClassNa
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.1, ease: 'easeOut' }}
               role="menu"
-              style={{ position: 'fixed', zIndex: 1000, ...positionStyle }}
-              className="w-52 py-2 bg-base border border-content/25 rounded-xl shadow-2xl overflow-hidden"
+              style={{ position: 'fixed', zIndex: 1000, maxWidth: 'calc(100vw - 24px)', ...positionStyle }}
+              className="w-max min-w-52 py-2 bg-base border border-content/25 rounded-xl shadow-2xl overflow-hidden"
             >
               {items.map((item) => (
                 item.isDivider ? (
@@ -110,10 +118,10 @@ export const OverflowMenu = ({ items = [], align = 'right', label, buttonClassNa
                         : 'text-muted hover:text-content hover:bg-elevated'
                     }`}
                   >
-                    <span className={item.danger ? 'text-danger' : 'text-content/50 group-hover:text-primary transition-colors'}>
+                    <span className={`shrink-0 ${item.danger ? 'text-danger' : 'text-content/50 group-hover:text-primary transition-colors'}`}>
                       {item.icon}
                     </span>
-                    <span className="whitespace-nowrap font-medium">{item.label}</span>
+                    <span className="font-medium leading-snug">{item.label}</span>
                   </button>
                 )
               ))}

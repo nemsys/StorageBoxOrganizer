@@ -2,7 +2,12 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../translations';
 
-export function ImageSlider({ images, alt, onImageClick, className = '', showNavigation: showNavigationProp = true, fit = 'contain' }) {
+/**
+ * @param {'default'|'overlay'} [variant] - 'overlay' is for full-bleed hero
+ *   images: square corners and dark translucent controls that stay readable on
+ *   any photo, in either theme.
+ */
+export function ImageSlider({ images, alt, onImageClick, className = '', showNavigation: showNavigationProp = true, fit = 'contain', variant = 'default' }) {
     const { t } = useTranslation();
     const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -37,12 +42,19 @@ export function ImageSlider({ images, alt, onImageClick, className = '', showNav
 
     // Only show navigation if there's more than one image AND showNavigationProp is true
     const showNavigation = images.length > 1 && showNavigationProp;
+    const isOverlay = variant === 'overlay';
+    const navBtnClass = isOverlay
+        ? 'bg-black/45 text-white backdrop-blur-sm hover:bg-black/65'
+        : 'bg-base text-content hover:bg-surface';
+    const counterClass = isOverlay
+        ? 'bottom-3 right-3 bg-black/50 text-white backdrop-blur-sm'
+        : 'top-2 right-2 bg-base text-content';
 
     return (
         <div className={`relative w-full h-full ${className}`}>
             {/* Main Image */}
             <div
-                className="w-full h-full overflow-hidden rounded-lg bg-surface"
+                className={`w-full h-full overflow-hidden bg-surface ${isOverlay ? '' : 'rounded-lg'}`}
                 onClick={handleImageClick}
             >
                 <img
@@ -58,7 +70,7 @@ export function ImageSlider({ images, alt, onImageClick, className = '', showNav
                     <button
                         onClick={goToPrevious}
                         style={{ top: '50%', transform: 'translateY(-50%)' }}
-                        className="absolute left-2 p-2 bg-base text-content rounded-full hover:bg-surface transition-all z-50 opacity-100 hover:scale-110"
+                        className={`absolute left-2 p-2 rounded-full transition-all z-50 hover:scale-110 ${navBtnClass}`}
                         aria-label={t('photo.previous')}
                     >
                         <ChevronLeft size={24} />
@@ -68,7 +80,7 @@ export function ImageSlider({ images, alt, onImageClick, className = '', showNav
                     <button
                         onClick={goToNext}
                         style={{ top: '50%', transform: 'translateY(-50%)' }}
-                        className="absolute right-2 p-2 bg-base text-content rounded-full hover:bg-surface transition-all z-50 opacity-100 hover:scale-110"
+                        className={`absolute right-2 p-2 rounded-full transition-all z-50 hover:scale-110 ${navBtnClass}`}
                         aria-label={t('photo.next')}
                     >
                         <ChevronRight size={24} />
@@ -90,7 +102,7 @@ export function ImageSlider({ images, alt, onImageClick, className = '', showNav
                     </div>
 
                     {/* Image Counter */}
-                    <div className="absolute top-2 right-2 bg-base text-content text-xs px-2 py-1 rounded-full z-50">
+                    <div className={`absolute text-xs px-2 py-1 rounded-full z-50 ${counterClass}`}>
                         {currentIndex + 1} / {images.length}
                     </div>
                 </>

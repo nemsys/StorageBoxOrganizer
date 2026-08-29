@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw, ImageDown, LogOut, Languages, Info } from 'lucide-react';
 import { useTranslation, LANGUAGES } from '../translations';
 
-export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImages, theme, onToggleTheme, onCheckUpdates, onAbout, onSignOut }) => {
+export const SettingsMenu = ({ userEmail, onManageTags, onExport, onImport, onOptimizeImages, theme, onToggleTheme, onCheckUpdates, onAbout, onSignOut }) => {
   const { t, lang, setLang } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -135,8 +135,19 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.1, ease: "easeOut" }}
-            className="absolute right-0 mt-3 w-72 py-2 bg-base border border-content/25 rounded-xl shadow-2xl z-50 overflow-hidden"
+            className="absolute right-0 mt-3 w-72 max-w-[calc(100vw-1.5rem)] py-2 bg-base border border-content/25 rounded-xl shadow-2xl z-50 overflow-hidden"
           >
+            {/* Signed-in identity lives here instead of a dedicated header bar,
+                which cost a full row of vertical space on every screen. */}
+            {userEmail && (
+              <>
+                <div className="px-4 py-2">
+                  <p className="text-xs text-muted">{t('nav.signedInAs')}</p>
+                  <p className="text-sm font-medium text-content break-all">{userEmail}</p>
+                </div>
+                <div className="border-b border-content/15 my-1" />
+              </>
+            )}
             <div className="flex items-center gap-2 px-4 py-2">
               <span className="text-content/50">
                 <Languages size={18} />
@@ -171,10 +182,10 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
                   onClick={item.onClick}
                   className="w-full flex items-center gap-3 px-4 py-2 text-sm text-muted hover:text-content hover:bg-elevated transition-colors text-left group"
                 >
-                  <span className="text-content/50 group-hover:text-primary transition-colors">
+                  <span className="shrink-0 text-content/50 group-hover:text-primary transition-colors">
                     {item.icon}
                   </span>
-                  <span className="whitespace-nowrap font-medium">{item.label}</span>
+                  <span className="font-medium leading-snug">{item.label}</span>
                 </button>
               )
             ))}
