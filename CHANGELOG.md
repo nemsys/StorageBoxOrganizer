@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.14.2](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.14.1...v1.14.2) (2026-08-29)
+
+
+### Bug Fixes
+
+* **pwa:** draw the launch screen on the first paint, not after the bundle ([#28](https://github.com/nemsys/StorageBoxOrganizer/issues/28)) ([33a7ea6](https://github.com/nemsys/StorageBoxOrganizer/commit/33a7ea664cd6e8add0322bbd4b9b17cb4fb242e1))
+
 ### [1.14.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.14.0...v1.14.1) (2026-08-29)
 
 
