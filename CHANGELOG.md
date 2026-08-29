@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.12.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.12.0...v1.12.1) (2026-08-29)
+
+
+### Bug Fixes
+
+* **ui:** restore the original header on the top-level views ([#24](https://github.com/nemsys/StorageBoxOrganizer/issues/24)) ([6b42b2c](https://github.com/nemsys/StorageBoxOrganizer/commit/6b42b2c02c3eba42cb971312b482e04f981ff6dd))
+
 ## [1.12.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.11.0...v1.12.0) (2026-08-29)
 
 
