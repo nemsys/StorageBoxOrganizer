@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.16.6](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.5...v1.16.6) (2026-08-29)
+
+
+### Bug Fixes
+
+* **ui:** put the collapsed box header's name in the primary hue ([#38](https://github.com/nemsys/StorageBoxOrganizer/issues/38)) ([397d982](https://github.com/nemsys/StorageBoxOrganizer/commit/397d98220e78a9124adb02dbc50c90e18a14a237))
+
 ### [1.16.5](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.4...v1.16.5) (2026-08-29)
 
 
