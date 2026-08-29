@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.14.3](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.14.2...v1.14.3) (2026-08-29)
+
+
+### Bug Fixes
+
+* **pwa:** name the home-screen icon "Storage Box", not "Boxes" ([#29](https://github.com/nemsys/StorageBoxOrganizer/issues/29)) ([8e8da0b](https://github.com/nemsys/StorageBoxOrganizer/commit/8e8da0b0fde5ae1f1f47a1cf45e2782d84f9b87c))
+
 ### [1.14.2](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.14.1...v1.14.2) (2026-08-29)
 
 
