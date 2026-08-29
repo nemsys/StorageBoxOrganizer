@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.15.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.14.3...v1.15.0) (2026-08-29)
+
+
+### Features
+
+* **offline:** make the app usable without a connection ([#30](https://github.com/nemsys/StorageBoxOrganizer/issues/30)) ([6166474](https://github.com/nemsys/StorageBoxOrganizer/commit/616647475308fdd49c7cc5b0ce6f1a9e0a8ddd37))
+
 ### [1.14.3](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.14.2...v1.14.3) (2026-08-29)
 
 
