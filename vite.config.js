@@ -31,5 +31,37 @@ export default defineConfig({
         })
       },
     },
+    {
+      // Emits src/sw.js to /sw.js with the build id and the precache list
+      // filled in. The list has to be built here because only the bundle knows
+      // the hashed filenames; hand-maintaining it would go stale on any deploy
+      // that changes a chunk, and a service worker precaching a file that no
+      // longer exists is a broken install.
+      name: 'emit-service-worker',
+      apply: 'build',
+      generateBundle(_options, bundle) {
+        const hashed = Object.keys(bundle)
+          .filter((name) => name.endsWith('.js') || name.endsWith('.css'))
+          .map((name) => '/' + name)
+
+        const precache = [
+          '/',
+          '/index.html',
+          ...hashed,
+          '/manifest.webmanifest',
+          '/box.svg',
+          '/icon-192.png',
+          '/icon-512.png',
+          '/icon-maskable-512.png',
+          '/apple-touch-icon.png',
+        ]
+
+        const source = readFileSync(new URL('./src/sw.js', import.meta.url), 'utf8')
+          .replace(/__BUILD_ID__/g, JSON.stringify(buildId))
+          .replace(/__PRECACHE__/g, JSON.stringify(precache))
+
+        this.emitFile({ type: 'asset', fileName: 'sw.js', source })
+      },
+    },
   ],
 })
