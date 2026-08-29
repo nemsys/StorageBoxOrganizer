@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.14.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.13.0...v1.14.0) (2026-08-29)
+
+
+### Features
+
+* **ui:** localized launch screen, native splash hand-off, centred FAB ([#26](https://github.com/nemsys/StorageBoxOrganizer/issues/26)) ([6e41a30](https://github.com/nemsys/StorageBoxOrganizer/commit/6e41a305256aaf9ef040865ff3baeb13ac1e6d20))
+
 ## [1.13.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.12.1...v1.13.0) (2026-08-29)
 
 
