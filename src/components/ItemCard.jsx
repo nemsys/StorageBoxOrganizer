@@ -1,14 +1,21 @@
-import { Package, PackageMinus, Edit, Trash2, Tag, ChevronRight, ZoomIn } from 'lucide-react';
+import { Package, PackageMinus, Edit, Trash2, Tag, ChevronRight, ZoomIn, Pencil } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 import { OverflowMenu } from './OverflowMenu';
 import { getImageRefs, refsToThumbs } from '../utils/imageUtils';
 import { useTranslation } from '../translations';
 
-export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onBoxClick, onImageClick, showNavigation = false }) {
+// How many tag chips fit before the card starts hiding them behind a "+N".
+const VISIBLE_TAGS = 2;
+
+export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onBoxClick, onImageClick, onTagClick, showNavigation = false }) {
     const { t } = useTranslation();
     // Browse from inline thumbnails; full-res is fetched on demand (fullscreen).
     const imageRefs = getImageRefs(item);
     const displayImages = refsToThumbs(imageRefs);
+    const tags = item.tags || [];
+    const shownTags = tags.slice(0, VISIBLE_TAGS);
+    const hiddenTagCount = tags.length - shownTags.length;
+
     return (
         <div className="card flex flex-col h-full relative group">
             {/* Image Area */}
@@ -22,34 +29,34 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                 <ImageSlider
                     images={displayImages}
                     alt={item.name}
-                    onImageClick={onImageClick && displayImages.length > 0 ? () => onImageClick(imageRefs, item.name, item) : undefined}
+                    onImageClick={onImageClick && displayImages.length > 0
+                        ? (_images, _alt, index) => onImageClick(imageRefs, item.name, index)
+                        : undefined}
                     className="absolute inset-0 w-full h-full"
                     showNavigation={showNavigation}
                     fit="cover"
                 />
                 {displayImages.length === 0 && (
-                    <div className="w-full h-full flex items-center justify-center text-content/40">
+                    <div className="w-full h-full flex items-center justify-center text-muted">
                         <Package size={48} />
                     </div>
                 )}
 
-                {/* Clickable zoom overlay — only when images exist */}
+                {/* Visible zoom affordance — replaces the hover-only overlay,
+                    which nothing revealed on a touch screen. */}
                 {displayImages.length > 0 && onImageClick && (
-                    <div
+                    <button
+                        type="button"
                         onClick={(e) => {
                             e.stopPropagation();
-                            onImageClick(imageRefs, item.name);
+                            onImageClick(imageRefs, item.name, 0);
                         }}
-                        className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        style={{ background: 'rgba(0,0,0,0.35)', cursor: 'zoom-in' }}
+                        className="zoom-btn"
                         title={t('photo.viewFullscreen')}
-                        role="button"
                         aria-label={t('item.viewFullscreen', { name: item.name })}
                     >
-                        <div className="p-2 bg-base/70 rounded-full backdrop-blur-sm">
-                            <ZoomIn size={22} className="text-content" />
-                        </div>
-                    </div>
+                        <ZoomIn size={16} />
+                    </button>
                 )}
 
                 {/* Overlay Gradient */}
@@ -64,7 +71,9 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                 )}
             </div>
 
-            <div className="p-4 flex flex-col h-28">
+            {/* min-h, not a fixed h-28: the title is allowed two lines now, and
+                a fixed height clipped the second one along with any tag row. */}
+            <div className="p-4 flex flex-col flex-1 min-h-28">
                 <div className="flex items-start justify-between gap-2 mb-1">
                     {onEdit ? (
                         <div
@@ -76,12 +85,19 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                             title={t('item.edit')}
                             aria-label={t('item.editAria', { name: item.name })}
                         >
-                            <h3 className="text-[15px] font-semibold text-content whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
+                            <div className="flex items-start gap-1.5">
+                                <h3 className="flex-1 min-w-0 text-[15px] font-semibold text-content line-clamp-2">{item.name}</h3>
+                                {/* Permanent pencil: the hover tint that used to be
+                                    the only hint does not exist on Android. */}
+                                <span className="edit-hint mt-0.5" aria-hidden="true">
+                                    <Pencil size={13} />
+                                </span>
+                            </div>
                             <p className="text-sm text-muted mb-3 line-clamp-1">{item.description}</p>
                         </div>
                     ) : (
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-[15px] font-semibold text-content whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</h3>
+                            <h3 className="text-[15px] font-semibold text-content line-clamp-2">{item.name}</h3>
                             <p className="text-sm text-muted mb-3 line-clamp-1">{item.description}</p>
                         </div>
                     )}
@@ -102,13 +118,33 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                     )}
                 </div>
 
-                {item.tags && item.tags.length > 0 && (
+                {tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-auto">
-                        {item.tags.map((tag, i) => (
-                            <span key={i} className="text-xs px-2 py-1 rounded-full bg-elevated text-muted flex items-center gap-1">
-                                <Tag size={10} /> {tag}
-                            </span>
+                        {shownTags.map((tag) => (
+                            onTagClick ? (
+                                <button
+                                    key={tag}
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); onTagClick(tag); }}
+                                    className="tag-chip"
+                                    title={t('tags.filterBy', { tag })}
+                                >
+                                    <Tag size={10} className="mr-1" /> {tag}
+                                </button>
+                            ) : (
+                                <span key={tag} className="text-xs px-2 py-1 rounded-full bg-elevated text-muted flex items-center gap-1">
+                                    <Tag size={10} /> {tag}
+                                </span>
+                            )
                         ))}
+                        {hiddenTagCount > 0 && (
+                            <span
+                                className="text-xs px-2 py-1 rounded-full bg-elevated text-muted"
+                                title={tags.join(', ')}
+                            >
+                                +{hiddenTagCount}
+                            </span>
+                        )}
                     </div>
                 )}
             </div>

@@ -7,7 +7,6 @@ import { AddBoxModal } from './components/AddBoxModal';
 import { AddItemModal } from './components/AddItemModal';
 import { EditBoxModal } from './components/EditBoxModal';
 import { EditItemModal } from './components/EditItemModal';
-import { SearchBar } from './components/SearchBar';
 import { AuthModal } from './components/AuthModal';
 import { AccessPendingScreen } from './components/AccessPendingScreen';
 import { FullscreenImageModal } from './components/FullscreenImageModal';
@@ -19,7 +18,9 @@ import { ImportProgressModal } from './components/ImportProgressModal';
 import { AboutModal } from './components/AboutModal';
 import { Toast } from './components/Toast';
 import { ConfirmationDialog } from './components/ConfirmationDialog';
-import { ArrowLeft, PackageOpen, LogOut, Package, Edit, Trash2, Calendar, History, Plus } from 'lucide-react';
+import { EmptyState } from './components/EmptyState';
+import { SkeletonGrid } from './components/SkeletonGrid';
+import { ArrowLeft, PackageOpen, LogOut, Package, Edit, Trash2, Calendar, History, Plus, SearchX, WifiOff, Pencil } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -32,31 +33,161 @@ import { loadDraft, saveDraft, clearDraft } from './utils/draftStorage';
 import { useTranslation } from './translations';
 import { normalizeTag, normalizeTags, tagVariants, hasTag } from './utils/tagUtils';
 
+// Visual-inspection fixtures. `import.meta.env.DEV` is inlined as a literal at
+// build time, so every branch below folds away and the data never reaches the
+// production bundle.
+// Visual-inspection fixtures, dev only. Deliberately messy — long Bulgarian
+// names, several photos, an untagged item and one with no box — so the states
+// that only show up with real data can be checked at a phone width.
+// `import.meta.env.DEV` is inlined at build time, so all of this folds away
+// and never reaches the production bundle.
+
 const MOCK_BOXES = [
   {
     id: "mock-box-1",
-    name: "Mock Box 1",
-    description: "A test storage box for visual inspection",
-    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%233b82f6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='10'>Box 1 Image</text></svg>",
-    images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%233b82f6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='10'>Box 1 Image</text></svg>"],
+    name: "Кутия със зимни дрехи - таван",
+    description: "Пуловери, шалове и якета от миналата зима",
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%233b82f6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 1.1</text></svg>",
+    images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%233b82f6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 1.1</text></svg>", "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%236366f1'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 1.2</text></svg>"],
     userId: "mock-user-123",
-    createdAt: Date.now()
+    createdAt: Date.now() - 0 * 86400000
+  },
+  {
+    id: "mock-box-2",
+    name: "Документи и гаранции 2019-2024",
+    description: "Договори, гаранционни карти, стари сметки",
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%238b5cf6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 2.1</text></svg>",
+    images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%238b5cf6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 2.1</text></svg>"],
+    userId: "mock-user-123",
+    createdAt: Date.now() - 1 * 86400000
+  },
+  {
+    id: "mock-box-3",
+    name: "Инструменти",
+    description: "Отвертки, клещи, свредла",
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%230ea5e9'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 3.1</text></svg>",
+    images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%230ea5e9'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 3.1</text></svg>", "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%2314b8a6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 3.2</text></svg>", "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%2322c55e'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 3.3</text></svg>"],
+    userId: "mock-user-123",
+    createdAt: Date.now() - 2 * 86400000
+  },
+  {
+    id: "mock-box-4",
+    name: "Кухня — резервни съдове",
+    description: "",
+    image: null,
+    images: [],
+    userId: "mock-user-123",
+    createdAt: Date.now() - 3 * 86400000
   }
 ];
 
 const MOCK_ITEMS = [
   {
     id: "mock-item-1",
-    name: "Mock Item 1",
-    description: "A test item with an image",
-    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2310b981'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='10'>Item 1 Image</text></svg>",
-    images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2310b981'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='10'>Item 1 Image</text></svg>"],
+    name: "Зимно яке, тъмносиньо",
+    description: "Мембрана, размер L",
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%2310b981'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Item 1.1</text></svg>",
+    images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%2310b981'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Item 1.1</text></svg>", "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%230ea5e9'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Item 1.2</text></svg>"],
     boxId: "mock-box-1",
     userId: "mock-user-123",
-    createdAt: Date.now(),
-    tags: ["test"]
+    createdAt: Date.now() - 0 * 3600000,
+    tags: ["зимно", "дрехи"]
+  },
+  {
+    id: "mock-item-2",
+    name: "Шапки и шалове",
+    description: "Вълнени, кутия отдясно",
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%23f59e0b'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Item 2.1</text></svg>",
+    images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%23f59e0b'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Item 2.1</text></svg>"],
+    boxId: "mock-box-1",
+    userId: "mock-user-123",
+    createdAt: Date.now() - 1 * 3600000,
+    tags: ["зимно"]
+  },
+  {
+    id: "mock-item-3",
+    name: "Гаранция за пералня Bosch WAT",
+    description: "Изтича 03.2027",
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%23ef4444'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Item 3.1</text></svg>",
+    images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%23ef4444'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Item 3.1</text></svg>"],
+    boxId: "mock-box-2",
+    userId: "mock-user-123",
+    createdAt: Date.now() - 2 * 3600000,
+    tags: ["документи", "гаранция", "техника"]
+  },
+  {
+    id: "mock-item-4",
+    name: "Акумулаторен винтоверт Makita",
+    description: "С две батерии и зарядно",
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%236366f1'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Item 4.1</text></svg>",
+    images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%236366f1'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Item 4.1</text></svg>", "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%238b5cf6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Item 4.2</text></svg>", "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%23ec4899'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Item 4.3</text></svg>"],
+    boxId: "mock-box-3",
+    userId: "mock-user-123",
+    createdAt: Date.now() - 3 * 3600000,
+    tags: ["инструменти"]
+  },
+  {
+    id: "mock-item-5",
+    name: "Комплект бургии",
+    description: "",
+    image: null,
+    images: [],
+    boxId: "mock-box-3",
+    userId: "mock-user-123",
+    createdAt: Date.now() - 4 * 3600000,
+    tags: ["инструменти"]
+  },
+  {
+    id: "mock-item-6",
+    name: "Кафемашина",
+    description: "Още не е прибрана в кутия",
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%23a855f7'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Item 6.1</text></svg>",
+    images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%23a855f7'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Item 6.1</text></svg>"],
+    boxId: "",
+    userId: "mock-user-123",
+    createdAt: Date.now() - 5 * 3600000,
+    tags: ["кухня"]
   }
 ];
+/** Is this the seeded, no-Firebase view used for visual inspection? */
+const isMockAuth = () =>
+  import.meta.env.DEV && new URLSearchParams(window.location.search).get('mock-auth') === 'true';
+
+// The tag filter doubles as a "show me the unfiled ones" switch. A sentinel
+// rather than a real tag, so it can never collide with something a user typed.
+const UNASSIGNED_FILTER = '__unassigned__';
+
+// How long a delete waits before it is written, so the toast can offer Undo.
+const UNDO_WINDOW_MS = 6000;
+
+/** One filter/search/sort pipeline, shared by the box view and All Items. */
+function filterSortItems(list, { query, tag, sortOrder }) {
+  let result = list;
+
+  if (tag === UNASSIGNED_FILTER) {
+    result = result.filter(item => !item.boxId);
+  } else if (tag) {
+    result = result.filter(item => hasTag(item, tag));
+  }
+
+  if (query) {
+    const fuse = new Fuse(result, {
+      keys: ['name', 'description', 'tags'],
+      threshold: 0.3,
+    });
+    result = fuse.search(query).map(r => r.item);
+  }
+
+  return [...result].sort((a, b) => {
+    switch (sortOrder) {
+      case 'name-asc': return a.name.localeCompare(b.name);
+      case 'name-desc': return b.name.localeCompare(a.name);
+      case 'newest': return (b.createdAt || 0) - (a.createdAt || 0);
+      case 'oldest': return (a.createdAt || 0) - (b.createdAt || 0);
+      default: return 0;
+    }
+  });
+}
 
 function App() {
   const [user, setUser] = useState(null);
@@ -108,8 +239,15 @@ function App() {
 
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
-  const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, refs: [], name: '' });
+  const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, refs: [], name: '', startIndex: 0 });
   const [toasts, setToasts] = useState([]);
+  // First load only: distinguishes "still fetching" from "you have nothing",
+  // which used to look identical (an empty grid).
+  const [dataLoading, setDataLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' && !navigator.onLine);
+  // Hero image out of view -> show the compact box header instead.
+  const [heroHidden, setHeroHidden] = useState(false);
+  const heroRef = useRef(null);
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
     title: '',
@@ -120,9 +258,10 @@ function App() {
   const fileInputRef = useRef(null);
 
   // Notification Helpers
-  const addToast = (message, type = 'info') => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
+  const addToast = (message, type = 'info', options = {}) => {
+    // Date.now() alone collides when two toasts land in the same millisecond.
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    setToasts(prev => [...prev, { id, message, type, ...options }]);
   };
 
   const removeToast = (id) => {
@@ -161,8 +300,7 @@ function App() {
 
   // Auth Listener
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('mock-auth') === 'true') {
+    if (isMockAuth()) {
       setUser({ uid: 'mock-user-123', email: 'mock@example.com' });
       setAuthLoading(false);
       return;
@@ -198,7 +336,11 @@ function App() {
           setView('boxes');
           setSearchQuery('');
           setBoxSearchQuery('');
-          if (user) {
+          setSelectedTag('');
+          if (isMockAuth()) {
+            setBoxes(MOCK_BOXES);
+            setItems(MOCK_ITEMS);
+          } else if (user) {
             const loadedBoxes = await firebaseStorage.getBoxes();
             setBoxes(loadedBoxes);
             const allItems = await firebaseStorage.getAllItems();
@@ -207,18 +349,20 @@ function App() {
         } else if (historyView === 'items' && boxId) {
           const box = boxes.find(b => b.id === boxId) || { id: boxId, name: boxName };
           setCurrentBox(box);
-          const boxItems = await firebaseStorage.getItems(boxId);
-          setItems(boxItems);
+          setItems(isMockAuth()
+            ? MOCK_ITEMS.filter(i => i.boxId === boxId)
+            : await firebaseStorage.getItems(boxId));
           setView('items');
           setSearchQuery('');
           setBoxSearchQuery('');
+          setSelectedTag('');
         } else if (historyView === 'allItems') {
           setCurrentBox(null);
-          const allItems = await firebaseStorage.getAllItems();
-          setItems(allItems);
+          setItems(isMockAuth() ? MOCK_ITEMS : await firebaseStorage.getAllItems());
           setView('allItems');
           setSearchQuery('');
           setBoxSearchQuery('');
+          setSelectedTag('');
         }
       }
     };
@@ -262,13 +406,76 @@ function App() {
     else clearDraft('active_modal');
   }, [isAddBoxModalOpen, isAddItemModalOpen, editingItem, editingBox]);
 
+  // Connectivity. Firestore keeps working offline against its local cache, so
+  // without this the user has no way of telling that what they are looking at —
+  // and what they are changing — has not reached the server.
+  useEffect(() => {
+    const goOnline = () => setIsOffline(false);
+    const goOffline = () => setIsOffline(true);
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, []);
+
+  // Deletes are held for a few seconds before they are written, so the toast
+  // can offer a way back. The row leaves the screen immediately either way.
+  const pendingCommits = useRef(new Map());
+
+  const scheduleCommit = (key, commit) => {
+    const timer = setTimeout(() => {
+      pendingCommits.current.delete(key);
+      commit();
+    }, UNDO_WINDOW_MS);
+    pendingCommits.current.set(key, { timer, commit });
+  };
+
+  /** Cancel a scheduled write. Returns false if it has already gone through. */
+  const cancelCommit = (key) => {
+    const entry = pendingCommits.current.get(key);
+    if (!entry) return false;
+    clearTimeout(entry.timer);
+    pendingCommits.current.delete(key);
+    return true;
+  };
+
+  // Leaving the page inside the undo window must not quietly resurrect what the
+  // user deleted: flush anything still waiting. Firestore queues the write in
+  // its offline layer, so it survives the unload.
+  useEffect(() => {
+    const pending = pendingCommits.current;
+    const flush = () => {
+      pending.forEach(({ timer, commit }) => { clearTimeout(timer); commit(); });
+      pending.clear();
+    };
+    window.addEventListener('pagehide', flush);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      flush();
+    };
+  }, []);
+
+  // Swap the hero image for a compact bar once it has scrolled away, so Back
+  // and the box actions stay reachable without scrolling back to the top.
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el) { setHeroHidden(false); return; }
+    const observer = new IntersectionObserver(
+      ([entry]) => setHeroHidden(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [view, currentBox?.id]);
+
   // Resolves to true when the data is loaded, false when the account is not
   // allowed to read it. AccessPendingScreen re-runs this after a token refresh
   // to find out whether approval has come through.
   const refreshData = async () => {
     if (!user) return true;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('mock-auth') === 'true') {
+    if (isMockAuth()) {
       setBoxes(MOCK_BOXES);
       setAllItems(MOCK_ITEMS);
       if (currentBox) {
@@ -276,9 +483,11 @@ function App() {
       } else {
         setItems(MOCK_ITEMS);
       }
+      setDataLoading(false);
       return true;
     }
 
+    setDataLoading(true);
     try {
       const loadedBoxes = await firebaseStorage.getBoxes();
       setBoxes(loadedBoxes);
@@ -307,15 +516,16 @@ function App() {
       console.error('Failed to load data', err);
       addToast(t('data.loadFailed'), 'error');
       return false;
+    } finally {
+      setDataLoading(false);
     }
   };
 
   // Handle Box Selection
   const handleBoxClick = async (box) => {
     setCurrentBox(box);
-    const params = new URLSearchParams(window.location.search);
     let boxItems = [];
-    if (params.get('mock-auth') === 'true') {
+    if (isMockAuth()) {
       boxItems = MOCK_ITEMS.filter(i => i.boxId === box.id);
     } else {
       boxItems = await firebaseStorage.getItems(box.id);
@@ -325,6 +535,7 @@ function App() {
     setView('items');
     setSearchQuery('');
     setBoxSearchQuery('');
+    setSelectedTag('');
 
     // Push to browser history
     window.history.pushState(
@@ -460,6 +671,7 @@ function App() {
       type: 'primary',
       onConfirm: async () => {
         const previousBoxId = findItemBoxId(itemId);
+        const snapshot = items.find(i => i.id === itemId) || allItems.find(i => i.id === itemId);
 
         // Optimistic update - remove from current view
         setItems(prev => prev.filter(i => i.id !== itemId));
@@ -469,7 +681,21 @@ function App() {
           // Update allItems to reflect the change
           setAllItems(prev => prev.map(i => i.id === itemId ? { ...i, boxId: '' } : i));
           await touchBoxes(previousBoxId);
-          addToast(t('item.removedToast'), "success");
+          addToast(t('item.removedToast'), "success", {
+            duration: UNDO_WINDOW_MS,
+            actionLabel: t('common.undo'),
+            onAction: async () => {
+              try {
+                await firebaseStorage.updateItem(itemId, { boxId: previousBoxId });
+                setAllItems(prev => prev.map(i => i.id === itemId ? { ...i, boxId: previousBoxId } : i));
+                if (snapshot) setItems(prev => [snapshot, ...prev.filter(i => i.id !== itemId)]);
+                await touchBoxes(previousBoxId);
+              } catch (err) {
+                console.error('Failed to undo remove', err);
+                refreshData();
+              }
+            }
+          });
         } catch (err) {
           console.error('Failed to remove item from box', err);
           refreshData(); // Revert on error
@@ -480,35 +706,56 @@ function App() {
   };
 
   // Permanently delete an item (available from both the box view and All Items).
+  //
+  // The write is deferred by the undo window. Deleting an item also deletes its
+  // image documents, so a delete that has actually happened cannot be undone by
+  // writing the item back — the only honest "undo" is to not have deleted yet.
   const handleDeleteItem = async (itemId) => {
     askConfirm({
       title: t('item.deleteTitle'),
       message: t('item.deleteMessage'),
       type: 'danger',
-      onConfirm: async () => {
+      onConfirm: () => {
         const previousBoxId = findItemBoxId(itemId);
+        const snapshot = items.find(i => i.id === itemId) || allItems.find(i => i.id === itemId);
+        const wasInView = items.some(i => i.id === itemId);
 
         // Optimistic update
         setItems(prev => prev.filter(i => i.id !== itemId));
         setAllItems(prev => prev.filter(i => i.id !== itemId));
 
-        try {
-          await firebaseStorage.deleteItem(itemId);
-          await touchBoxes(previousBoxId);
-          addToast(t('item.deletedToast'), "success");
-        } catch (err) {
-          console.error('Failed to delete item', err);
-          refreshData(); // Revert on error
-          addToast(t('item.deleteFailed'), "error");
-        }
+        scheduleCommit(`item:${itemId}`, async () => {
+          try {
+            await firebaseStorage.deleteItem(itemId);
+            await touchBoxes(previousBoxId);
+          } catch (err) {
+            console.error('Failed to delete item', err);
+            refreshData(); // Revert on error
+            addToast(t('item.deleteFailed'), "error");
+          }
+        });
+
+        addToast(t('item.deletedToast'), "success", {
+          duration: UNDO_WINDOW_MS,
+          actionLabel: t('common.undo'),
+          onAction: () => {
+            if (!cancelCommit(`item:${itemId}`) || !snapshot) return;
+            if (wasInView) setItems(prev => [snapshot, ...prev]);
+            setAllItems(prev => [snapshot, ...prev]);
+          }
+        });
       }
     });
   };
 
   async function handleDeleteBox(id) {
+    // Cascading and immediate — name the scope, since there is no way back.
+    const doomedCount = allItems.filter(i => i.boxId === id).length;
     askConfirm({
       title: t('box.deleteTitle'),
-      message: t('box.deleteMessage'),
+      message: doomedCount > 0
+        ? t('box.deleteMessageCount', { count: doomedCount })
+        : t('box.deleteMessageEmpty'),
       type: 'danger',
       onConfirm: async () => {
         // Optimistic update
@@ -731,6 +978,23 @@ function App() {
     }
   };
 
+  // No pull-to-refresh (the body disables overscroll for a native feel), so
+  // this is the only way to pick up a change made on another device.
+  const handleManualRefresh = async () => {
+    const ok = await refreshData();
+    if (ok) addToast(t('data.refreshed'), 'success');
+  };
+
+  const clearItemFilters = () => {
+    setSearchQuery('');
+    setSelectedTag('');
+  };
+
+  const clearBoxFilters = () => {
+    setBoxSearchQuery('');
+    setSelectedBoxTag('');
+  };
+
   // Handle Sign Out
   const handleSignOut = async () => {
     try {
@@ -742,13 +1006,13 @@ function App() {
 
   // Handle Fullscreen Image. Receives image refs ({id?, thumb, full?}); the
   // viewer renders thumbs immediately and fetches full-res on demand.
-  const handleImageClick = (refs, itemName) => {
+  const handleImageClick = (refs, itemName, startIndex = 0) => {
     const list = Array.isArray(refs) ? refs : [refs];
-    setFullscreenImage({ isOpen: true, refs: list, name: itemName });
+    setFullscreenImage({ isOpen: true, refs: list, name: itemName, startIndex });
   };
 
   const handleCloseFullscreenImage = () => {
-    setFullscreenImage({ isOpen: false, refs: [], name: '' });
+    setFullscreenImage({ isOpen: false, refs: [], name: '', startIndex: 0 });
   };
 
   // Data Import/Export Handlers
@@ -871,18 +1135,6 @@ function App() {
     event.target.value = ''; // Reset input
   };
 
-  // Fuzzy Search Logic
-  const filteredItems = useMemo(() => {
-    if (!searchQuery) return items;
-
-    const fuse = new Fuse(items, {
-      keys: ['name', 'description', 'tags'],
-      threshold: 0.3,
-    });
-
-    return fuse.search(searchQuery).map(result => result.item);
-  }, [items, searchQuery]);
-
   // Box Search Logic
   const filteredBoxes = useMemo(() => {
     let result = boxes;
@@ -918,24 +1170,12 @@ function App() {
     return sorted;
   }, [boxes, boxSearchQuery, selectedBoxTag, boxSortOrder, allItems]);
 
-  // Global Search
-  const globalSearchResults = useMemo(() => {
-    if (view !== 'boxes' || !searchQuery) return [];
-
-    const allItems = items;
-    const fuse = new Fuse(allItems, {
-      keys: ['name', 'description', 'tags'],
-      threshold: 0.3,
-    });
-
-    const results = fuse.search(searchQuery).map(result => result.item);
-
-    return results.map(item => {
-      if (!item.boxId) return { ...item, boxName: t('box.unassigned') };
-      const box = boxes.find(b => b.id === item.boxId);
-      return { ...item, boxName: box?.name || t('box.unknown') };
-    });
-  }, [view, searchQuery, boxes, items, t]);
+  // Tapping a tag chip on a card filters by it — the shortest path from
+  // "this looks relevant" to "show me everything like it".
+  const handleTagClick = (tag) => {
+    setSelectedTag(prev => (normalizeTag(prev) === normalizeTag(tag) ? '' : normalizeTag(tag)));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Handle Box Click from Search Results
   const handleBoxClickFromSearch = (boxId) => {
@@ -959,31 +1199,10 @@ function App() {
   const allItemsDisplayItems = useMemo(() => {
     if (view !== 'allItems') return [];
 
-    let result = items;
-
-    // Filter by tag
-    if (selectedTag) {
-      result = result.filter(item => hasTag(item, selectedTag));
-    }
-
-    // Filter by search query
-    if (searchQuery) {
-      const fuse = new Fuse(result, {
-        keys: ['name', 'description', 'tags'],
-        threshold: 0.3,
-      });
-      result = fuse.search(searchQuery).map(r => r.item);
-    }
-
-    // Sort
-    const sorted = [...result].sort((a, b) => {
-      switch (itemSortOrder) {
-        case 'name-asc': return a.name.localeCompare(b.name);
-        case 'name-desc': return b.name.localeCompare(a.name);
-        case 'newest': return (b.createdAt || 0) - (a.createdAt || 0);
-        case 'oldest': return (a.createdAt || 0) - (b.createdAt || 0);
-        default: return 0;
-      }
+    const sorted = filterSortItems(items, {
+      query: searchQuery,
+      tag: selectedTag,
+      sortOrder: itemSortOrder,
     });
 
     // Enrich with boxName for the footer row (Option C)
@@ -994,10 +1213,31 @@ function App() {
     });
   }, [items, selectedTag, searchQuery, itemSortOrder, view, boxes, t]);
 
+  // Inside a box: the same search / sort / filter as everywhere else. This is
+  // the list the box view actually renders — it used to render the raw `items`,
+  // so the search field in there changed nothing at all.
+  const boxViewItems = useMemo(() => {
+    if (view !== 'items') return [];
+    return filterSortItems(items, {
+      query: searchQuery,
+      tag: selectedTag,
+      sortOrder: itemSortOrder,
+    }).map(item => ({ ...item, boxName: currentBox?.name }));
+  }, [view, items, searchQuery, selectedTag, itemSortOrder, currentBox?.name]);
+
+  // Only the tags that occur in this box — offering the global list here would
+  // mostly offer ways to empty the screen.
+  const boxTags = useMemo(() => {
+    if (view !== 'items') return [];
+    const tagSet = new Set();
+    items.forEach(item => normalizeTags(item.tags).forEach(tag => tagSet.add(tag)));
+    return Array.from(tagSet).sort();
+  }, [view, items]);
+
   // Handle List All Items
   const handleListAllItems = async () => {
     setCurrentBox(null);
-    const allItems = await firebaseStorage.getAllItems();
+    const allItems = isMockAuth() ? MOCK_ITEMS : await firebaseStorage.getAllItems();
     const sortedItems = [...allItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     setItems(sortedItems);
     setView('allItems');
@@ -1008,8 +1248,6 @@ function App() {
     // Push to browser history
     window.history.pushState({ view: 'allItems' }, '', '#all-items');
   };
-
-  const displayItems = (view === 'items' || view === 'allItems') ? filteredItems : globalSearchResults;
 
   if (authLoading) {
     return (
@@ -1053,34 +1291,27 @@ function App() {
       <AuthModal isOpen={!user} onClose={() => { }} />
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
 
+      {/* Offline notice. Firestore keeps serving from its cache, so without this
+          there is nothing to say the data on screen is not the server's. */}
+      {isOffline && (
+        <div className="app-safe-top">
+          <div className="offline-bar">
+            <WifiOff size={14} />
+            {t('data.offline')}
+          </div>
+        </div>
+      )}
+
       {/* Global Navigation Wrap — skipped in the box view, where the hero
           image owns the top of the screen. */}
       {!isBoxDetail && (
-        <div className="sticky top-0 z-40 app-safe-top bg-base/80 backdrop-blur-md border-b border-content/15">
-          {/* Header */}
+        <div className={`sticky top-0 z-40 bg-base/80 backdrop-blur-md border-b border-content/15 ${isOffline ? '' : 'app-safe-top'}`}>
+          {/* Header. The signed-in address used to sit in a bar of its own
+              across the top of every screen; it now lives in the settings menu,
+              next to Sign out, and that row of chrome is gone. */}
           <header>
-            {/* Top Bar - User Info */}
-            {user && (
-              <div className="bg-base/50 border-b border-content/15 py-1.5 px-4">
-                <div className="container flex justify-end items-center gap-3">
-                  <span className="text-xs text-muted">{t('nav.signedInAs')} <span className="text-content font-medium ml-1">{user.email}</span></span>
-                  <SettingsMenu
-                    onManageTags={() => setIsTagManagementModalOpen(true)}
-                    onExport={handleExportData}
-                    onImport={handleImportButtonClick}
-                    onOptimizeImages={handleOptimizeImages}
-                    theme={theme}
-                    onToggleTheme={toggleTheme}
-                    onCheckUpdates={handleCheckForUpdates}
-                    onAbout={() => setIsAboutModalOpen(true)}
-                    onSignOut={handleSignOut}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="container py-3">
-              <div className="flex items-center gap-4">
+            <div className="container py-2.5">
+              <div className="flex items-center gap-3">
                 {/* Logo */}
                 <div
                   className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity shrink-0"
@@ -1119,11 +1350,28 @@ function App() {
                   })}
                 </div>
 
+                {user && (
+                  <SettingsMenu
+                    email={user.email}
+                    onRefresh={handleManualRefresh}
+                    onManageTags={() => setIsTagManagementModalOpen(true)}
+                    onExport={handleExportData}
+                    onImport={handleImportButtonClick}
+                    onOptimizeImages={handleOptimizeImages}
+                    theme={theme}
+                    onToggleTheme={toggleTheme}
+                    onCheckUpdates={handleCheckForUpdates}
+                    onAbout={() => setIsAboutModalOpen(true)}
+                    onSignOut={handleSignOut}
+                  />
+                )}
               </div>
             </div>
           </header>
 
-          {/* Sticky Sort / Filter bar */}
+          {/* Sticky find bar: search + sort + filter. Search belongs here —
+              it is the primary way of finding anything, and it used to be the
+              one control that scrolled away while sort stayed pinned. */}
           {user && (view === 'boxes' || view === 'allItems') && (
             <div className="sfb-wrapper border-t border-content/15">
               <div className="sfb-wrapper__inner">
@@ -1133,6 +1381,13 @@ function App() {
                   selectedTag={view === 'boxes' ? selectedBoxTag : selectedTag}
                   onTagChange={view === 'boxes' ? setSelectedBoxTag : setSelectedTag}
                   tags={allTags}
+                  searchValue={view === 'boxes' ? boxSearchQuery : searchQuery}
+                  onSearchChange={view === 'boxes' ? setBoxSearchQuery : setSearchQuery}
+                  searchPlaceholder={view === 'boxes' ? t('box.search') : t('item.searchAll')}
+                  filterTitle={view === 'boxes' ? t('tags.boxFilterTitle') : t('tags.itemFilterTitle')}
+                  specialOptions={view === 'allItems'
+                    ? [{ value: UNASSIGNED_FILTER, label: t('box.unassignedFilter') }]
+                    : []}
                 />
               </div>
             </div>
@@ -1144,12 +1399,15 @@ function App() {
           box actions floating on it — or, with no photo, a plain compact bar. */}
       {isBoxDetail && (
         boxImageRefs.length > 0 ? (
-          <div className="app-safe-top bg-base">
-            <div className="relative w-full h-[42vh] min-h-[220px] max-h-[420px] bg-surface overflow-hidden">
+          <div className={`bg-base ${isOffline ? '' : 'app-safe-top'}`} ref={heroRef}>
+            {/* 32vh, not 42vh: at 42 the first item was a single clipped row of
+                photo with its name below the fold, on a screen you opened in
+                order to see what is in the box. */}
+            <div className="relative w-full h-[32vh] min-h-[180px] max-h-[360px] bg-surface overflow-hidden">
               <ImageSlider
                 images={refsToThumbs(boxImageRefs)}
                 alt={currentBox.name}
-                onImageClick={() => handleImageClick(boxImageRefs, currentBox.name)}
+                onImageClick={(_images, _alt, index) => handleImageClick(boxImageRefs, currentBox.name, index)}
                 className="w-full h-full"
                 fit="cover"
                 variant="overlay"
@@ -1165,7 +1423,7 @@ function App() {
             </div>
           </div>
         ) : (
-          <div className="sticky top-0 z-40 app-safe-top bg-base/80 backdrop-blur-md border-b border-content/15">
+          <div className={`sticky top-0 z-40 bg-base/80 backdrop-blur-md border-b border-content/15 ${isOffline ? '' : 'app-safe-top'}`}>
             <div className="container py-2 flex items-center gap-2">
               <button onClick={handleBack} className="p-2.5 rounded-lg hover:bg-elevated text-muted hover:text-content transition-colors shrink-0" aria-label={t('nav.back')}>
                 <ArrowLeft size={22} />
@@ -1177,8 +1435,36 @@ function App() {
         )
       )}
 
+      {/* The hero collapses into this once it scrolls away, so Back and the box
+          actions never leave the screen. */}
+      <AnimatePresence>
+        {isBoxDetail && boxImageRefs.length > 0 && heroHidden && (
+          <motion.div
+            key="box-bar"
+            initial={{ y: -56, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -56, opacity: 0 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="box-bar"
+          >
+            <div className="box-bar__inner">
+              <button
+                onClick={handleBack}
+                className="p-2 rounded-lg text-muted hover:text-content hover:bg-elevated transition-colors shrink-0"
+                aria-label={t('nav.back')}
+                title={t('nav.back')}
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <h2 className="flex-1 min-w-0 text-sm font-semibold text-content truncate">{currentBox.name}</h2>
+              <OverflowMenu label={t('box.actions')} items={boxMenuItems} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Main Content */}
-      <main className={`container animate-fade-in ${isBoxDetail ? 'pt-5 pb-8' : 'py-8'}`}>
+      <main className={`container animate-fade-in ${isBoxDetail ? 'pt-4 pb-8' : 'py-6'}`}>
 
         {/* Box List View */}
         {view === 'boxes' && (
@@ -1188,21 +1474,34 @@ function App() {
               <h2 className="text-lg font-semibold text-content">{t('box.title')}</h2>
               <span className="text-muted text-sm">{t('box.count', { count: filteredBoxes.length })}</span>
             </div>
-            {/* Search */}
-            <div className="mb-6">
-              <SearchBar
-                value={boxSearchQuery}
-                onChange={setBoxSearchQuery}
-                placeholder={t('box.search')}
-              />
-            </div>
 
-            <BoxList
-              boxes={filteredBoxes}
-              allItems={allItems}
-              onBoxClick={handleBoxClick}
-              onImageClick={handleImageClick}
-            />
+            {dataLoading && boxes.length === 0 ? (
+              <SkeletonGrid count={6} />
+            ) : boxes.length === 0 ? (
+              <EmptyState
+                icon={<PackageOpen size={28} />}
+                title={t('box.emptyTitle')}
+                hint={t('box.emptyHint')}
+                actionLabel={t('box.createFirst')}
+                actionIcon={<Plus size={18} />}
+                onAction={() => setIsAddBoxModalOpen(true)}
+              />
+            ) : filteredBoxes.length === 0 ? (
+              <EmptyState
+                icon={<SearchX size={28} />}
+                title={boxSearchQuery ? t('search.noMatchFor', { query: boxSearchQuery }) : t('search.noMatch')}
+                hint={t('search.noMatchHint')}
+                actionLabel={t('search.clearFilters')}
+                onAction={clearBoxFilters}
+              />
+            ) : (
+              <BoxList
+                boxes={filteredBoxes}
+                allItems={allItems}
+                onBoxClick={handleBoxClick}
+                onImageClick={handleImageClick}
+              />
+            )}
           </>
         )}
 
@@ -1211,10 +1510,10 @@ function App() {
           <>
             {/* Box Header — the image and the actions menu live in the hero
                 above; this is just the text block. */}
-            <div className="mb-6 animate-fade-in">
+            <div className="mb-4 animate-fade-in">
               <div className="flex flex-col md:flex-row gap-6 items-start">
                 <div className="flex-1 min-w-0 w-full">
-                  <div className="flex items-start justify-between gap-4 mb-4">
+                  <div className="flex items-start justify-between gap-4 mb-3">
                     <div
                       onClick={() => handleEditBox(currentBox)}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleEditBox(currentBox); } }}
@@ -1224,7 +1523,14 @@ function App() {
                       title={t('box.edit')}
                       aria-label={t('box.editAria', { name: currentBox.name })}
                     >
-                      <h1 className="text-2xl md:text-3xl font-bold text-content tracking-tight">{currentBox.name}</h1>
+                      <div className="flex items-start gap-2">
+                        <h1 className="text-2xl md:text-3xl font-bold text-content tracking-tight">{currentBox.name}</h1>
+                        {/* Permanent, not hover-revealed: on Android the hover
+                            tint that used to be the only hint never appears. */}
+                        <span className="edit-hint mt-1.5" aria-hidden="true">
+                          <Pencil size={16} />
+                        </span>
+                      </div>
                       <p className="text-muted text-sm leading-relaxed mt-2 max-w-3xl">{currentBox.description}</p>
                     </div>
                   </div>
@@ -1255,40 +1561,56 @@ function App() {
 
 
 
-            {/* Search within this box */}
+            {/* Find bar inside the box. Sticks below the collapsed header, so
+                sorting a 40-item box no longer means scrolling back to the top.
+                `top` matches .box-bar__inner's height. */}
             {items.length > 0 && (
-              <div className="mb-6">
-                <SearchBar
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  placeholder={t('item.searchInBox')}
-                />
+              <div
+                className="sfb-wrapper -mx-4 mb-4 border-y border-content/10"
+                style={{ top: `calc(env(safe-area-inset-top, 0px) + ${boxImageRefs.length > 0 ? '3rem + 1px' : '0px'})` }}
+              >
+                <div className="sfb-wrapper__inner">
+                  <SortFilterBar
+                    sortOrder={itemSortOrder}
+                    onSortChange={setItemSortOrder}
+                    selectedTag={selectedTag}
+                    onTagChange={setSelectedTag}
+                    tags={boxTags}
+                    searchValue={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    searchPlaceholder={t('item.searchInBox')}
+                    filterTitle={t('tags.itemFilterTitle')}
+                  />
+                </div>
               </div>
             )}
 
             {/* Items Grid */}
             {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-center py-16 px-6">
-                <div className="p-4 rounded-full bg-surface/60 mb-4">
-                  <Package size={28} className="text-muted" />
-                </div>
-                <p className="text-muted text-lg font-medium">{t('item.emptyTitle')}</p>
-                <p className="text-content/50 text-sm mt-1 mb-5">{t('item.emptyHint')}</p>
-                <button
-                  onClick={() => setIsAddItemModalOpen(true)}
-                  className="btn btn-primary"
-                >
-                  <Plus size={18} />
-                  {t('item.add')}
-                </button>
-              </div>
+              <EmptyState
+                icon={<Package size={28} />}
+                title={t('item.emptyTitle')}
+                hint={t('item.emptyHint')}
+                actionLabel={t('item.add')}
+                actionIcon={<Plus size={18} />}
+                onAction={() => setIsAddItemModalOpen(true)}
+              />
+            ) : boxViewItems.length === 0 ? (
+              <EmptyState
+                icon={<SearchX size={28} />}
+                title={searchQuery ? t('search.noMatchFor', { query: searchQuery }) : t('search.noMatch')}
+                hint={t('search.noMatchHint')}
+                actionLabel={t('search.clearFilters')}
+                onAction={clearItemFilters}
+              />
             ) : (
               <ItemList
-                items={items.map(item => ({ ...item, boxName: currentBox?.name }))}
+                items={boxViewItems}
                 onDeleteItem={handleDeleteItem}
                 onRemoveFromBox={handleRemoveItemFromBox}
                 onEditItem={handleEditItem}
                 onImageClick={handleImageClick}
+                onTagClick={handleTagClick}
                 showItemNavigation={true}
               />
             )}
@@ -1303,22 +1625,35 @@ function App() {
               <h2 className="text-lg font-semibold text-content">{t('item.title')}</h2>
               <span className="text-muted text-sm">{t('item.count', { count: allItemsDisplayItems.length })}</span>
             </div>
-            {/* Search */}
-            <div className="mb-6">
-              <SearchBar
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder={t('item.searchAll')}
+            {dataLoading && items.length === 0 ? (
+              <SkeletonGrid count={6} columns="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" />
+            ) : items.length === 0 ? (
+              <EmptyState
+                icon={<Package size={28} />}
+                title={t('item.emptyAllTitle')}
+                hint={t('item.emptyAllHint')}
+                actionLabel={t('item.add')}
+                actionIcon={<Plus size={18} />}
+                onAction={() => setIsAddItemModalOpen(true)}
               />
-            </div>
-
-            <ItemList
-              items={allItemsDisplayItems}
-              onDeleteItem={handleDeleteItem}
-              onEditItem={handleEditItem}
-              onBoxClick={handleBoxClickFromSearch}
-              onImageClick={handleImageClick}
-            />
+            ) : allItemsDisplayItems.length === 0 ? (
+              <EmptyState
+                icon={<SearchX size={28} />}
+                title={searchQuery ? t('search.noMatchFor', { query: searchQuery }) : t('search.noMatch')}
+                hint={t('search.noMatchHint')}
+                actionLabel={t('search.clearFilters')}
+                onAction={clearItemFilters}
+              />
+            ) : (
+              <ItemList
+                items={allItemsDisplayItems}
+                onDeleteItem={handleDeleteItem}
+                onEditItem={handleEditItem}
+                onBoxClick={handleBoxClickFromSearch}
+                onImageClick={handleImageClick}
+                onTagClick={handleTagClick}
+              />
+            )}
           </>
         )}
       </main>
@@ -1366,6 +1701,7 @@ function App() {
         onClose={handleCloseFullscreenImage}
         imageRefs={fullscreenImage.refs}
         itemName={fullscreenImage.name}
+        startIndex={fullscreenImage.startIndex}
       />
       <TagManagementModal
         isOpen={isTagManagementModalOpen}
@@ -1393,16 +1729,27 @@ function App() {
         total={importState.total}
       />
 
-      <AnimatePresence>
-        {toasts.map(toast => (
-          <Toast
-            key={toast.id}
-            message={toast.message}
-            type={toast.type}
-            onClose={() => removeToast(toast.id)}
-          />
-        ))}
-      </AnimatePresence>
+      {/* One live region for every notification — screen readers announced
+          nothing at all before. */}
+      <div
+        className="fixed left-1/2 -translate-x-1/2 z-[60] flex flex-col items-center gap-2 px-4 pointer-events-none w-full max-w-md"
+        style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+        aria-live="polite"
+      >
+        <AnimatePresence>
+          {toasts.map(toast => (
+            <Toast
+              key={toast.id}
+              message={toast.message}
+              type={toast.type}
+              duration={toast.duration}
+              actionLabel={toast.actionLabel}
+              onAction={toast.onAction ? () => { toast.onAction(); removeToast(toast.id); } : undefined}
+              onClose={() => removeToast(toast.id)}
+            />
+          ))}
+        </AnimatePresence>
+      </div>
 
       {/* Floating Action Button (FAB) */}
       <AnimatePresence>

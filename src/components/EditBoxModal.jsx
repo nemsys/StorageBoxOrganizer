@@ -184,7 +184,7 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
                             />
                         </label>
                     </div>
-                    <p className="text-xs text-content/50 mt-1">{t('photo.hint')}</p>
+                    <p className="text-xs text-muted mt-1">{t('photo.hint')}</p>
                     <CameraCaptureModal
                         isOpen={cameraOpen}
                         onClose={() => setCameraOpen(false)}
@@ -204,7 +204,7 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
 
                 {/* The box view shows the last contents change; creation date
                     stays available here. */}
-                <div className="pt-6 mt-2 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-content/50">
+                <div className="pt-6 mt-2 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-muted">
                     <div className="flex items-center gap-1.5">
                         <Calendar size={12} className="text-content/40" />
                         <span>{t('box.createdOn', { date: formatDate(box?.createdAt) })}</span>

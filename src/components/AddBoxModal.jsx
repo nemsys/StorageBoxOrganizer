@@ -180,7 +180,7 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
                             />
                         </label>
                     </div>
-                    <p className="text-xs text-content/50 mt-1">{t('photo.hint')}</p>
+                    <p className="text-xs text-muted mt-1">{t('photo.hint')}</p>
                     <CameraCaptureModal
                         isOpen={cameraOpen}
                         onClose={() => setCameraOpen(false)}

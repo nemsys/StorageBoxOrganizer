@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw, ImageDown, LogOut, Languages, Info } from 'lucide-react';
+import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw, ImageDown, LogOut, Languages, Info, RotateCw, User } from 'lucide-react';
 import { useTranslation, LANGUAGES } from '../translations';
 
-export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImages, theme, onToggleTheme, onCheckUpdates, onAbout, onSignOut }) => {
+export const SettingsMenu = ({ email, onRefresh, onManageTags, onExport, onImport, onOptimizeImages, theme, onToggleTheme, onCheckUpdates, onAbout, onSignOut }) => {
   const { t, lang, setLang } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -28,6 +28,20 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
         setIsOpen(false);
       }
     },
+    ...(onRefresh ? [
+      {
+        // No pull-to-refresh: the body sets overscroll-behavior-y: none for a
+        // native feel, so this is the only way to force a reload after a change
+        // made on another device.
+        id: 'refresh',
+        label: t('data.refresh'),
+        icon: <RotateCw size={18} />,
+        onClick: () => {
+          onRefresh();
+          setIsOpen(false);
+        }
+      }
+    ] : []),
     {
       id: 'divider-1',
       isDivider: true
@@ -137,6 +151,21 @@ export const SettingsMenu = ({ onManageTags, onExport, onImport, onOptimizeImage
             transition={{ duration: 0.1, ease: "easeOut" }}
             className="absolute right-0 mt-3 w-72 max-w-[calc(100vw-1.5rem)] py-2 bg-base border border-content/25 rounded-xl shadow-2xl z-50 overflow-hidden"
           >
+            {email && (
+              <>
+                <div className="flex items-center gap-2 px-4 py-2">
+                  <span className="shrink-0 text-content/50">
+                    <User size={18} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[11px] uppercase tracking-wider text-muted">{t('nav.signedInAs')}</span>
+                    <span className="block text-sm font-medium text-content truncate">{email}</span>
+                  </span>
+                </div>
+                <div className="border-b border-content/15 my-1" />
+              </>
+            )}
+
             <div className="flex items-center gap-2 px-4 py-2">
               <span className="text-content/50">
                 <Languages size={18} />

@@ -179,26 +179,32 @@
     background-color: var(--color-primary);
     color: var(--color-bg);
   }
-  .btn-primary:hover {
-    background-color: var(--color-primary-hover);
-    box-shadow: var(--shadow-glow);
-    transform: translateY(-1px);
+  @media (hover: hover) {
+    .btn-primary:hover {
+      background-color: var(--color-primary-hover);
+      box-shadow: var(--shadow-glow);
+      transform: translateY(-1px);
+    }
   }
 
   .btn-ghost {
     background-color: transparent;
     color: var(--color-text);
   }
-  .btn-ghost:hover {
-    background-color: rgba(var(--color-text-rgb), 0.1);
+  @media (hover: hover) {
+    .btn-ghost:hover {
+      background-color: rgba(var(--color-text-rgb), 0.1);
+    }
   }
 
   .btn-danger {
     background-color: var(--color-danger);
     color: #fff;
   }
-  .btn-danger:hover {
-    background-color: rgba(var(--color-danger-rgb), 0.85);
+  @media (hover: hover) {
+    .btn-danger:hover {
+      background-color: rgba(var(--color-danger-rgb), 0.85);
+    }
   }
 
   .btn-icon {
@@ -228,10 +234,14 @@
     border: 1px solid var(--color-border);
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   }
-  .card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--color-primary);
+  /* Touch devices can latch :hover after a tap, leaving a card stuck in the
+     lifted state. Gate every hover affordance on a real pointer. */
+  @media (hover: hover) {
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--color-primary);
+    }
   }
 
   /* Circular control floating on a hero image (box view). Literal colours:
@@ -249,8 +259,10 @@
     -webkit-backdrop-filter: blur(8px);
     transition: background-color 0.2s ease, transform 0.2s ease;
   }
-  .hero-btn:hover {
-    background-color: rgba(0, 0, 0, 0.65);
+  @media (hover: hover) {
+    .hero-btn:hover {
+      background-color: rgba(0, 0, 0, 0.65);
+    }
   }
   .hero-btn:active {
     transform: scale(0.94);
@@ -274,8 +286,10 @@
     cursor: pointer;
     transition: background-color 0.15s ease, transform 0.1s ease;
   }
-  .img-delete-btn:hover {
-    background-color: rgba(var(--color-danger-rgb), 0.85);
+  @media (hover: hover) {
+    .img-delete-btn:hover {
+      background-color: rgba(var(--color-danger-rgb), 0.85);
+    }
   }
   .img-delete-btn:active {
     transform: scale(0.92);
@@ -284,10 +298,10 @@
   /* Floating Action Button (FAB) */
   .fab-btn {
     position: fixed;
-    bottom: 2rem;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
+    /* Right-hand thumb zone (Material's default). The centre is left free so a
+       toast, a snackbar or the browser's own chrome never covers it. */
+    bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+    right: 1.5rem;
     z-index: 50;
     width: 3.5rem;
     height: 3.5rem;
@@ -300,7 +314,6 @@
     box-shadow: 0 4px 20px rgba(var(--color-primary-rgb), 0.4);
     cursor: pointer;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    outline: none;
   }
 
   /* ── Sort / Filter Bar (src/components/SortFilterBar.jsx) ── */
@@ -345,10 +358,12 @@
     line-height: 1;
     -webkit-tap-highlight-color: transparent;
   }
-  .sfb__pill:hover {
-    background-color: rgba(var(--color-surface-hover-rgb), 0.9);
-    border-color: rgba(var(--color-text-rgb), 0.2);
-    color: var(--color-text);
+  @media (hover: hover) {
+    .sfb__pill:hover {
+      background-color: rgba(var(--color-surface-hover-rgb), 0.9);
+      border-color: rgba(var(--color-text-rgb), 0.2);
+      color: var(--color-text);
+    }
   }
   .sfb__pill:focus-visible {
     box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.45);
@@ -445,7 +460,7 @@
   .sfb__drop-empty {
     padding: 0.75rem 1rem;
     font-size: 0.75rem;
-    color: rgba(var(--color-text-rgb), 0.3);
+    color: var(--color-text-muted);
     font-style: italic;
   }
 
@@ -480,19 +495,23 @@
     transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     -webkit-tap-highlight-color: transparent;
   }
-  .tag-chip:hover {
-    background-color: var(--color-surface-hover);
-    border-color: rgba(var(--color-text-rgb), 0.25);
-    color: var(--color-text);
+  @media (hover: hover) {
+    .tag-chip:hover {
+      background-color: var(--color-surface-hover);
+      border-color: rgba(var(--color-text-rgb), 0.25);
+      color: var(--color-text);
+    }
   }
   .tag-chip.active {
     background-color: rgba(var(--color-primary-rgb), 0.15);
     border-color: rgba(var(--color-primary-rgb), 0.45);
     color: var(--color-primary);
   }
-  .tag-chip.active:hover {
-    background-color: rgba(var(--color-primary-rgb), 0.25);
-    border-color: rgba(var(--color-primary-rgb), 0.6);
+  @media (hover: hover) {
+    .tag-chip.active:hover {
+      background-color: rgba(var(--color-primary-rgb), 0.25);
+      border-color: rgba(var(--color-primary-rgb), 0.6);
+    }
   }
 
   /* ── Card overlay badges & footer ──────────────────────────────────────
@@ -546,13 +565,281 @@
   .card-footer--link {
     cursor: pointer;
   }
-  .card-footer--link:hover {
-    background-color: rgba(var(--color-primary-rgb), 0.08);
-    color: var(--color-primary);
+  @media (hover: hover) {
+    .card-footer--link:hover {
+      background-color: rgba(var(--color-primary-rgb), 0.08);
+      color: var(--color-primary);
+    }
   }
   .card-footer--static {
     background-color: rgba(var(--color-surface-rgb), 0.3);
     font-weight: 500;
+  }
+
+  /* ── Focus ─────────────────────────────────────────────────────────────
+     One ring for every interactive surface. :focus-visible only fires for
+     keyboard/AT focus, so this never shows up on a tap or a click. */
+  .btn:focus-visible,
+  .btn-primary:focus-visible,
+  .btn-ghost:focus-visible,
+  .btn-danger:focus-visible,
+  .btn-icon:focus-visible,
+  .fab-btn:focus-visible,
+  .hero-btn:focus-visible,
+  .img-delete-btn:focus-visible,
+  .tag-chip:focus-visible,
+  .card:focus-visible,
+  .card-footer--link:focus-visible,
+  .zoom-btn:focus-visible,
+  .sfb__drop-item:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* ── Sort / filter / search row ────────────────────────────────────────
+     Search is the primary find action, so it lives in the sticky row; sort
+     and filter shrink to icons on a phone to make room for it. */
+  .sfb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .sfb__search {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .sfb__controls {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-shrink: 0;
+  }
+  /* 16px keeps iOS from zooming the page when the field takes focus. */
+  .input--compact {
+    padding: 0.4375rem 0.75rem;
+    font-size: 16px;
+    line-height: 1.25;
+  }
+  @media (max-width: 30rem) {
+    .sfb__pill-label--optional {
+      display: none;
+    }
+  }
+  .sfb__drop-title {
+    padding: 0.5rem 1rem 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid rgba(var(--color-text-rgb), 0.08);
+  }
+
+  /* ── Always-visible zoom control on a card photo ───────────────────────
+     The card itself owns the tap (open the box / edit the item); zoom is a
+     separate, visible target — there is no hover on Android to reveal it. */
+  .zoom-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    transition: background-color 0.15s ease, transform 0.1s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (hover: hover) {
+    .zoom-btn:hover {
+      background-color: rgba(0, 0, 0, 0.72);
+    }
+  }
+  .zoom-btn:active {
+    transform: scale(0.92);
+  }
+
+  /* Photo-count badge — the only sign, in the grid views, that a card has
+     more than one photo behind it. */
+  .photo-count {
+    position: absolute;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.1875rem 0.4375rem;
+    border-radius: var(--radius-sm);
+    background-color: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    pointer-events: none;
+  }
+
+  /* Small pencil next to an editable heading. Permanent, because the hover
+     tint it replaces is invisible on touch. */
+  .edit-hint {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+    opacity: 0.65;
+  }
+
+  /* ── Collapsed box header ──────────────────────────────────────────────
+     Slides in once the hero image has scrolled away, so Back and the box
+     actions stay reachable without scrolling to the top. */
+  .box-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 45;
+    padding-top: env(safe-area-inset-top, 0px);
+    background-color: rgba(var(--color-bg-rgb), 0.9);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(var(--color-text-rgb), 0.1);
+  }
+  /* Fixed 3rem so the in-box find bar can pin exactly underneath it — see the
+     `top` offset in App.jsx's box view. */
+  .box-bar__inner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 0.75rem;
+  }
+
+  /* ── Tag chip input ────────────────────────────────────────────────────
+     A real chip field: Enter or comma commits a tag, Backspace on an empty
+     field removes the last one. */
+  .tag-field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+    width: 100%;
+    padding: 0.5rem 0.625rem;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    cursor: text;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .tag-field:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
+  }
+  .tag-field__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.1875rem 0.25rem 0.1875rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background-color: rgba(var(--color-primary-rgb), 0.14);
+    border: 1px solid rgba(var(--color-primary-rgb), 0.35);
+    color: var(--color-primary);
+    max-width: 100%;
+  }
+  .tag-field__chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tag-field__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: 9999px;
+    color: inherit;
+    flex-shrink: 0;
+  }
+  @media (hover: hover) {
+    .tag-field__remove:hover {
+      background-color: rgba(var(--color-primary-rgb), 0.25);
+    }
+  }
+  .tag-field__input {
+    flex: 1 1 6rem;
+    min-width: 6rem;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--color-text);
+    font-size: 16px;
+    padding: 0.1875rem 0;
+  }
+
+  /* ── Picker rows (choose an existing item) ─────────────────────────────── */
+  .picker-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: var(--radius-md);
+    text-align: left;
+    border: 1px solid transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  @media (hover: hover) {
+    .picker-row:hover {
+      background-color: var(--color-surface-hover);
+    }
+  }
+  .picker-row--on {
+    background-color: rgba(var(--color-primary-rgb), 0.12);
+    border-color: rgba(var(--color-primary-rgb), 0.4);
+  }
+  .picker-row__thumb {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    background-color: var(--color-surface-hover);
+  }
+
+  /* ── Loading skeletons ─────────────────────────────────────────────────
+     So a slow first load reads as "loading", not as "you have nothing". */
+  .skeleton {
+    background-color: rgba(var(--color-text-rgb), 0.07);
+    border-radius: var(--radius-sm);
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+  }
+
+  /* ── Offline banner ───────────────────────────────────────────────────── */
+  .offline-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.375rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background-color: rgba(var(--color-danger-rgb), 0.15);
+    color: var(--color-danger);
+    border-bottom: 1px solid rgba(var(--color-danger-rgb), 0.3);
   }
 }
 
@@ -567,6 +854,15 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
   }
 }
 

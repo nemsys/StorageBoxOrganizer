@@ -55,7 +55,7 @@ export const ImportProgressModal = ({ isOpen, progress, phase, current, total })
               {/* Progress Section */}
               <div className="w-full space-y-3">
                 <div className="flex justify-between items-end">
-                  <span className="text-xs font-semibold text-content/50 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-muted uppercase tracking-wider">
                     {t('import.overall')}
                   </span>
                   <span className="text-sm font-bold text-content tabular-nums">
@@ -82,7 +82,7 @@ export const ImportProgressModal = ({ isOpen, progress, phase, current, total })
                 </div>
               </div>
 
-              <p className="text-[11px] text-content/50 italic mt-2">
+              <p className="text-[11px] text-muted italic mt-2">
                 {t('import.warning')}
               </p>
             </div>

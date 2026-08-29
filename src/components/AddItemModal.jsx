@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
+import Fuse from 'fuse.js';
 import { Modal } from './Modal';
 import { CameraCaptureModal } from './CameraCaptureModal';
-import { Upload, Trash2, Search, Camera } from 'lucide-react';
-import { makeDerivatives, refsToThumbs } from '../utils/imageUtils';
+import { TagInput } from './TagInput';
+import { Upload, Trash2, Search, Camera, Package, X, Check } from 'lucide-react';
+import { makeDerivatives, refsToThumbs, getImageRefs } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
 import { usePhotoCapture } from '../native/usePhotoCapture';
 import { useTranslation } from '../translations';
@@ -66,15 +68,16 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
         return availableItems.filter(item => item.boxId !== initialBoxId);
     }, [availableItems, initialBoxId]);
 
-    // Search filter
+    // Same fuzzy engine as every other search field in the app — a substring
+    // match here meant one typo produced "no items" while the item was right
+    // there.
     const filteredItems = useMemo(() => {
         if (!searchQuery) return selectableItems;
-        const query = searchQuery.toLowerCase();
-        return selectableItems.filter(item =>
-            item.name.toLowerCase().includes(query) ||
-            (item.description || '').toLowerCase().includes(query) ||
-            (item.tags || []).some(tag => tag.toLowerCase().includes(query))
-        );
+        const fuse = new Fuse(selectableItems, {
+            keys: ['name', 'description', 'tags'],
+            threshold: 0.3,
+        });
+        return fuse.search(searchQuery).map(r => r.item);
     }, [selectableItems, searchQuery]);
 
     // Auto-select if search results in exactly one item
@@ -291,7 +294,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                                 />
                             </label>
                         </div>
-                        <p className="text-xs text-content/50 mt-1">{t('photo.hint')}</p>
+                        <p className="text-xs text-muted mt-1">{t('photo.hint')}</p>
                         <CameraCaptureModal
                             isOpen={cameraOpen}
                             onClose={() => setCameraOpen(false)}
@@ -302,57 +305,15 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     <div>
                         <div className="flex justify-between items-end mb-1">
                             <label className="block text-sm font-medium text-muted">{t('common.tags')}</label>
-                            <span className="text-[10px] text-content/50 uppercase tracking-wider">{t('item.tagsHint')}</span>
+                            <span className="text-[10px] text-muted uppercase tracking-wider">{t('item.tagsHint')}</span>
                         </div>
 
-                        {/* Tag Ribbon - Horizontal Scrollable Suggestions */}
-                        <div className="tag-ribbon">
-                            {availableTags
-                                .filter(t => {
-                                    const lastTag = tags.split(',').pop().trim().toLowerCase();
-                                    if (!lastTag) return true; // Show all if not typing
-                                    return t.toLowerCase().includes(lastTag);
-                                })
-                                .map(suggestion => {
-                                    const currentTags = tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
-                                    const isActive = currentTags.includes(suggestion.toLowerCase());
-
-                                    return (
-                                        <button
-                                            key={suggestion}
-                                            type="button"
-                                            className={`tag-chip ${isActive ? 'active' : ''}`}
-                                            onClick={() => {
-                                                const parts = tags.split(',').map(t => t.trim()).filter(Boolean);
-                                                const lowerSuggestion = suggestion.toLowerCase();
-
-                                                if (isActive) {
-                                                    // Remove tag
-                                                    setTags(parts.filter(p => p.toLowerCase() !== lowerSuggestion).join(', ') + (parts.length > 1 ? ', ' : ' '));
-                                                } else {
-                                                    // Add tag - replace the last partial tag if it matches
-                                                    const lastPartial = parts[parts.length - 1] || '';
-                                                    if (suggestion.toLowerCase().startsWith(lastPartial.toLowerCase())) {
-                                                        parts.pop();
-                                                    }
-                                                    parts.push(suggestion);
-                                                    setTags(parts.join(', ') + ', ');
-                                                }
-                                            }}
-                                        >
-                                            {suggestion}
-                                        </button>
-                                    );
-                                })
-                            }
-                        </div>
-
-                        <input
-                            type="text"
+                        <TagInput
                             value={tags}
-                            onChange={(e) => setTags(e.target.value)}
-                            className="input"
+                            onChange={setTags}
+                            suggestions={availableTags}
                             placeholder={t('item.tagsPlaceholder')}
+                            hint={{ remove: (tag) => t('tags.remove', { tag }) }}
                         />
                     </div>
 
@@ -367,38 +328,66 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
             {/* Select Existing Mode */}
             {mode === 'select' && (
                 <div className="space-y-4">
-                    {/* Dropdown to select item */}
-                    <div>
-                        <label className="block text-sm font-medium text-muted mb-1">{t('item.selectLabel')}</label>
-                        <select
-                            className="input"
-                            value={selectedExistingId}
-                            onChange={(e) => setSelectedExistingId(e.target.value)}
-                        >
-                            <option value="">{t('item.choosePlaceholder')}</option>
-                            {filteredItems.map(item => (
-                                <option key={item.id} value={item.id}>
-                                    {item.name} - {getBoxName(item.boxId)}
-                                </option>
-                            ))}
-                        </select>
-                        {filteredItems.length === 0 && (
-                            <p className="text-xs text-muted mt-1">
-                                {searchQuery ? t('item.noMatch') : t('item.noneAvailable')}
-                            </p>
+                    {/* Search first, then results: the old order put a native
+                        <select> above the field that narrowed it, and offered no
+                        photos in an app whose whole point is recognising things
+                        by sight. */}
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={18} />
+                        <input
+                            type="search"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="input pl-10 pr-10 text-[16px]"
+                            placeholder={t('item.filterPlaceholder')}
+                            aria-label={t('item.filterPlaceholder')}
+                        />
+                        {searchQuery && (
+                            <button
+                                type="button"
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-content"
+                                aria-label={t('search.clear')}
+                            >
+                                <X size={16} />
+                            </button>
                         )}
                     </div>
 
-                    {/* Optional search to filter dropdown */}
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={20} />
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="input pl-10"
-                            placeholder={t('item.filterPlaceholder')}
-                        />
+                    <div className="max-h-72 overflow-y-auto -mx-1 px-1 space-y-1" role="listbox" aria-label={t('item.selectLabel')}>
+                        {filteredItems.map(item => {
+                            const thumb = refsToThumbs(getImageRefs(item))[0];
+                            const isSelected = selectedExistingId === item.id;
+                            return (
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    role="option"
+                                    aria-selected={isSelected}
+                                    onClick={() => setSelectedExistingId(isSelected ? '' : item.id)}
+                                    className={`picker-row ${isSelected ? 'picker-row--on' : ''}`}
+                                >
+                                    {thumb ? (
+                                        <img src={thumb} alt="" className="picker-row__thumb" />
+                                    ) : (
+                                        <span className="picker-row__thumb flex items-center justify-center text-muted">
+                                            <Package size={18} />
+                                        </span>
+                                    )}
+                                    <span className="flex-1 min-w-0">
+                                        <span className="block text-sm font-medium text-content truncate">{item.name}</span>
+                                        <span className="block text-xs text-muted truncate">{getBoxName(item.boxId)}</span>
+                                    </span>
+                                    {isSelected && <Check size={18} className="shrink-0 text-primary" />}
+                                </button>
+                            );
+                        })}
+
+                        {filteredItems.length === 0 && (
+                            <p className="text-sm text-muted py-6 text-center">
+                                {searchQuery ? t('item.noMatch') : t('item.noneAvailable')}
+                            </p>
+                        )}
                     </div>
 
                     <div className="text-xs text-muted text-right">
@@ -423,6 +412,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     </div>
                 </div>
             )}
+
         </Modal>
     );
 }
