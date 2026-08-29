@@ -1,4 +1,4 @@
-import { Package, PackageMinus, Edit, Trash2, Tag, ChevronRight, ZoomIn, Pencil } from 'lucide-react';
+import { Package, PackageMinus, Edit, Trash2, Tag, ChevronRight, ZoomIn } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 import { OverflowMenu } from './OverflowMenu';
 import { getImageRefs, refsToThumbs } from '../utils/imageUtils';
@@ -85,14 +85,7 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                             title={t('item.edit')}
                             aria-label={t('item.editAria', { name: item.name })}
                         >
-                            <div className="flex items-start gap-1.5">
-                                <h3 className="flex-1 min-w-0 text-[15px] font-semibold text-content line-clamp-2">{item.name}</h3>
-                                {/* Permanent pencil: the hover tint that used to be
-                                    the only hint does not exist on Android. */}
-                                <span className="edit-hint mt-0.5" aria-hidden="true">
-                                    <Pencil size={13} />
-                                </span>
-                            </div>
+                            <h3 className="text-[15px] font-semibold text-content line-clamp-2">{item.name}</h3>
                             <p className="text-sm text-muted mb-3 line-clamp-1">{item.description}</p>
                         </div>
                     ) : (
@@ -102,8 +95,11 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                         </div>
                     )}
 
+                    {/* The trigger keeps its 44px touch target but is pulled back
+                        out of the flow, so what lines up with the title's first
+                        line is the dots themselves, not the padding around them. */}
                     {(onEdit || onRemoveFromBox || onDelete) && (
-                        <div className="flex-shrink-0">
+                        <div className="flex-shrink-0 -my-2.5 -mr-1">
                             <OverflowMenu
                                 label={t('item.actions')}
                                 buttonClassName="p-3 rounded-lg text-muted hover:bg-elevated hover:text-content transition-colors flex items-center justify-center"
