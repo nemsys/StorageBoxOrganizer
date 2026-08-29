@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Android 12+ (API 31) draws the system splash itself, straight from the
+        theme, before any of our code runs — so it reads the platform's own
+        android:-prefixed attributes here, not the androidx-compat ones in
+        values/styles.xml (those cover API 21-30). Both have to be declared.
+
+        Without them the system falls back to the adaptive launcher icon, whose
+        background is @color/ic_launcher_background (white) — which is the white
+        frame the app used to open on.
+    -->
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="android:windowSplashScreenBackground">@color/splashBackground</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+    </style>
+</resources>

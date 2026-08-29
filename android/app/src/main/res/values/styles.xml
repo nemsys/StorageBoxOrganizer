@@ -16,7 +16,21 @@
     </style>
 
 
+    <!--
+        Android 12+ draws a system splash before anything of ours runs, and it
+        cannot be turned off. Left unstyled it uses the adaptive launcher icon,
+        whose background is white — so the app opened on a white screen with the
+        box in the middle, then cut to the dark splash. The three settings below
+        make that first frame identical to what follows: our dark ground, our
+        blue box, no launcher-icon white.
+
+        android:background keeps the old PNG for pre-12 devices, which never see
+        the system splash.
+    -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <item name="windowSplashScreenBackground">@color/splashBackground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>
