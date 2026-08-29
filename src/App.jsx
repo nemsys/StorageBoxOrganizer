@@ -1057,11 +1057,30 @@ function App() {
           image owns the top of the screen. */}
       {!isBoxDetail && (
         <div className="sticky top-0 z-40 app-safe-top bg-base/80 backdrop-blur-md border-b border-content/15">
-          {/* Header — one row: logo, tabs, settings. The signed-in address now
-              lives inside the settings menu instead of its own bar. */}
+          {/* Header */}
           <header>
-            <div className="container py-2">
-              <div className="flex items-center gap-3">
+            {/* Top Bar - User Info */}
+            {user && (
+              <div className="bg-base/50 border-b border-content/15 py-1.5 px-4">
+                <div className="container flex justify-end items-center gap-3">
+                  <span className="text-xs text-muted">{t('nav.signedInAs')} <span className="text-content font-medium ml-1">{user.email}</span></span>
+                  <SettingsMenu
+                    onManageTags={() => setIsTagManagementModalOpen(true)}
+                    onExport={handleExportData}
+                    onImport={handleImportButtonClick}
+                    onOptimizeImages={handleOptimizeImages}
+                    theme={theme}
+                    onToggleTheme={toggleTheme}
+                    onCheckUpdates={handleCheckForUpdates}
+                    onAbout={() => setIsAboutModalOpen(true)}
+                    onSignOut={handleSignOut}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="container py-3">
+              <div className="flex items-center gap-4">
                 {/* Logo */}
                 <div
                   className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity shrink-0"
@@ -1100,22 +1119,6 @@ function App() {
                   })}
                 </div>
 
-                {user && (
-                  <div className="ml-auto shrink-0">
-                    <SettingsMenu
-                      userEmail={user.email}
-                      onManageTags={() => setIsTagManagementModalOpen(true)}
-                      onExport={handleExportData}
-                      onImport={handleImportButtonClick}
-                      onOptimizeImages={handleOptimizeImages}
-                      theme={theme}
-                      onToggleTheme={toggleTheme}
-                      onCheckUpdates={handleCheckForUpdates}
-                      onAbout={() => setIsAboutModalOpen(true)}
-                      onSignOut={handleSignOut}
-                    />
-                  </div>
-                )}
               </div>
             </div>
           </header>
