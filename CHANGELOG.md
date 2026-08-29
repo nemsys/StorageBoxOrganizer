@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.12.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.11.0...v1.12.0) (2026-08-29)
+
+
+### Features
+
+* **ui:** give the box view a full-bleed hero image and stop clipping menu labels ([#23](https://github.com/nemsys/StorageBoxOrganizer/issues/23)) ([06259ce](https://github.com/nemsys/StorageBoxOrganizer/commit/06259ce48623d47e15c63a9c583eba130413f141))
+
 ## [1.11.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.10.1...v1.11.0) (2026-08-28)
 
 
