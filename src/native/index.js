@@ -3,18 +3,38 @@ import { runTopBackHandler } from './backHandler';
 
 export const isNative = Capacitor.isNativePlatform();
 
+let splashHidden = false;
+
 /**
- * One-time native setup: status bar theming, hardware back-button routing, and
- * hiding the splash screen. No-op on the web build, so the same bundle runs in
- * the browser unchanged.
+ * Dismiss the native splash. The plugin no longer auto-hides on a timer
+ * (`launchAutoHide: false`), because a fixed duration is a guess: too short and
+ * the app flashes an unpainted screen, too long and it sits on a screen that is
+ * already ready. The web launch screen calls this the moment it paints, so the
+ * PNG hands over to it instead of covering it.
+ *
+ * Safe to call repeatedly, before `initNative()` has finished, and on the web.
+ */
+export async function hideSplash() {
+    if (!isNative || splashHidden) return;
+    splashHidden = true;
+    try {
+        const { SplashScreen } = await import('@capacitor/splash-screen');
+        await SplashScreen.hide();
+    } catch {
+        // Plugin missing or already hidden; nothing to undo.
+    }
+}
+
+/**
+ * One-time native setup: status bar theming and hardware back-button routing.
+ * No-op on the web build, so the same bundle runs in the browser unchanged.
  */
 export async function initNative() {
     if (!isNative) return;
     document.body.classList.add('native');
 
-    const [{ StatusBar, Style }, { SplashScreen }, { App: CapApp }] = await Promise.all([
+    const [{ StatusBar, Style }, { App: CapApp }] = await Promise.all([
         import('@capacitor/status-bar'),
-        import('@capacitor/splash-screen'),
         import('@capacitor/app'),
     ]);
 
@@ -38,9 +58,8 @@ export async function initNative() {
         }
     });
 
-    try {
-        await SplashScreen.hide();
-    } catch {
-        // Splash plugin may auto-hide; ignore.
-    }
+    // Failsafe: if the app never gets far enough to call hideSplash() itself —
+    // a failed bundle, a hung auth call — the splash must still come off rather
+    // than stay on screen forever.
+    setTimeout(hideSplash, 6000);
 }
