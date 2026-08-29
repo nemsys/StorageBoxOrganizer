@@ -168,6 +168,11 @@ const UNDO_WINDOW_MS = 6000;
 const INTRO_MIN_MS = 1100;
 const INTRO_MAX_MS = 6000;
 
+// Floor between automatic syncs. Coming back to the app and regaining a signal
+// often happen within the same second — waking the phone on wifi does both —
+// and there is nothing to gain from reading the same data twice.
+const AUTO_SYNC_MIN_GAP_MS = 30000;
+
 /** One filter/search/sort pipeline, shared by the box view and All Items. */
 function filterSortItems(list, { query, tag, sortOrder }) {
   let result = list;
@@ -202,6 +207,12 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [introDone, setIntroDone] = useState(false);
   const introStartedAt = useRef(Date.now());
+  // refreshData closes over user and currentBox, so the listeners below cannot
+  // capture it once — they would keep syncing against whatever was on screen
+  // when the app started. This ref always holds the current one.
+  const refreshRef = useRef(null);
+  const autoSyncRef = useRef(null);
+  const lastSyncAt = useRef(0);
   // Signed in, but Firestore refuses everything: the account has not been
   // granted the `approved` claim. See AccessPendingScreen.
   const [accessDenied, setAccessDenied] = useState(false);
@@ -442,13 +453,29 @@ function App() {
   // without this the user has no way of telling that what they are looking at —
   // and what they are changing — has not reached the server.
   useEffect(() => {
-    const goOnline = () => setIsOffline(false);
+    // Regaining a signal is also the moment the local cache is most likely to
+    // be behind: Firestore flushes its own queued writes by itself, but reads
+    // stay as they were until something asks again.
+    const goOnline = () => {
+      setIsOffline(false);
+      autoSyncRef.current?.();
+    };
     const goOffline = () => setIsOffline(true);
+
+    // Coming back to the app after it was in the background — where another
+    // device may have changed things — is the other such moment. visibility
+    // covers both a browser tab and the native WebView.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') autoSyncRef.current?.();
+    };
+
     window.addEventListener('online', goOnline);
     window.addEventListener('offline', goOffline);
+    document.addEventListener('visibilitychange', onVisible);
     return () => {
       window.removeEventListener('online', goOnline);
       window.removeEventListener('offline', goOffline);
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, []);
 
@@ -515,11 +542,13 @@ function App() {
       } else {
         setItems(MOCK_ITEMS);
       }
+      lastSyncAt.current = Date.now();
       setDataLoading(false);
       return true;
     }
 
     setDataLoading(true);
+    lastSyncAt.current = Date.now();
     try {
       const loadedBoxes = await firebaseStorage.getBoxes();
       setBoxes(loadedBoxes);
@@ -552,6 +581,21 @@ function App() {
       setDataLoading(false);
     }
   };
+
+  // Pull from the server without saying anything. Used by the two moments where
+  // the data on screen is most likely to be behind: coming back to the app, and
+  // regaining a connection after edits were queued locally.
+  const autoSync = () => {
+    if (!auth.currentUser && !isMockAuth()) return;
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+    if (Date.now() - lastSyncAt.current < AUTO_SYNC_MIN_GAP_MS) return;
+    refreshRef.current?.();
+  };
+
+  useEffect(() => {
+    refreshRef.current = refreshData;
+    autoSyncRef.current = autoSync;
+  });
 
   // Handle Box Selection
   const handleBoxClick = async (box) => {
