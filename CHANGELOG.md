@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.16.2](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.1...v1.16.2) (2026-08-29)
+
+
+### Bug Fixes
+
+* **ui:** sign out from the row that names the account ([#34](https://github.com/nemsys/StorageBoxOrganizer/issues/34)) ([1d0350d](https://github.com/nemsys/StorageBoxOrganizer/commit/1d0350d506d875ac25622d3e2fe6da9bd515e10b))
+
 ### [1.16.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.0...v1.16.1) (2026-08-29)
 
 
