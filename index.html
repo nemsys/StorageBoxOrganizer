@@ -21,11 +21,62 @@
   <!-- Follows the in-app theme so the system bars don't clash with the page. -->
   <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
   <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
-  <title>storage-box-organizer</title>
+  <!-- Replaced at runtime with the translated name; this is what the tab, a
+       bookmark and the install prompt show before the bundle loads. -->
+  <title>Storage Box Organizer</title>
+
+  <!--
+      First-paint launch screen. Without it the page is an empty #root — white —
+      from the moment the platform's own splash lifts until React has parsed and
+      mounted, which on a phone is not a short gap. This is the same picture as
+      AppIntro and as the native splash, inline in the document, so it is on
+      screen from the first byte and the whole launch is one frame.
+
+      AppIntro removes #boot when it mounts (see its useEffect): identical
+      pixels, so the swap is invisible. If the bundle never boots, the branded
+      screen stays up, which beats a white page.
+  -->
+  <style>
+    html:has(#boot) {
+      background-color: #0f172a;
+    }
+
+    #boot {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #0f172a;
+    }
+
+    #boot svg {
+      width: clamp(96px, 38vw, 168px);
+      height: clamp(96px, 38vw, 168px);
+    }
+
+    /* The instant React renders anything, AppIntro is on screen underneath. */
+    #root:not(:empty)~#boot {
+      display: none;
+    }
+  </style>
 </head>
 
 <body>
   <div id="root"></div>
+  <div id="boot">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 22v-9" />
+      <path
+        d="M15.17 2.21a1.67 1.67 0 0 1 1.63 0L21 4.57a1.93 1.93 0 0 1 0 3.36L8.82 14.79a1.655 1.655 0 0 1-1.64 0L3 12.43a1.93 1.93 0 0 1 0-3.36z" />
+      <path
+        d="M20 13v3.87a2.06 2.06 0 0 1-1.11 1.83l-6 3.08a1.93 1.93 0 0 1-1.78 0l-6-3.08A2.06 2.06 0 0 1 4 16.87V13" />
+      <path
+        d="M21 12.43a1.93 1.93 0 0 0 0-3.36L8.83 2.2a1.64 1.64 0 0 0-1.63 0L3 4.57a1.93 1.93 0 0 0 0 3.36l12.18 6.86a1.636 1.636 0 0 0 1.63 0z" />
+    </svg>
+  </div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 
