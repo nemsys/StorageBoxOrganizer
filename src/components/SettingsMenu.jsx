@@ -114,7 +114,10 @@ export const SettingsMenu = ({ email, onRefresh, onManageTags, onExport, onImpor
         }
       }
     ] : []),
-    ...(onSignOut ? [
+    // Sign out lives in the identity row at the top of the menu, next to the
+    // address it signs out of. It only falls back to a row of its own if there
+    // is no address to put it beside.
+    ...(onSignOut && !email ? [
       {
         id: 'divider-signout',
         isDivider: true
@@ -161,6 +164,19 @@ export const SettingsMenu = ({ email, onRefresh, onManageTags, onExport, onImpor
                     <span className="block text-[11px] uppercase tracking-wider text-muted">{t('nav.signedInAs')}</span>
                     <span className="block text-sm font-medium text-content truncate">{email}</span>
                   </span>
+                  {onSignOut && (
+                    <button
+                      onClick={() => {
+                        onSignOut();
+                        setIsOpen(false);
+                      }}
+                      className="shrink-0 p-3 -my-1 -mr-1.5 rounded-lg text-muted hover:text-danger hover:bg-elevated transition-colors"
+                      title={t('settings.signOut')}
+                      aria-label={t('settings.signOut')}
+                    >
+                      <LogOut size={18} />
+                    </button>
+                  )}
                 </div>
                 <div className="border-b border-content/15 my-1" />
               </>
