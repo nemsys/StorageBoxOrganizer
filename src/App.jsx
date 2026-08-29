@@ -1308,12 +1308,14 @@ function App() {
   // so the search field in there changed nothing at all.
   const boxViewItems = useMemo(() => {
     if (view !== 'items') return [];
+    // No boxName: inside a box, every card would repeat the name already
+    // standing at the top of the screen.
     return filterSortItems(items, {
       query: searchQuery,
       tag: selectedTag,
       sortOrder: itemSortOrder,
-    }).map(item => ({ ...item, boxName: currentBox?.name }));
-  }, [view, items, searchQuery, selectedTag, itemSortOrder, currentBox?.name]);
+    });
+  }, [view, items, searchQuery, selectedTag, itemSortOrder]);
 
   // Only the tags that occur in this box — offering the global list here would
   // mostly offer ways to empty the screen.
