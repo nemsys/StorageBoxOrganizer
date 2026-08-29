@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Fuse from 'fuse.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BoxList } from './components/BoxList';
@@ -118,19 +118,6 @@ function App() {
     type: 'danger'
   });
   const fileInputRef = useRef(null);
-  const headerRef = useRef(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
-
-  useLayoutEffect(() => {
-    const el = headerRef.current;
-    if (!el) return;
-    setHeaderHeight(el.getBoundingClientRect().height);
-    const ro = new ResizeObserver(([entry]) =>
-      setHeaderHeight(entry.contentRect.height)
-    );
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
 
   // Notification Helpers
   const addToast = (message, type = 'info') => {
@@ -1036,62 +1023,57 @@ function App() {
     return <AccessPendingScreen user={user} onRecheck={refreshData} />;
   }
 
+  const isBoxDetail = view === 'items' && !!currentBox;
+  const boxImageRefs = currentBox ? getImageRefs(currentBox) : [];
+  const boxMenuItems = currentBox ? [
+    {
+      id: 'edit',
+      label: t('box.edit'),
+      icon: <Edit size={18} />,
+      onClick: () => handleEditBox(currentBox),
+    },
+    {
+      id: 'remove',
+      label: t('box.removeKeepItems'),
+      icon: <LogOut size={18} />,
+      onClick: () => handleRemoveBox(currentBox.id),
+    },
+    { id: 'divider', isDivider: true },
+    {
+      id: 'delete',
+      label: t('box.deleteWithItems'),
+      icon: <Trash2 size={18} />,
+      danger: true,
+      onClick: () => handleDeleteBox(currentBox.id),
+    },
+  ] : [];
+
   return (
     <div className="min-h-screen app-safe-bottom">
       <AuthModal isOpen={!user} onClose={() => { }} />
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
 
-      {/* Global Navigation Wrap */}
-      <div className="sticky top-0 z-40 app-safe-top bg-base/80 backdrop-blur-md border-b border-content/15">
-        {/* Header */}
-        <header ref={headerRef}>
-          {/* Top Bar - User Info */}
-          {user && (
-            <div className="bg-base/50 border-b border-content/15 py-1.5 px-4">
-              <div className="container flex justify-end items-center gap-3">
-                <span className="text-xs text-muted">{t('nav.signedInAs')} <span className="text-content font-medium ml-1">{user.email}</span></span>
-                <SettingsMenu
-                  onManageTags={() => setIsTagManagementModalOpen(true)}
-                  onExport={handleExportData}
-                  onImport={handleImportButtonClick}
-                  onOptimizeImages={handleOptimizeImages}
-                  theme={theme}
-                  onToggleTheme={toggleTheme}
-                  onCheckUpdates={handleCheckForUpdates}
-                  onAbout={() => setIsAboutModalOpen(true)}
-                  onSignOut={handleSignOut}
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="container py-3">
-            <div className="flex items-center gap-4">
-              {/* Back button - only when inside a box */}
-              {view === 'items' && (
-                <button onClick={handleBack} className="p-2.5 rounded-lg hover:bg-elevated text-muted hover:text-content transition-colors shrink-0" aria-label={t('nav.back')}>
-                  <ArrowLeft size={22} />
-                </button>
-              )}
-
-              {/* Logo */}
-              <div
-                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity shrink-0"
-                onClick={handleBack}
-                title={t('nav.home')}
-              >
-                <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                  <PackageOpen size={22} />
+      {/* Global Navigation Wrap — skipped in the box view, where the hero
+          image owns the top of the screen. */}
+      {!isBoxDetail && (
+        <div className="sticky top-0 z-40 app-safe-top bg-base/80 backdrop-blur-md border-b border-content/15">
+          {/* Header — one row: logo, tabs, settings. The signed-in address now
+              lives inside the settings menu instead of its own bar. */}
+          <header>
+            <div className="container py-2">
+              <div className="flex items-center gap-3">
+                {/* Logo */}
+                <div
+                  className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity shrink-0"
+                  onClick={handleBack}
+                  title={t('nav.home')}
+                >
+                  <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                    <PackageOpen size={22} />
+                  </div>
                 </div>
-                {view === 'items' && (
-                  <h1 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-content to-muted">
-                    {currentBox?.name}
-                  </h1>
-                )}
-              </div>
 
-              {/* Tab Switcher in header — only on top-level views */}
-              {!currentBox && (
+                {/* Tab Switcher */}
                 <div className="flex bg-base/40 p-1 rounded-xl flex-1 max-w-xs border border-content/25 backdrop-blur-xl shadow-lg ring-1 ring-content/5">
                   {[
                     { id: 'boxes', label: t('nav.boxes'), onClick: handleBack },
@@ -1117,30 +1099,83 @@ function App() {
                     );
                   })}
                 </div>
-              )}
 
+                {user && (
+                  <div className="ml-auto shrink-0">
+                    <SettingsMenu
+                      userEmail={user.email}
+                      onManageTags={() => setIsTagManagementModalOpen(true)}
+                      onExport={handleExportData}
+                      onImport={handleImportButtonClick}
+                      onOptimizeImages={handleOptimizeImages}
+                      theme={theme}
+                      onToggleTheme={toggleTheme}
+                      onCheckUpdates={handleCheckForUpdates}
+                      onAbout={() => setIsAboutModalOpen(true)}
+                      onSignOut={handleSignOut}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        {/* Sticky Sort / Filter bar */}
-        {user && (view === 'boxes' || view === 'allItems') && (
-          <div className="sfb-wrapper border-t border-content/15">
-            <div className="sfb-wrapper__inner">
-              <SortFilterBar
-                sortOrder={view === 'boxes' ? boxSortOrder : itemSortOrder}
-                onSortChange={view === 'boxes' ? setBoxSortOrder : setItemSortOrder}
-                selectedTag={view === 'boxes' ? selectedBoxTag : selectedTag}
-                onTagChange={view === 'boxes' ? setSelectedBoxTag : setSelectedTag}
-                tags={allTags}
+          {/* Sticky Sort / Filter bar */}
+          {user && (view === 'boxes' || view === 'allItems') && (
+            <div className="sfb-wrapper border-t border-content/15">
+              <div className="sfb-wrapper__inner">
+                <SortFilterBar
+                  sortOrder={view === 'boxes' ? boxSortOrder : itemSortOrder}
+                  onSortChange={view === 'boxes' ? setBoxSortOrder : setItemSortOrder}
+                  selectedTag={view === 'boxes' ? selectedBoxTag : selectedTag}
+                  onTagChange={view === 'boxes' ? setSelectedBoxTag : setSelectedTag}
+                  tags={allTags}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Box view top bar: a full-bleed hero image with the back button and the
+          box actions floating on it — or, with no photo, a plain compact bar. */}
+      {isBoxDetail && (
+        boxImageRefs.length > 0 ? (
+          <div className="app-safe-top bg-base">
+            <div className="relative w-full h-[42vh] min-h-[220px] max-h-[420px] bg-surface overflow-hidden">
+              <ImageSlider
+                images={refsToThumbs(boxImageRefs)}
+                alt={currentBox.name}
+                onImageClick={() => handleImageClick(boxImageRefs, currentBox.name)}
+                className="w-full h-full"
+                fit="cover"
+                variant="overlay"
               />
+              {/* Scrim: keeps the floating controls readable on light photos */}
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/45 to-transparent" />
+              <div className="absolute inset-x-0 top-0 flex items-start justify-between p-3">
+                <button onClick={handleBack} className="hero-btn" aria-label={t('nav.back')} title={t('nav.back')}>
+                  <ArrowLeft size={22} />
+                </button>
+                <OverflowMenu label={t('box.actions')} buttonClassName="hero-btn" items={boxMenuItems} />
+              </div>
             </div>
           </div>
-        )}
-      </div>
+        ) : (
+          <div className="sticky top-0 z-40 app-safe-top bg-base/80 backdrop-blur-md border-b border-content/15">
+            <div className="container py-2 flex items-center gap-2">
+              <button onClick={handleBack} className="p-2.5 rounded-lg hover:bg-elevated text-muted hover:text-content transition-colors shrink-0" aria-label={t('nav.back')}>
+                <ArrowLeft size={22} />
+              </button>
+              <h1 className="flex-1 min-w-0 text-lg font-semibold text-content truncate">{currentBox.name}</h1>
+              <OverflowMenu label={t('box.actions')} items={boxMenuItems} />
+            </div>
+          </div>
+        )
+      )}
 
       {/* Main Content */}
-      <main className="container py-8 animate-fade-in">
+      <main className={`container animate-fade-in ${isBoxDetail ? 'pt-5 pb-8' : 'py-8'}`}>
 
         {/* Box List View */}
         {view === 'boxes' && (
@@ -1171,30 +1206,12 @@ function App() {
         {/* Box View (Inside Box) */}
         {view === 'items' && currentBox && (
           <>
-            {/* Box Header */}
-            <div className="mb-8 animate-fade-in">
-              {/* Image Banner */}
-              <div className="w-full h-48 md:h-64 bg-surface rounded-3xl shadow-2xl border border-border/50 overflow-hidden relative mb-6 group">
-                <ImageSlider
-                  images={refsToThumbs(getImageRefs(currentBox))}
-                  alt={currentBox.name}
-                  onImageClick={() => handleImageClick(getImageRefs(currentBox), currentBox.name)}
-                  className="w-full h-full"
-                  fit="cover"
-                />
-                {getImageRefs(currentBox).length === 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center text-content/40">
-                    <Package size={64} />
-                  </div>
-                )}
-                {/* Visual gradient overlay to make the banner feel more integrated */}
-                <div className="absolute inset-0 bg-gradient-to-t from-base/60 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-
-              {/* Box Info Row */}
+            {/* Box Header — the image and the actions menu live in the hero
+                above; this is just the text block. */}
+            <div className="mb-6 animate-fade-in">
               <div className="flex flex-col md:flex-row gap-6 items-start">
                 <div className="flex-1 min-w-0 w-full">
-                  <div className="flex items-start justify-between gap-4 mb-6">
+                  <div className="flex items-start justify-between gap-4 mb-4">
                     <div
                       onClick={() => handleEditBox(currentBox)}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleEditBox(currentBox); } }}
@@ -1207,35 +1224,8 @@ function App() {
                       <h1 className="text-2xl md:text-3xl font-bold text-content tracking-tight">{currentBox.name}</h1>
                       <p className="text-muted text-sm leading-relaxed mt-2 max-w-3xl">{currentBox.description}</p>
                     </div>
-                    <div className="shrink-0">
-                      <OverflowMenu
-                        label={t('box.actions')}
-                        items={[
-                          {
-                            id: 'edit',
-                            label: t('box.edit'),
-                            icon: <Edit size={18} />,
-                            onClick: () => handleEditBox(currentBox),
-                          },
-                          {
-                            id: 'remove',
-                            label: t('box.removeKeepItems'),
-                            icon: <LogOut size={18} />,
-                            onClick: () => handleRemoveBox(currentBox.id),
-                          },
-                          { id: 'divider', isDivider: true },
-                          {
-                            id: 'delete',
-                            label: t('box.deleteWithItems'),
-                            icon: <Trash2 size={18} />,
-                            danger: true,
-                            onClick: () => handleDeleteBox(currentBox.id),
-                          },
-                        ]}
-                      />
-                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-4 text-sm text-muted">
+                  <div className="flex flex-wrap gap-3 text-sm text-muted">
                     {/* Last contents change is the useful date here; fall back to
                         creation for boxes nobody has touched since packing. */}
                     <span className="bg-surface/50 px-3 py-1.5 rounded-full border border-content/15 flex items-center gap-1.5">

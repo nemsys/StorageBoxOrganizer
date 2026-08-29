@@ -234,6 +234,28 @@
     border-color: var(--color-primary);
   }
 
+  /* Circular control floating on a hero image (box view). Literal colours:
+     it always sits on a photo, so it must read the same in both themes. */
+  .hero-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    background-color: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+  .hero-btn:hover {
+    background-color: rgba(0, 0, 0, 0.65);
+  }
+  .hero-btn:active {
+    transform: scale(0.94);
+  }
+
   /* Floating delete button overlaid on image previews */
   .img-delete-btn {
     position: absolute;
