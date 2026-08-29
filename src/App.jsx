@@ -20,6 +20,7 @@ import { Toast } from './components/Toast';
 import { ConfirmationDialog } from './components/ConfirmationDialog';
 import { EmptyState } from './components/EmptyState';
 import { SkeletonGrid } from './components/SkeletonGrid';
+import { AppIntro } from './components/AppIntro';
 import { ArrowLeft, PackageOpen, LogOut, Package, Edit, Trash2, Calendar, History, Plus, SearchX, WifiOff, Pencil } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
@@ -28,6 +29,7 @@ import { formatDate } from './utils/dateUtils';
 import { getImageRefs, refsToThumbs, makeDerivatives } from './utils/imageUtils';
 import { SortFilterBar } from './components/SortFilterBar';
 import { checkForUpdate, applyUpdate } from './native/updates';
+import { hideSplash } from './native';
 import { v4 as uuidv4 } from 'uuid';
 import { loadDraft, saveDraft, clearDraft } from './utils/draftStorage';
 import { useTranslation } from './translations';
@@ -160,6 +162,12 @@ const UNASSIGNED_FILTER = '__unassigned__';
 // How long a delete waits before it is written, so the toast can offer Undo.
 const UNDO_WINDOW_MS = 6000;
 
+// Launch screen. The floor stops it flashing past on a warm start, where the
+// IndexedDB cache answers in a few milliseconds; the ceiling stops a hung read
+// from leaving the user staring at it.
+const INTRO_MIN_MS = 1100;
+const INTRO_MAX_MS = 6000;
+
 /** One filter/search/sort pipeline, shared by the box view and All Items. */
 function filterSortItems(list, { query, tag, sortOrder }) {
   let result = list;
@@ -192,6 +200,8 @@ function filterSortItems(list, { query, tag, sortOrder }) {
 function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [introDone, setIntroDone] = useState(false);
+  const introStartedAt = useRef(Date.now());
   // Signed in, but Firestore refuses everything: the account has not been
   // granted the `approved` claim. See AccessPendingScreen.
   const [accessDenied, setAccessDenied] = useState(false);
@@ -312,6 +322,28 @@ function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  // Hand the native splash over to <AppIntro/> as soon as React paints: same
+  // icon, same background, same position, so nothing appears to change — but
+  // from here on the screen is ours, and it speaks the chosen language.
+  useEffect(() => {
+    hideSplash();
+    const cap = setTimeout(() => setIntroDone(true), INTRO_MAX_MS);
+    return () => clearTimeout(cap);
+  }, []);
+
+  // Dismiss it once there is something to show. Everything below the early
+  // return still mounts and its effects still run, so this waits on the very
+  // data load it is covering.
+  const bootReady = !authLoading
+    && (!user || accessDenied || !dataLoading || boxes.length > 0 || allItems.length > 0);
+
+  useEffect(() => {
+    if (introDone || !bootReady) return;
+    const wait = Math.max(0, INTRO_MIN_MS - (Date.now() - introStartedAt.current));
+    const id = setTimeout(() => setIntroDone(true), wait);
+    return () => clearTimeout(id);
+  }, [bootReady, introDone]);
 
   // Load data when user changes
   useEffect(() => {
@@ -1249,15 +1281,7 @@ function App() {
     window.history.pushState({ view: 'allItems' }, '', '#all-items');
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-base flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (user && accessDenied) {
+  if (introDone && user && accessDenied) {
     return <AccessPendingScreen user={user} onRecheck={refreshData} />;
   }
 
@@ -1288,7 +1312,11 @@ function App() {
 
   return (
     <div className="min-h-screen app-safe-bottom">
-      <AuthModal isOpen={!user} onClose={() => { }} />
+      <AnimatePresence>
+        {!introDone && <AppIntro key="app-intro" />}
+      </AnimatePresence>
+
+      <AuthModal isOpen={!authLoading && !user} onClose={() => { }} />
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
 
       {/* Offline notice. Firestore keeps serving from its cache, so without this

@@ -187,6 +187,7 @@
 
   "about.title": "Информация",
   "about.tagline": "Знай какво има в {{box.theMany}}.",
+  "intro.by": "от",
   "about.version": "Версия",
   "about.build": "Компилация",
   "about.author": "Разработено от",

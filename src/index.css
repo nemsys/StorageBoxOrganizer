@@ -296,12 +296,83 @@
   }
 
   /* Floating Action Button (FAB) */
+  /* ── Launch screen (src/components/AppIntro.jsx) ──────────────────────
+     Mirrors android/.../splash.png: same background, same icon, same size,
+     drawn at the same place — so the native splash dissolving into this one
+     reads as a single screen. Fixed dark in both themes for that reason. */
+  .app-intro {
+    --intro-logo: clamp(96px, 38vw, 168px);
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background-color: #0f172a;
+    color: #f8fafc;
+    overflow: hidden;
+  }
+
+  .app-intro__logo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #38bdf8;
+  }
+
+  .app-intro__logo svg {
+    width: var(--intro-logo);
+    height: var(--intro-logo);
+  }
+
+  /* Anchored to the logo's lower edge, so the icon itself stays dead centre.
+     Offset via `top`, not a transform: framer-motion animates this element in
+     and owns its `transform`, which would drop any we set here. */
+  .app-intro__text {
+    position: absolute;
+    top: calc(50% + var(--intro-logo) / 2 + 1.75rem);
+    left: 0;
+    right: 0;
+    padding: 0 1.5rem;
+    text-align: center;
+  }
+
+  .app-intro__title {
+    font-size: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #f8fafc;
+  }
+
+  .app-intro__tagline {
+    margin-top: 0.5rem;
+    font-size: 0.9375rem;
+    color: rgba(248, 250, 252, 0.6);
+  }
+
+  .app-intro__by {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+    text-align: center;
+    font-size: 0.75rem;
+    color: rgba(248, 250, 252, 0.35);
+  }
+
+  .app-intro__by a {
+    color: rgba(248, 250, 252, 0.6);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
   .fab-btn {
     position: fixed;
-    /* Right-hand thumb zone (Material's default). The centre is left free so a
-       toast, a snackbar or the browser's own chrome never covers it. */
+    /* Centred, within reach of either thumb. Nothing competes for the bottom
+       of the screen any more — the toasts moved to the top. Centred with a
+       negative margin rather than translateX, because framer-motion owns this
+       element's `transform` (scale on tap, y on hover) and would drop it. */
     bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
-    right: 1.5rem;
+    left: 50%;
+    margin-left: -1.75rem;
     z-index: 50;
     width: 3.5rem;
     height: 3.5rem;
