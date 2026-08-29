@@ -68,9 +68,17 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
                     }}
                 />
 
-                {/* Item Count Badge */}
-                <div className="badge badge-count absolute z-20 bottom-2 right-2 pointer-events-none">
-                    {t('box.itemCount', { count: itemCount })}
+                {/* Item Count Badge. The number alone: the word only repeated
+                    what a grid of boxes already says, and on a narrow card it
+                    was the widest thing over the photo. role="img" + aria-label
+                    is what keeps the meaning for a screen reader — a bare digit
+                    would otherwise be read as a bare digit. */}
+                <div
+                    className="badge badge-count absolute z-20 bottom-2 right-2 pointer-events-none"
+                    role="img"
+                    aria-label={t('box.itemCount', { count: itemCount })}
+                >
+                    <span aria-hidden="true">{itemCount}</span>
                 </div>
             </div>
 
