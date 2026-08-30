@@ -24,6 +24,25 @@ A clean, cloud-synced web app for cataloguing your physical storage boxes and th
 
 The app is deployed on Firebase Hosting. Sign in with your Google account or email to get started.
 
+### Installing it on a phone
+
+Two ways, same app — both load the same hosted build, so both stay up to date on
+their own without a reinstall.
+
+**From the browser (PWA).** Open the live app in Chrome (Android) or Safari
+(iOS) and add it to the home screen — Chrome offers *Install app* in its ⋮ menu,
+Safari uses *Share → Add to Home Screen*. It launches standalone, without the
+address bar, and a service worker keeps it opening offline after the first
+visit. Nothing to download, works on both platforms.
+
+**From the APK (Android only).** Grab `storage-box-organizer-<version>.apk` from
+the [Releases page](https://github.com/nemsys/StorageBoxOrganizer/releases) and
+open it on the phone; Android will ask you to allow installing from that source
+once. The APK adds what the browser cannot give a web page: the device camera
+with its own capture UI, the hardware back button wired into navigation, and a
+native splash screen. It is signed with the project's release key, so a later
+release installs straight over it.
+
 ---
 
 ## 👤 End-User Guide
@@ -182,6 +201,9 @@ An unapproved account gets a "waiting for approval" screen showing its email and
 | `npm run access` | List / grant / revoke account approval (requires service account) |
 | `npm run backup` | Dump all Firestore collections to `.backups/` (requires service account) |
 | `npm run import` | Import a backup JSON into Firestore (requires service account) |
+| `npm run cap:sync` | Build the web app and copy it into the Android project |
+| `npm run android:apk` | Build a **debug** APK (`android/app/build/outputs/apk/debug/`) |
+| `npm run android:release` | Build a **signed release** APK (`android/app/build/outputs/apk/release/`) |
 
 ### Project structure
 
@@ -306,6 +328,38 @@ npm run build
 firebase deploy --only hosting
 ```
 
+### Building the Android APK
+
+The APK is a Capacitor shell around the hosted site (`capacitor.config.json` →
+`server.url`), not a copy of it. That means a web deploy reaches every installed
+phone immediately, and a new APK is only needed when the native shell itself
+changes — a plugin, a permission, the splash screen.
+
+```bash
+npm run android:release   # → android/app/build/outputs/apk/release/app-release.apk
+```
+
+Needs the Android SDK (`android/local.properties` → `sdk.dir`) and a JDK.
+
+**Versioning is automatic.** `android/app/build.gradle` reads `package.json` at
+build time, so `versionName` is the released semver and `versionCode` is it
+packed into one ascending integer — `major * 10000 + minor * 100 + patch`, so
+1.16.9 is `11609`. Nothing to bump by hand, and nothing that can drift from the
+web version.
+
+**Signing.** Release builds are signed from `.secrets/keystore.properties`,
+which points at `.secrets/release-keystore.jks`. Both are gitignored — they are
+never committed and never leave the machine.
+
+> ⚠️ **Back up `.secrets/`.** Android identifies an app by its signing key. Lose
+> the keystore and no future APK can install as an update over an already
+> installed one — every user would have to uninstall first. (No data would be
+> lost; it all lives in Firestore.)
+
+Without that properties file the build still works: `assembleDebug` is
+unaffected, and `assembleRelease` simply produces an unsigned APK, which Android
+will refuse to install.
+
 ### Releases and versioning
 
 Merging to `main` triggers `.github/workflows/release.yml`, which runs
@@ -337,6 +391,21 @@ do. You can run the same check locally:
 .github/scripts/check-pr-title.sh "feat(ui): add an About dialog"
 .github/scripts/check-pr-title.sh "chore: tidy up" main HEAD   # also compares commits
 ```
+
+**Publishing the APK.** The workflow tags the release; it does not build an APK.
+When the native shell has changed and phones need a new one, build it after the
+bot's bump has landed and attach it to that tag's GitHub Release:
+
+```bash
+git checkout main && git pull --ff-only        # pick up chore(release): x.y.z
+npm run android:release
+gh release create "v$(node -p "require('./package.json').version")" \
+  --title "v$(node -p "require('./package.json').version")" --notes-from-tag \
+  "android/app/build/outputs/apk/release/app-release.apk#storage-box-organizer-$(node -p "require('./package.json').version").apk"
+```
+
+The Releases page is what the README's install instructions point people at, so
+an APK that only exists locally is not published.
 
 ---
 
