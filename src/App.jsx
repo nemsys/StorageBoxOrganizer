@@ -1544,10 +1544,12 @@ function App() {
               >
                 <ArrowLeft size={20} />
               </button>
-              {/* In the primary hue: this bar is the only thing naming the box
-                  once the hero has scrolled away, so it should read as the
-                  heading it replaces rather than as another row of chrome. */}
-              <h2 className="flex-1 min-w-0 text-sm font-semibold text-primary-strong truncate">{currentBox.name}</h2>
+              {/* In the primary itself, at the user's explicit request after the
+                  contrast was put to them: on the light theme it measures
+                  2.65:1, so the size is up from 14px to 16px to give the glyphs
+                  what weight they can. text-[16px], not text-base — `base` is a
+                  colour token here and shadows that utility. */}
+              <h2 className="flex-1 min-w-0 text-[16px] font-semibold text-primary truncate">{currentBox.name}</h2>
               <OverflowMenu label={t('box.actions')} items={boxMenuItems} />
             </div>
           </motion.div>
