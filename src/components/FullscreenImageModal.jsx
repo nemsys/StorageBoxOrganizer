@@ -8,7 +8,12 @@ import { useTranslation } from '../translations';
 
 const MAX_SCALE = 5;
 const DOUBLE_TAP_SCALE = 2.5;
-const DOUBLE_TAP_MS = 300;
+// 300ms only caught a brisk double tap; an ordinary one lands nearer 350.
+const DOUBLE_TAP_MS = 400;
+// A finger never lands twice in the same pixel, and never leaves the glass
+// perfectly still. Both taps have to be a tap, and near each other.
+const TAP_SLOP_PX = 10;
+const DOUBLE_TAP_SLOP_PX = 40;
 
 /**
  * Fullscreen image viewer.
@@ -48,7 +53,7 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
     const touchStartY = useRef(null);
     const panStart = useRef(null);
     const pinchStart = useRef(null);
-    const lastTap = useRef(0);
+    const lastTap = useRef({ t: 0, x: 0, y: 0 });
     const moved = useRef(false);
 
     const refs = Array.isArray(imageRefs) ? imageRefs.filter(Boolean) : [];
@@ -83,6 +88,21 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
         const clamped = clampOffset(next, x, y);
         setZoom({ scale: next, ...clamped });
     }, [clampOffset, resetZoom]);
+
+    /**
+     * Zoom so the point under the finger stays under the finger. With the
+     * default centre transform-origin a point `d` from the centre lands at
+     * `d * scale + offset`, so holding it still means an offset of
+     * `d * (1 - scale)`.
+     */
+    const zoomToPoint = useCallback((scale, clientX, clientY) => {
+        const el = imgRef.current;
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        const dx = clientX - (r.left + r.width / 2);
+        const dy = clientY - (r.top + r.height / 2);
+        applyZoom(scale, dx * (1 - scale), dy * (1 - scale));
+    }, [applyZoom]);
 
     const goToPrevious = useCallback(() => {
         resetZoom();
@@ -190,9 +210,9 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
         }
         // One finger only pans while zoomed in; otherwise it is a slide swipe.
         if (isZoomed && panStart.current && e.touches.length === 1) {
-            moved.current = true;
             const dx = e.touches[0].clientX - panStart.current.x;
             const dy = e.touches[0].clientY - panStart.current.y;
+            if (Math.hypot(dx, dy) > TAP_SLOP_PX) moved.current = true;
             const next = clampOffset(zoom.scale, panStart.current.ox + dx, panStart.current.oy + dy);
             setZoom((z) => ({ ...z, ...next }));
         }
@@ -202,16 +222,25 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
         pinchStart.current = null;
         setInteracting(false);
 
-        // Double tap toggles between fit-to-screen and a readable magnification.
+        // Double tap toggles between fit-to-screen and a readable magnification,
+        // and zooms towards the point that was tapped rather than the middle of
+        // the photo — the thing you double-tapped is the thing you want to see.
         if (!moved.current && e.changedTouches.length === 1) {
             const now = Date.now();
-            if (now - lastTap.current < DOUBLE_TAP_MS) {
-                lastTap.current = 0;
-                if (isZoomed) resetZoom();
-                else applyZoom(DOUBLE_TAP_SCALE, 0, 0);
+            const t = e.changedTouches[0];
+            const prev = lastTap.current;
+            const near = Math.hypot(t.clientX - prev.x, t.clientY - prev.y) < DOUBLE_TAP_SLOP_PX;
+
+            if (now - prev.t < DOUBLE_TAP_MS && near) {
+                lastTap.current = { t: 0, x: 0, y: 0 };
+                if (isZoomed) {
+                    resetZoom();
+                } else {
+                    zoomToPoint(DOUBLE_TAP_SCALE, t.clientX, t.clientY);
+                }
                 return;
             }
-            lastTap.current = now;
+            lastTap.current = { t: now, x: t.clientX, y: t.clientY };
         }
 
         if (isZoomed) { panStart.current = null; return; }
@@ -384,12 +413,6 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
                 )}
             </div>
 
-            {/* Gesture hint — mobile only, and only while nothing is zoomed. */}
-            {!isZoomed && (
-                <p className="absolute bottom-4 text-slate-400 text-xs select-none pointer-events-none md:hidden px-6 text-center">
-                    {showNavigation ? t('photo.swipeAndZoomHint') : t('photo.zoomHint')}
-                </p>
-            )}
         </div>,
         document.body
     );

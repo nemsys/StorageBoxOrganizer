@@ -132,8 +132,6 @@
   "photo.closeFullscreen": "Затвори цял екран",
   "photo.closeEsc": "Затвори (Esc)",
   "photo.resetZoom": "Върни мащаба",
-  "photo.zoomHint": "Щипни или тапни двукратно за увеличение",
-  "photo.swipeAndZoomHint": "Плъзни за навигация · щипни или тапни двукратно за увеличение",
   "photo.delete": "Изтрий {{photo.the}}",
   "photo.removeTitle": "Да се премахне ли {{photo.theSubj}}?",
   "photo.removeMessageCreateBox": "Промените не са запазени, докато не натиснеш „{{createBox}}“.",
