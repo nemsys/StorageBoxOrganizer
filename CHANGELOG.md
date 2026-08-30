@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.17.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.11...v1.17.0) (2026-08-30)
+
+
+### Features
+
+* **items:** give the item list the box list's grid and card ([#45](https://github.com/nemsys/StorageBoxOrganizer/issues/45)) ([7cbf551](https://github.com/nemsys/StorageBoxOrganizer/commit/7cbf551183c85a7a7a16252403584af45c390ba1))
+
 ### [1.16.11](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.10...v1.16.11) (2026-08-30)
 
 ### [1.16.10](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.9...v1.16.10) (2026-08-30)
