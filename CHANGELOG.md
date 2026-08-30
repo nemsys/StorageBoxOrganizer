@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.16.8](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.7...v1.16.8) (2026-08-30)
+
+
+### Bug Fixes
+
+* **ui:** let a photo fill the fullscreen viewer ([#40](https://github.com/nemsys/StorageBoxOrganizer/issues/40)) ([1ae9fdb](https://github.com/nemsys/StorageBoxOrganizer/commit/1ae9fdb0bf2c8d33f84209e4da8b83581befa97f))
+
 ### [1.16.7](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.6...v1.16.7) (2026-08-30)
 
 
