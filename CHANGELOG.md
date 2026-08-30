@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.16.9](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.8...v1.16.9) (2026-08-30)
+
+
+### Bug Fixes
+
+* **ui:** drop the gesture hint, make double-tap actually fire ([#41](https://github.com/nemsys/StorageBoxOrganizer/issues/41)) ([6018c7f](https://github.com/nemsys/StorageBoxOrganizer/commit/6018c7f63b16b80fa2e32d14f82f844b43905330))
+
 ### [1.16.8](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.7...v1.16.8) (2026-08-30)
 
 
