@@ -1,4 +1,23 @@
+import groovy.json.JsonSlurper
+
 apply plugin: 'com.android.application'
+
+// The release bot owns package.json's version; the APK reads it from there so
+// there is one source of truth. versionCode has to be a single ascending
+// integer, so the semver is packed as major*10000 + minor*100 + patch —
+// 1.16.9 becomes 11609. Ascending as long as minor and patch stay under 100.
+def pkgVersion = new JsonSlurper().parse(rootProject.file('../package.json')).version
+def (verMajor, verMinor, verPatch) = pkgVersion.tokenize('.').collect { it.toInteger() }
+
+// Release signing. The keystore and its passwords live in ../.secrets/, which is
+// gitignored — an unsigned release APK cannot be installed, and a debug-signed
+// one cannot be upgraded over later. When the file is absent (a fresh clone, CI)
+// assembleDebug still works; assembleRelease produces an unsigned APK.
+def keystorePropsFile = rootProject.file('../.secrets/keystore.properties')
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
 
 android {
     namespace "com.nemsys.storageboxorganizer"
@@ -7,8 +26,8 @@ android {
         applicationId "com.nemsys.storageboxorganizer"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode verMajor * 10000 + verMinor * 100 + verPatch
+        versionName pkgVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +35,21 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (keystorePropsFile.exists()) {
+                storeFile rootProject.file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
+            if (keystorePropsFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
