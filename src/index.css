@@ -573,6 +573,19 @@
       color: var(--color-text);
     }
   }
+  /* The "+N" that stands for the tags a card has no room for. Same size and
+     rhythm as a chip, but flat and inert — it is a count, not a filter. */
+  .tag-count {
+    flex-shrink: 0;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: rgba(var(--color-surface-hover-rgb), 0.9);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
   .tag-chip.active {
     background-color: rgba(var(--color-primary-rgb), 0.15);
     border-color: rgba(var(--color-primary-rgb), 0.45);
@@ -730,6 +743,13 @@
     transition: background-color 0.15s ease, transform 0.1s ease;
     -webkit-tap-highlight-color: transparent;
   }
+  /* The card's actions "⋮", same pill as the zoom button in the opposite
+     corner. Beside the title it cost 42px of a 156px two-column card. */
+  .card-menu-btn {
+    left: 0.5rem;
+    right: auto;
+  }
+
   @media (hover: hover) {
     .zoom-btn:hover {
       background-color: rgba(0, 0, 0, 0.72);
