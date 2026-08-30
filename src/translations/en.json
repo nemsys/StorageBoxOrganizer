@@ -132,8 +132,6 @@
   "photo.closeFullscreen": "Close fullscreen",
   "photo.closeEsc": "Close (Esc)",
   "photo.resetZoom": "Reset zoom",
-  "photo.zoomHint": "Pinch or double-tap to zoom",
-  "photo.swipeAndZoomHint": "Swipe to navigate · pinch or double-tap to zoom",
   "photo.delete": "Delete {{photo.the}}",
   "photo.removeTitle": "Remove {{photo.the}}?",
   "photo.removeMessageCreateBox": "Your changes are not saved until you tap \"{{createBox}}\".",
