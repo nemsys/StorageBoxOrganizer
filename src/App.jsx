@@ -1704,7 +1704,6 @@ function App() {
                 onEditItem={handleEditItem}
                 onImageClick={handleImageClick}
                 onTagClick={handleTagClick}
-                showItemNavigation={true}
               />
             )}
           </>
@@ -1719,7 +1718,7 @@ function App() {
               <span className="text-muted text-sm">{t('item.count', { count: allItemsDisplayItems.length })}</span>
             </div>
             {dataLoading && items.length === 0 ? (
-              <SkeletonGrid count={6} columns="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" />
+              <SkeletonGrid count={6} />
             ) : items.length === 0 ? (
               <EmptyState
                 icon={<Package size={28} />}
