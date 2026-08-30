@@ -19,6 +19,7 @@ export const SettingsMenu = ({ email, onRefresh, onManageTags, onExport, onImpor
   }, []);
 
   const menuItems = [
+    // Group 1 continues the language row above: appearance choices together.
     {
       id: 'theme',
       label: theme === 'dark' ? t('settings.lightMode') : t('settings.darkMode'),
@@ -28,6 +29,11 @@ export const SettingsMenu = ({ email, onRefresh, onManageTags, onExport, onImpor
         setIsOpen(false);
       }
     },
+    {
+      id: 'divider-1',
+      isDivider: true
+    },
+    // Group 2: moving data in and out.
     ...(onRefresh ? [
       {
         // No pull-to-refresh: the body sets overscroll-behavior-y: none for a
@@ -42,23 +48,6 @@ export const SettingsMenu = ({ email, onRefresh, onManageTags, onExport, onImpor
         }
       }
     ] : []),
-    {
-      id: 'divider-1',
-      isDivider: true
-    },
-    {
-      id: 'tags',
-      label: t('settings.manageTags'),
-      icon: <Tags size={18} />,
-      onClick: () => {
-        onManageTags();
-        setIsOpen(false);
-      }
-    },
-    {
-      id: 'divider-2',
-      isDivider: true
-    },
     {
       id: 'export',
       label: t('settings.export'),
@@ -77,6 +66,20 @@ export const SettingsMenu = ({ email, onRefresh, onManageTags, onExport, onImpor
         setIsOpen(false);
       }
     },
+    {
+      id: 'divider-2',
+      isDivider: true
+    },
+    // Group 3: maintenance of the content already stored.
+    {
+      id: 'tags',
+      label: t('settings.manageTags'),
+      icon: <Tags size={18} />,
+      onClick: () => {
+        onManageTags();
+        setIsOpen(false);
+      }
+    },
     ...(onOptimizeImages ? [
       {
         id: 'optimize-images',
@@ -88,11 +91,14 @@ export const SettingsMenu = ({ email, onRefresh, onManageTags, onExport, onImpor
         }
       }
     ] : []),
-    ...(onCheckUpdates ? [
+    // Group 4: about the app itself.
+    ...(onCheckUpdates || onAbout ? [
       {
         id: 'divider-3',
         isDivider: true
-      },
+      }
+    ] : []),
+    ...(onCheckUpdates ? [
       {
         id: 'check-updates',
         label: t('settings.checkUpdates'),
@@ -205,7 +211,6 @@ export const SettingsMenu = ({ email, onRefresh, onManageTags, onExport, onImpor
                 ))}
               </div>
             </div>
-            <div className="border-b border-content/15 my-1" />
 
             {menuItems.map((item) => (
               item.isDivider ? (
