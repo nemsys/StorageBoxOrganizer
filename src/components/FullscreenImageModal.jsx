@@ -62,8 +62,15 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
     const clampOffset = useCallback((scale, x, y) => {
         const el = imgRef.current;
         if (!el) return { x, y };
-        const maxX = (el.offsetWidth * (scale - 1)) / 2;
-        const maxY = (el.offsetHeight * (scale - 1)) / 2;
+        // The element is now the whole frame, so under object-contain the
+        // painted photo is that box shrunk to the image's aspect ratio. Pan
+        // bounds have to come from the photo; taking them from the frame would
+        // let a zoomed image be dragged out into the letterbox.
+        const nw = el.naturalWidth || el.offsetWidth;
+        const nh = el.naturalHeight || el.offsetHeight;
+        const fit = Math.min(el.offsetWidth / nw, el.offsetHeight / nh) || 1;
+        const maxX = (nw * fit * (scale - 1)) / 2;
+        const maxY = (nh * fit * (scale - 1)) / 2;
         return {
             x: Math.min(maxX, Math.max(-maxX, x)),
             y: Math.min(maxY, Math.max(-maxY, y)),
@@ -280,9 +287,23 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
             )}
 
             {/* Image + overlay controls — stopPropagation so clicks here don't close */}
+            {/* Full-bleed frame. It used to be capped at 90vw/90vh with the
+                image left at its natural size, so anything smaller than the
+                frame — a legacy photo with no full-size derivative, or just a
+                small original — sat as a postage stamp in the middle of a black
+                screen, and zooming scaled that stamp rather than filling the
+                screen. The frame now takes the viewport and the image fills the
+                frame; object-contain keeps the aspect ratio. Safe-area padding
+                so a notch never lands on the photo. */}
             <div
                 className="relative flex items-center justify-center overflow-hidden"
-                style={{ maxWidth: '90vw', maxHeight: '90vh', width: '100%', touchAction: 'none' }}
+                style={{
+                    width: '100vw',
+                    height: '100dvh',
+                    paddingTop: 'env(safe-area-inset-top, 0px)',
+                    paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+                    touchAction: 'none',
+                }}
                 onClick={(e) => e.stopPropagation()}
                 onDoubleClick={(e) => {
                     e.stopPropagation();
@@ -297,7 +318,7 @@ export function FullscreenImageModal({ isOpen, onClose, imageRefs = [], itemName
                     ref={imgRef}
                     src={currentSrc}
                     alt={itemName}
-                    className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl select-none"
+                    className="w-full h-full object-contain select-none"
                     style={{
                         transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})`,
                         transition: interacting ? 'none' : 'transform 0.18s ease-out',
