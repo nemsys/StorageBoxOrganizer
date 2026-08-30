@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.16.7](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.6...v1.16.7) (2026-08-30)
+
+
+### Bug Fixes
+
+* **ui:** box-bar title in the primary blue at 16px ([#39](https://github.com/nemsys/StorageBoxOrganizer/issues/39)) ([8e30e0b](https://github.com/nemsys/StorageBoxOrganizer/commit/8e30e0b53745254e1a9e1bc7a96d56f61eb9fedc))
+
 ### [1.16.6](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.5...v1.16.6) (2026-08-29)
 
 
