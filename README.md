@@ -409,6 +409,49 @@ an APK that only exists locally is not published.
 
 ---
 
+## ✅ What is not automated
+
+Everything else in this README the tooling does on its own. These are the steps
+that need a human, collected in one place so none of them is discovered late.
+
+### Once — and it matters most
+
+- [ ] **Back up `.secrets/` off this machine.** It holds
+      `release-keystore.jks` and the passwords that unlock it, and it is
+      gitignored, so the working copy is the only copy. Android identifies an
+      installed app by its signing key: lose the keystore and no future APK can
+      install as an update over one already on a phone — every user has to
+      uninstall first. Nothing is lost from the app itself (all data lives in
+      Firestore), but the upgrade path is gone permanently and cannot be
+      recreated. Copy the directory somewhere encrypted and off-machine —
+      a password manager's file attachment, an encrypted archive in cloud
+      storage, a USB key in a drawer. Any two of those.
+- [ ] **Install the APK on the phone once and open it**, so the signed build is
+      known to work before a release depends on it. The
+      [Releases page](https://github.com/nemsys/StorageBoxOrganizer/releases)
+      has the file; Android asks once for permission to install from that source.
+
+### After every merge to `main`
+
+- [ ] **`npm run deploy`.** The release workflow bumps the version and tags it —
+      it does **not** deploy. Until this runs, the live site is unchanged, and so
+      is every phone, because the APK loads that site rather than a copy of it.
+      Confirm with
+      `curl -s "https://storageboxorganizer-42466.web.app/version.json?ts=$(date +%s)"`:
+      the `buildId` must differ from the previous deploy's.
+
+### Only when the native shell changes
+
+A plugin, a permission, the splash screen, `capacitor.config.json` — anything
+under `android/`. A change confined to the web app needs none of this; it reaches
+installed phones through the deploy above.
+
+- [ ] **Build and publish a new APK** — see
+      [Building the Android APK](#building-the-android-apk) and *Publishing the
+      APK* above.
+
+---
+
 ## 🗺️ Architecture notes
 
 - **Optimistic UI** — State updates happen immediately on the client; if the Firebase write fails, the state reverts and a toast error is shown.
