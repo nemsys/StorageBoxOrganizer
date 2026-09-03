@@ -55,6 +55,10 @@ export function TagInput({ value, onChange, suggestions = [], placeholder = '', 
                                 type="button"
                                 className={`tag-chip ${isActive ? 'active' : ''}`}
                                 aria-pressed={isActive}
+                                // Keep focus in the field: the default blur would fire
+                                // onBlur first, committing the half-typed draft ("кл")
+                                // and re-filtering the ribbon out from under the tap.
+                                onPointerDown={(e) => e.preventDefault()}
                                 onClick={() => (isActive ? removeTag(normalizeTag(suggestion)) : addTag(suggestion))}
                             >
                                 {suggestion}
@@ -102,7 +106,11 @@ export function TagInput({ value, onChange, suggestions = [], placeholder = '', 
                         }
                     }}
                     onKeyDown={handleKeyDown}
-                    onBlur={() => addTag(draft)}
+                    onBlur={(e) => {
+                        // Belt and braces for browsers that move focus anyway.
+                        if (e.relatedTarget?.closest?.('.tag-ribbon')) return;
+                        addTag(draft);
+                    }}
                     placeholder={tags.length ? '' : placeholder}
                 />
             </div>
