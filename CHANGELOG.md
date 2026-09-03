@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.17.1](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.17.0...v1.17.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* **tags:** tapping a suggestion saved the typed prefix, not the tag ([#46](https://github.com/nemsys/StorageBoxOrganizer/issues/46)) ([86051a7](https://github.com/nemsys/StorageBoxOrganizer/commit/86051a727cf0109e13fbfd0cc5d23f556ebe414c))
+
 ## [1.17.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.16.11...v1.17.0) (2026-08-30)
 
 
