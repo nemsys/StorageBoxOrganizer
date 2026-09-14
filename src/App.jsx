@@ -621,17 +621,23 @@ function App() {
     );
   };
 
-  // Handle Back to Home
-  const handleBack = () => {
+  // Navigate to the box list without reloading. Used by the delete/remove box
+  // flows: a reload racing their writes would bring back the deleted box.
+  const goToBoxes = () => {
     setCurrentBox(null);
     setView('boxes');
     setSearchQuery('');
     setBoxSearchQuery('');
     setSelectedTag('');
-    refreshData();
 
     // Push to browser history
     window.history.pushState({ view: 'boxes' }, '', '#');
+  };
+
+  // Handle Back to Home
+  const handleBack = () => {
+    goToBoxes();
+    refreshData();
   };
 
   // Turn a modal's image list into lightweight refs ({id, thumb}) stored on the
@@ -840,7 +846,7 @@ function App() {
         setAllItems(prev => prev.filter(i => i.boxId !== id));
 
         if (currentBox?.id === id) {
-          handleBack();
+          goToBoxes();
         }
 
         try {
@@ -867,7 +873,7 @@ function App() {
         setAllItems(prev => prev.map(i => i.boxId === id ? { ...i, boxId: '' } : i));
 
         if (currentBox?.id === id) {
-          handleBack();
+          goToBoxes();
         }
 
         try {
