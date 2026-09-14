@@ -275,6 +275,11 @@ export const firebaseStorage = {
 
   deleteBox: async (id) => {
     const uid = getUserId();
+    // The box document goes first, before any await. The cascade below needs
+    // two reads, and a list refresh landing in that gap used to see a box whose
+    // items were already gone — or keep the box for good if a read failed.
+    queueWrite(deleteDoc(doc(db, BOXES_COLL, id)));
+
     // Cascade: delete the box's own images.
     await deleteImagesByOwner(id, uid);
 
@@ -285,8 +290,6 @@ export const firebaseStorage = {
       await deleteImagesByOwner(d.id, uid);
       queueWrite(deleteDoc(doc(db, ITEMS_COLL, d.id)));
     }));
-
-    queueWrite(deleteDoc(doc(db, BOXES_COLL, id)));
   },
 
   getItems: async (boxId) => {
