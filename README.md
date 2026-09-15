@@ -348,8 +348,9 @@ packed into one ascending integer — `major * 10000 + minor * 100 + patch`, so
 web version.
 
 **Signing.** Release builds are signed from `.secrets/keystore.properties`,
-which points at `.secrets/release-keystore.jks`. Both are gitignored — they are
-never committed and never leave the machine.
+which points at `.secrets/release-keystore.jks`. Both are gitignored and never
+committed; CI rebuilds them from repository secrets (see *Releases and
+versioning*).
 
 > ⚠️ **Back up `.secrets/`.** Android identifies an app by its signing key. Lose
 > the keystore and no future APK can install as an update over an already
@@ -362,50 +363,56 @@ will refuse to install.
 
 ### Releases and versioning
 
-Merging to `main` triggers `.github/workflows/release.yml`, which runs
-[standard-version](https://github.com/conventional-changelog/standard-version):
-it bumps the version in `package.json`, writes `CHANGELOG.md`, tags the commit
-and pushes. It does **not** deploy — run `npm run deploy` after the merge, or the
-live app stays on the previous build.
+Releases are cut by [release-please](https://github.com/googleapis/release-please)
+(`.github/workflows/release.yml`, configured in `release-please-config.json` and
+`.release-please-manifest.json`). It works in two steps:
 
-Two things keep the version honest, and both exist because they were once
-missing:
+1. **Every push to `main`** updates one open release PR, titled
+   `chore(main): release X.Y.Z`. The version comes from the Conventional Commit
+   subjects since the last release (`fix` → patch, `feat` → minor, `!` → major),
+   and the PR carries the `CHANGELOG.md` entry and the `package.json` bump.
+   Nothing is released yet — merge more work and the PR grows.
+2. **Merging that release PR** tags `vX.Y.Z`, creates the GitHub Release with the
+   changelog as its notes, and a second job builds the signed APK and attaches it
+   as `storage-box-organizer-X.Y.Z.apk`. "Latest" on the Releases page is
+   therefore always the newest version.
 
-**Only code releases.** The workflow ignores pushes that touch nothing but
-`**/*.md`, `docs/**`, `LICENSE` or `.github/**`. `standard-version` bumps a patch for *any*
-commit type, so without this a typo fix in a README produced a new version whose
-changelog entry was empty. A mixed push still releases normally — `paths-ignore`
-skips a run only when every changed file matches.
+It does **not** deploy — run `npm run deploy` after merging the release PR, or
+the live app stays on the previous build.
+
+**Only user-facing commits release.** `feat`, `fix`, `perf`, `refactor`, `revert`
+and `deps` go into the changelog; `docs`, `chore`, `ci`, `test`, `build` and
+`style` are hidden, and a set of commits with nothing visible opens no release PR.
 
 **The PR title is the release note.** PRs are squash-merged, and GitHub builds
 the squash commit's subject from the PR title. That subject is the only thing
-`standard-version` reads, so a branch full of well-formed `feat:` commits still
+release-please reads, so a branch full of well-formed `feat:` commits still
 ships as a patch with an empty changelog if the title says `chore:`. Title the
 PR after the most significant change in it.
 
-`.github/workflows/pr-title.yml` enforces both halves of that: the title must be
-a Conventional Commit, and it must not claim a smaller bump than its own commits
-do. You can run the same check locally:
+`.github/workflows/pr-title.yml` enforces that: the title must be a Conventional
+Commit, and it must not claim a smaller bump than its own commits do. You can run
+the same check locally:
 
 ```bash
 .github/scripts/check-pr-title.sh "feat(ui): add an About dialog"
 .github/scripts/check-pr-title.sh "chore: tidy up" main HEAD   # also compares commits
 ```
 
-**Publishing the APK.** The workflow tags the release; it does not build an APK.
-When the native shell has changed and phones need a new one, build it after the
-bot's bump has landed and attach it to that tag's GitHub Release:
+**APK signing in CI.** The `apk` job restores the keystore from four repository
+secrets — `KEYSTORE_BASE64` (the `.jks`, base64-encoded), `STORE_PASSWORD`,
+`KEY_ALIAS`, `KEY_PASSWORD` — into `.secrets/` before running
+`npm run android:release`. GitHub secrets cannot be read back, so they are not a
+backup: the local `.secrets/` still needs one.
+
+**Rebuilding an APK for an existing tag** (backfilling a Release, replacing a
+broken asset): Actions → Release → *Run workflow* with the tag, or
 
 ```bash
-git checkout main && git pull --ff-only        # pick up chore(release): x.y.z
-npm run android:release
-gh release create "v$(node -p "require('./package.json').version")" \
-  --title "v$(node -p "require('./package.json').version")" --notes-from-tag \
-  "android/app/build/outputs/apk/release/app-release.apk#storage-box-organizer-$(node -p "require('./package.json').version").apk"
+gh workflow run release.yml -f tag=v1.17.2
 ```
 
-The Releases page is what the README's install instructions point people at, so
-an APK that only exists locally is not published.
+The Release must already exist; the job only uploads to it.
 
 ---
 
