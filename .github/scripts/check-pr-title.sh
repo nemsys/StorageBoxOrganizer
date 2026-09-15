@@ -3,7 +3,7 @@
 # The PR title is the release note.
 #
 # PRs here are squash-merged, and GitHub seeds the squash commit's subject from
-# the PR title. standard-version then reads that subject — and nothing else — to
+# the PR title. release-please then reads that subject — and nothing else — to
 # decide the version bump and write the changelog. A branch full of well-formed
 # `feat:` commits still ships as a patch with an empty changelog entry if the
 # title says `chore:`. That is exactly how v1.8.2 happened.

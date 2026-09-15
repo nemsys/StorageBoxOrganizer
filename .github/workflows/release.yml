@@ -1,48 +1,108 @@
 name: Release
 
+# release-please keeps one release PR open ("chore(main): release X.Y.Z") and
+# updates it on every push to main: the version comes from the Conventional
+# Commit subjects since the last release, the notes go into CHANGELOG.md.
+# Nothing is released until that PR is merged. The merge push then tags the
+# version, creates the GitHub Release, and the apk job attaches the signed APK
+# to it — so "Latest" on the Releases page is always the shipped version.
+#
+# Commits whose type is hidden in release-please-config.json (docs, chore, ci,
+# test, …) never open a release PR on their own.
+#
+# workflow_dispatch rebuilds the APK for an existing tag and (re)attaches it,
+# for backfilling a Release or replacing a broken asset.
+
 on:
   push:
     branches:
       - main
-    # A release must mean the shipped app changed. These paths cannot affect the
-    # build, so a push touching only them produces no version bump and no tag —
-    # otherwise the version climbs while the changelog entry comes out empty.
-    # A mixed push (code + docs) still releases: paths-ignore skips a run only
-    # when every changed file matches.
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
-      - 'LICENSE'
-      - '.github/**'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to build the APK for, e.g. v1.17.2'
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  release:
+  release-please:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    # Only run if the commit wasn't created by the bot to avoid infinite loops
-    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  apk:
+    needs: release-please
+    # always() lets the job run on workflow_dispatch, where release-please is skipped.
+    if: >-
+      always() &&
+      ((github.event_name == 'push' && needs.release-please.outputs.release_created == 'true') ||
+       github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || needs.release-please.outputs.tag_name }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0 # Important: fetch all history for tagging
+          ref: ${{ env.TAG }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21' # android/app/capacitor.build.gradle targets Java 21
+          cache: gradle
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Release
-        run: npm run release
+      # build.gradle signs the release build only when .secrets/keystore.properties
+      # exists; without it the APK comes out unsigned and uninstallable.
+      - name: Restore signing keystore
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::KEYSTORE_BASE64 secret is not set"; exit 1
+          fi
+          mkdir -p .secrets
+          echo "$KEYSTORE_BASE64" | base64 -d > .secrets/release-keystore.jks
+          {
+            echo "storeFile=../.secrets/release-keystore.jks"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+          } > .secrets/keystore.properties
 
-      - name: Push changes
-        run: git push --follow-tags origin main
+      - name: Build signed APK
+        run: npm run android:release
+
+      - name: Attach APK to the release
+        run: |
+          version="${TAG#v}"
+          apk="storage-box-organizer-${version}.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$apk"
+          "$ANDROID_HOME"/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner verify "$apk"
+          gh release upload "$TAG" "$apk" --clobber
