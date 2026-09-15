@@ -343,9 +343,11 @@ Needs the Android SDK (`android/local.properties` → `sdk.dir`) and a JDK.
 
 **Versioning is automatic.** `android/app/build.gradle` reads `package.json` at
 build time, so `versionName` is the released semver and `versionCode` is it
-packed into one ascending integer — `major * 10000 + minor * 100 + patch`, so
-1.16.9 is `11609`. Nothing to bump by hand, and nothing that can drift from the
-web version.
+packed into one ascending integer — `major * 1000000 + minor * 1000 + patch`, so
+1.17.2 is `1017002`. Nothing to bump by hand, and nothing that can drift from the
+web version. Three digits per part, because the old two-digit packing collided
+once a part reached 100 (1.17.100 and 1.18.0 were both `11800`), and Android
+refuses an update whose `versionCode` has not grown.
 
 **Signing.** Release builds are signed from `.secrets/keystore.properties`,
 which points at `.secrets/release-keystore.jks`. Both are gitignored and never

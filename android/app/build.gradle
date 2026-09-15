@@ -4,8 +4,11 @@ apply plugin: 'com.android.application'
 
 // The release bot owns package.json's version; the APK reads it from there so
 // there is one source of truth. versionCode has to be a single ascending
-// integer, so the semver is packed as major*10000 + minor*100 + patch —
-// 1.16.9 becomes 11609. Ascending as long as minor and patch stay under 100.
+// integer, so the semver is packed as major*1000000 + minor*1000 + patch —
+// 1.17.2 becomes 1017002. Three digits per part: the earlier two-digit packing
+// made 1.17.100 and 1.18.0 both 11800, and Android refuses an update whose
+// versionCode did not grow. Widening only ever raises the number, so no
+// installed APK is stranded. Ceiling is 2100000000, i.e. major < 2100.
 def pkgVersion = new JsonSlurper().parse(rootProject.file('../package.json')).version
 def (verMajor, verMinor, verPatch) = pkgVersion.tokenize('.').collect { it.toInteger() }
 
@@ -26,7 +29,7 @@ android {
         applicationId "com.nemsys.storageboxorganizer"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode verMajor * 10000 + verMinor * 100 + verPatch
+        versionCode verMajor * 1000000 + verMinor * 1000 + verPatch
         versionName pkgVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
