@@ -3,6 +3,7 @@ import { auth } from '../firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { Mail, Lock, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from '../translations';
+import { initialSignUpMode } from '../utils/authMemory';
 
 // Firebase reports its own English text; map the codes we can actually hit onto
 // translated messages and keep a generic fallback for everything else.
@@ -19,11 +20,13 @@ const AUTH_ERROR_KEYS = {
 
 export function AuthModal({ isOpen, onClose }) {
     const { t } = useTranslation();
-    const [isSignUp, setIsSignUp] = useState(false);
+    const [isSignUp, setIsSignUp] = useState(initialSignUpMode);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
+    // Sign-up hit an address that already has an account: offer sign-in instead.
+    const [offerSignIn, setOfferSignIn] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -32,9 +35,14 @@ export function AuthModal({ isOpen, onClose }) {
     // Losing the password used to mean losing the whole inventory: there was no
     // way back into an account from this screen. Firebase's reset email is free
     // on the Spark plan.
-    const handleResetPassword = async () => {
+    const clearMessages = () => {
         setError('');
         setNotice('');
+        setOfferSignIn(false);
+    };
+
+    const handleResetPassword = async () => {
+        clearMessages();
         if (!email) {
             setError(t('auth.error.resetNeedsEmail'));
             return;
@@ -55,8 +63,7 @@ export function AuthModal({ isOpen, onClose }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-        setNotice('');
+        clearMessages();
         setLoading(true);
 
         try {
@@ -69,9 +76,18 @@ export function AuthModal({ isOpen, onClose }) {
         } catch (err) {
             console.error(err);
             setError(t(AUTH_ERROR_KEYS[err.code] ?? 'auth.error.generic'));
+            // Most likely someone who has an account, on a device that has not
+            // seen them sign in yet — so it opened on sign-up.
+            if (isSignUp && err.code === 'auth/email-already-in-use') setOfferSignIn(true);
         } finally {
             setLoading(false);
         }
+    };
+
+    // Email and password stay filled in, so switching is one more tap.
+    const switchToSignIn = () => {
+        clearMessages();
+        setIsSignUp(false);
     };
 
     return (
@@ -88,6 +104,18 @@ export function AuthModal({ isOpen, onClose }) {
                     {error && (
                         <div className="p-3 bg-danger/10 border border-danger/20 rounded-lg text-danger text-sm" role="alert">
                             {error}
+                            {offerSignIn && (
+                                <>
+                                    {' '}
+                                    <button
+                                        type="button"
+                                        onClick={switchToSignIn}
+                                        className="font-semibold underline underline-offset-2 rounded-sm hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/50"
+                                    >
+                                        {t('auth.signInInstead')}
+                                    </button>
+                                </>
+                            )}
                         </div>
                     )}
 
@@ -174,7 +202,7 @@ export function AuthModal({ isOpen, onClose }) {
                         {isSignUp ? t('auth.haveAccount') : t('auth.noAccount')}{' '}
                         <button
                             type="button"
-                            onClick={() => { setIsSignUp(!isSignUp); setError(''); setNotice(''); }}
+                            onClick={() => { setIsSignUp(!isSignUp); clearMessages(); }}
                             className="font-medium text-primary underline underline-offset-2 rounded-sm hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-colors"
                         >
                             {isSignUp ? t('auth.haveAccountAction') : t('auth.noAccountAction')}
