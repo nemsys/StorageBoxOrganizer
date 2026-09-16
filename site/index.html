@@ -13,6 +13,34 @@
 <meta property="og:image" content="https://nemsys.github.io/StorageBoxOrganizer/assets/og.jpg">
 <meta property="og:url" content="https://nemsys.github.io/StorageBoxOrganizer/">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="author" content="SciScend">
+<link rel="canonical" href="https://nemsys.github.io/StorageBoxOrganizer/">
+<link rel="author" href="https://sciscend.com/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Storage Box Organizer",
+  "applicationCategory": "LifestyleApplication",
+  "operatingSystem": "Android, iOS, Web",
+  "inLanguage": ["bg", "en"],
+  "description": "Безплатно приложение за дома: снимаш кутиите и нещата в тях, записваш къде стоят и ги намираш за секунди.",
+  "url": "https://nemsys.github.io/StorageBoxOrganizer/",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+  "author": { "@id": "https://sciscend.com/#organization" },
+  "publisher": { "@id": "https://sciscend.com/#organization" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://sciscend.com/#organization",
+  "name": "SciScend",
+  "url": "https://sciscend.com/",
+  "email": "ivapopova@sciscend.com"
+}
+</script>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -310,7 +338,7 @@ h3 { font-size: 1.2rem; letter-spacing: -.01em; line-height: 1.25; font-weight: 
 .ok-toast strong { display: block; line-height: 1.2; }
 .ok-toast small { color: #a8b3c7; font-size: .85rem; }
 .mail-card { margin-top: 26px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
-.mail-addr { font-weight: 600; color: var(--ink-2); }
+.mail-addr { font-weight: 600; color: var(--ink-2); text-decoration: none; }
 @media (max-width: 860px) { .access-grid { grid-template-columns: minmax(0, 1fr); } .access-visual { order: 2; min-height: 0; padding: 12px 0 40px; } .ok-toast { right: 0; bottom: -4%; } }
 
 /* Guide */
@@ -622,7 +650,7 @@ h3 { font-size: 1.2rem; letter-spacing: -.01em; line-height: 1.25; font-weight: 
         <div class="ring"></div>
         <div class="mail-mock">
           <div class="bar"><i></i><i></i><i></i></div>
-          <div class="row"><b data-i18n="mock.to">До:</b><span data-mail-text></span></div>
+          <div class="row"><b data-i18n="mock.to">До:</b><span>ivapopova@sciscend.com</span></div>
           <div class="row"><b data-i18n="mock.subject">Тема:</b><span data-i18n="mock.subjectText">Достъп до Storage Box Organizer</span></div>
           <div class="body">
             <p data-i18n="mock.hi">Здравей!</p>
@@ -647,8 +675,8 @@ h3 { font-size: 1.2rem; letter-spacing: -.01em; line-height: 1.25; font-weight: 
           <li><div><strong data-i18n="ac3.t">Натисни „Провери отново“</strong><p data-i18n="ac3.d">Когато ти отговоря, натисни този бутон в приложението и можеш да започнеш.</p></div></li>
         </ol>
         <div class="mail-card">
-          <a class="btn btn-primary" href="#access" data-mail><svg class="i"><use href="#i-mail"/></svg><span data-i18n="access.mail">Пиши ми в Gmail</span></a>
-          <span class="mail-addr" data-mail-addr></span>
+          <a class="btn btn-primary" href="mailto:ivapopova@sciscend.com" data-mail><svg class="i"><use href="#i-mail"/></svg><span data-i18n="access.mail">Пиши ми</span></a>
+          <a class="mail-addr" href="mailto:ivapopova@sciscend.com">ivapopova@sciscend.com</a>
         </div>
       </div>
     </div>
@@ -716,7 +744,7 @@ h3 { font-size: 1.2rem; letter-spacing: -.01em; line-height: 1.25; font-weight: 
 
 <footer class="footer">
   <div class="wrap">
-    <span><strong style="color:var(--ink)">Storage Box Organizer</strong> · <span data-i18n="footer.by">създадено от</span> <a href="https://sciscend.com/" target="_blank" rel="noopener">SciScend</a></span>
+    <span><strong style="color:var(--ink)">Storage Box Organizer</strong> · <span data-i18n="footer.by">Разработено от</span> <a href="https://sciscend.com/" rel="author" title="SciScend">SciScend</a> · <a href="mailto:ivapopova@sciscend.com">ivapopova@sciscend.com</a></span>
     <nav aria-label="Footer">
       <a href="https://storageboxorganizer-42466.web.app" target="_blank" rel="noopener" data-i18n="footer.app">Приложението</a>
       <a href="#access" data-i18n="footer.contact">Контакт</a>
@@ -777,7 +805,7 @@ h3 { font-size: 1.2rem; letter-spacing: -.01em; line-height: 1.25; font-weight: 
     'ac1.t': 'Sign up', 'ac1.d': 'Open the app, tap “Sign Up” and enter an email and a password you will remember.',
     'ac2.t': 'Email me', 'ac2.d': 'Send me an email from the address you signed up with. I will reply as soon as your access is ready.',
     'ac3.t': 'Tap “Check again”', 'ac3.d': 'Once I reply, tap that button in the app and you are ready to go.',
-    'access.mail': 'Email me on Gmail',
+    'access.mail': 'Email me',
     'mock.to': 'To:', 'mock.subject': 'Subject:', 'mock.subjectText': 'Access to Storage Box Organizer', 'mock.hi': 'Hi!',
     'mock.body': 'I signed up for Storage Box Organizer with this email address and would like access.', 'mock.thanks': 'Thank you!',
     'mock.ok': 'Access approved', 'mock.okHint': 'Tap “Check again”',
@@ -797,10 +825,10 @@ h3 { font-size: 1.2rem; letter-spacing: -.01em; line-height: 1.25; font-weight: 
     'fq7': 'I forgot my password.', 'fa7': 'On the sign-in screen tap “Forgot password?”. You will get an email with a link to set a new one.',
     'fq8': 'Does it work on iPhone?', 'fa8': 'Yes, through Safari. See “Install” and pick iPhone.',
     'band.title': 'Let’s tidy up <span class="serif">the attic.</span>', 'band.lead': 'Start with one box. The rest follows.',
-    'footer.by': 'made by', 'footer.app': 'The app', 'footer.contact': 'Contact',
+    'footer.by': 'Made by', 'footer.app': 'The app', 'footer.contact': 'Contact',
   };
 
-  const MAIL = ['iva.e.popova', 'gmail.com'].join('@');
+  const MAIL = 'ivapopova@sciscend.com';
   const MAIL_TEXT = {
     bg: { subject: 'Достъп до Storage Box Organizer', body: 'Здравей!\n\nРегистрирах се в Storage Box Organizer с този имейл и искам достъп.\n\nБлагодаря!' },
     en: { subject: 'Access to Storage Box Organizer', body: 'Hi!\n\nI signed up for Storage Box Organizer with this email address and would like access.\n\nThank you!' },
@@ -830,7 +858,6 @@ h3 { font-size: 1.2rem; letter-spacing: -.01em; line-height: 1.25; font-weight: 
     for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
     const m = MAIL_TEXT[lang];
     for (const a of document.querySelectorAll('[data-mail]')) a.href = `mailto:${MAIL}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
-    for (const s of document.querySelectorAll('[data-mail-text], [data-mail-addr]')) s.textContent = MAIL;
   }
 
   const fromUrl = new URLSearchParams(location.search).get('lang');
