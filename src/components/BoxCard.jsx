@@ -1,4 +1,4 @@
-import { Package, ZoomIn } from 'lucide-react';
+import { Package, ZoomIn, MapPin } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 import { getImageRefs, refsToThumbs } from '../utils/imageUtils';
 import { useTranslation } from '../translations';
@@ -80,6 +80,19 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
                 >
                     <span aria-hidden="true">{itemCount}</span>
                 </div>
+
+                {/* Where the box actually is. The grid's whole job is to get you
+                    to the right box; without this it stops one step short. */}
+                {box.location && (
+                    <div
+                        className="badge badge-place absolute z-20 bottom-2 left-2 pointer-events-none"
+                        role="img"
+                        aria-label={t('box.locatedAt', { location: box.location })}
+                    >
+                        <MapPin size={11} className="shrink-0" aria-hidden="true" />
+                        <span aria-hidden="true">{box.location}</span>
+                    </div>
+                )}
             </div>
 
             <div className="p-4 flex flex-col flex-1">

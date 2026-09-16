@@ -8,11 +8,13 @@ import { makeDerivatives, getImageRefs, refsToThumbs } from '../utils/imageUtils
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
 import { usePhotoCapture } from '../native/usePhotoCapture';
 import { useTranslation } from '../translations';
+import { LocationInput } from './LocationInput';
 
-export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
+export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm, knownLocations = [] }) {
     const { t } = useTranslation();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [location, setLocation] = useState('');
     const [images, setImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
     const [viewerIndex, setViewerIndex] = useState(null); // null = closed
@@ -25,16 +27,18 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
     useModalDraft(
         draftKey,
         isOpen,
-        { name, description, images },
+        { name, description, location, images },
         (draft) => {
             setName(draft.name || '');
             setDescription(draft.description || '');
+            setLocation(draft.location || '');
             setImages(draft.images || []);
             setImagePreviews(refsToThumbs(draft.images || []));
         },
         () => ({
             name: box?.name || '',
             description: box?.description || '',
+            location: box?.location || '',
             // Refs ({id, thumb}) for existing images; new captures append {thumb, full}.
             images: getImageRefs(box)
         })
@@ -96,7 +100,7 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         // Pass updates to parent
-        onSave({ name, description, images });
+        onSave({ name, description, location: location.trim(), images });
         clearDraft(draftKey);
         if (typeof onClose === 'function') onClose();
     };
@@ -115,6 +119,12 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm }) {
                         placeholder={t('box.namePlaceholder')}
                     />
                 </div>
+
+                <LocationInput
+                    value={location}
+                    onChange={setLocation}
+                    suggestions={knownLocations}
+                />
 
                 <div>
                     <label className="block text-sm font-medium text-muted mb-1">{t('common.description')}</label>

@@ -632,6 +632,27 @@
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
   }
+  /* Where the box physically is, overlaid bottom-left on a box card — opposite
+     the item count, on the strip of photo the gradient has already darkened.
+     It earns the space a text line under the name would have cost, and puts the
+     answer to "so where do I go?" in the grid itself. Same dark-glass treatment
+     as .badge-count; it truncates rather than pushing the count off the card. */
+  .badge-place {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    max-width: calc(100% - 3.5rem);
+  }
+  .badge-place > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   /* Footer "which box" row (item cards, all-items / search view) */
   .card-footer {
     display: flex;

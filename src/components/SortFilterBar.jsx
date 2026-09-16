@@ -2,13 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { ArrowUpDown, Tag, ChevronDown, Check } from 'lucide-react';
 import { SearchBar } from './SearchBar';
 import { useTranslation } from '../translations';
-
-const SORT_OPTIONS = [
-    { value: 'newest',    tKey: 'sort.newest'   },
-    { value: 'oldest',    tKey: 'sort.oldest'   },
-    { value: 'name-asc',  tKey: 'sort.nameAsc'  },
-    { value: 'name-desc', tKey: 'sort.nameDesc' },
-];
+import { SORT_OPTIONS } from '../utils/sortOptions';
 
 /**
  * The sticky find bar: search, sort, filter.
@@ -33,6 +27,7 @@ export function SortFilterBar({
     searchPlaceholder = '',
     filterTitle,
     specialOptions = [],
+    sortOptions = SORT_OPTIONS,
 }) {
     const { t } = useTranslation();
     const [sortOpen,   setSortOpen]   = useState(false);
@@ -59,7 +54,7 @@ export function SortFilterBar({
         return () => document.removeEventListener('keydown', handle);
     }, []);
 
-    const currentSort    = SORT_OPTIONS.find(o => o.value === sortOrder) ?? SORT_OPTIONS[0];
+    const currentSort    = sortOptions.find(o => o.value === sortOrder) ?? sortOptions[0];
     const isSortActive   = sortOrder !== 'newest';
     const isFilterActive = !!selectedTag;
     const activeSpecial  = specialOptions.find(o => o.value === selectedTag);
@@ -100,7 +95,7 @@ export function SortFilterBar({
 
                     {sortOpen && (
                         <div className="sfb__drop" role="listbox">
-                            {SORT_OPTIONS.map(opt => (
+                            {sortOptions.map(opt => (
                                 <button
                                     key={opt.value}
                                     role="option"

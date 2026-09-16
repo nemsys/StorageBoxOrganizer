@@ -6,11 +6,13 @@ import { makeDerivatives, refsToThumbs } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
 import { usePhotoCapture } from '../native/usePhotoCapture';
 import { useTranslation } from '../translations';
+import { LocationInput } from './LocationInput';
 
-export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
+export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm, knownLocations = [] }) {
     const { t } = useTranslation();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [location, setLocation] = useState('');
     const [images, setImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
     const fileInputRef = useRef(null);
@@ -22,14 +24,15 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
     useModalDraft(
         draftKey,
         isOpen,
-        { name, description, images },
+        { name, description, location, images },
         (draft) => {
             setName(draft.name || '');
             setDescription(draft.description || '');
+            setLocation(draft.location || '');
             setImages(draft.images || []);
             setImagePreviews(refsToThumbs(draft.images || []));
         },
-        () => ({ name: '', description: '', images: [] })
+        () => ({ name: '', description: '', location: '', images: [] })
     );
 
     const handleClose = () => {
@@ -88,9 +91,10 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         // pass base64 strings to parent
-        onAdd({ name, description, images });
+        onAdd({ name, description, location: location.trim(), images });
         setName('');
         setDescription('');
+        setLocation('');
         setImages([]);
         setImagePreviews([]);
         if (fileInputRef.current) fileInputRef.current.value = null;
@@ -112,6 +116,12 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm }) {
                         placeholder={t('box.namePlaceholder')}
                     />
                 </div>
+
+                <LocationInput
+                    value={location}
+                    onChange={setLocation}
+                    suggestions={knownLocations}
+                />
 
                 <div>
                     <label className="block text-sm font-medium text-muted mb-1">{t('common.description')}</label>

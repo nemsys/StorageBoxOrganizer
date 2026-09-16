@@ -21,13 +21,14 @@ import { ConfirmationDialog } from './components/ConfirmationDialog';
 import { EmptyState } from './components/EmptyState';
 import { SkeletonGrid } from './components/SkeletonGrid';
 import { AppIntro } from './components/AppIntro';
-import { ArrowLeft, PackageOpen, LogOut, Package, Edit, Trash2, Calendar, History, Plus, SearchX, WifiOff, Pencil } from 'lucide-react';
+import { ArrowLeft, PackageOpen, LogOut, Package, Edit, Trash2, Calendar, History, Plus, SearchX, WifiOff, Pencil, MapPin } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { formatDate } from './utils/dateUtils';
 import { getImageRefs, refsToThumbs, makeDerivatives } from './utils/imageUtils';
 import { SortFilterBar } from './components/SortFilterBar';
+import { BOX_SORT_OPTIONS } from './utils/sortOptions';
 import { checkForUpdate, applyUpdate } from './native/updates';
 import { hideSplash } from './native';
 import { v4 as uuidv4 } from 'uuid';
@@ -49,6 +50,7 @@ const MOCK_BOXES = [
     id: "mock-box-1",
     name: "Кутия със зимни дрехи - таван",
     description: "Пуловери, шалове и якета от миналата зима",
+    location: "Таван, рафт 1",
     image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%233b82f6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 1.1</text></svg>",
     images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%233b82f6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 1.1</text></svg>", "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%236366f1'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 1.2</text></svg>"],
     userId: "mock-user-123",
@@ -58,6 +60,7 @@ const MOCK_BOXES = [
     id: "mock-box-2",
     name: "Документи и гаранции 2019-2024",
     description: "Договори, гаранционни карти, стари сметки",
+    location: "Кабинет, шкаф",
     image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%238b5cf6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 2.1</text></svg>",
     images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%238b5cf6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 2.1</text></svg>"],
     userId: "mock-user-123",
@@ -67,6 +70,7 @@ const MOCK_BOXES = [
     id: "mock-box-3",
     name: "Инструменти",
     description: "Отвертки, клещи, свредла",
+    location: "Мазе",
     image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%230ea5e9'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 3.1</text></svg>",
     images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%230ea5e9'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 3.1</text></svg>", "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%2314b8a6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 3.2</text></svg>", "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%2322c55e'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 3.3</text></svg>"],
     userId: "mock-user-123",
@@ -368,6 +372,61 @@ function App() {
     }
   }, [user]);
 
+  // Deletes are held for a few seconds before they are written, so the toast
+  // can offer a way back. The row leaves the screen immediately either way.
+  const pendingCommits = useRef(new Map());
+
+  // What those deferred writes are about to remove. Firestore still serves the
+  // documents for as long as the write is held back, so any read landing inside
+  // the undo window would bring the deleted rows straight back — switching tabs
+  // within those few seconds was enough. Every load filters through this.
+  const pendingDeletes = useRef({ boxes: new Set(), items: new Set() });
+
+  /** The bucket a `kind:id` commit key belongs to. */
+  const deleteBucket = (kind) =>
+    kind === 'box' ? pendingDeletes.current.boxes : pendingDeletes.current.items;
+
+  const scheduleCommit = (key, commit) => {
+    const [kind, id] = key.split(':');
+    const bucket = deleteBucket(kind);
+    bucket.add(id);
+    const run = () => {
+      bucket.delete(id);
+      pendingCommits.current.delete(key);
+      commit();
+    };
+    const timer = setTimeout(run, UNDO_WINDOW_MS);
+    pendingCommits.current.set(key, { timer, commit: run });
+  };
+
+  /** Cancel a scheduled write. Returns false if it has already gone through. */
+  const cancelCommit = (key) => {
+    const entry = pendingCommits.current.get(key);
+    if (!entry) return false;
+    clearTimeout(entry.timer);
+    const [kind, id] = key.split(':');
+    deleteBucket(kind).delete(id);
+    pendingCommits.current.delete(key);
+    return true;
+  };
+
+  // Reads, with anything awaiting deletion filtered out. An item goes when its
+  // own delete is pending or when the box it sits in is on its way out. Stable
+  // identities (they close over refs only) so the listeners below can depend on
+  // them without re-subscribing on every render.
+  const loadBoxes = useCallback(async () => {
+    const list = await firebaseStorage.getBoxes();
+    return list.filter(b => !pendingDeletes.current.boxes.has(b.id));
+  }, []);
+
+  const visibleItems = useCallback((list) => list.filter(i =>
+    !pendingDeletes.current.items.has(i.id) && !pendingDeletes.current.boxes.has(i.boxId)), []);
+
+  const loadAllItems = useCallback(
+    async () => visibleItems(await firebaseStorage.getAllItems()), [visibleItems]);
+  const loadBoxItems = useCallback(
+    async (boxId) => visibleItems(await firebaseStorage.getItems(boxId)), [visibleItems]);
+
   // Browser history support
   useEffect(() => {
     const handlePopState = async (event) => {
@@ -478,61 +537,6 @@ function App() {
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, []);
-
-  // Deletes are held for a few seconds before they are written, so the toast
-  // can offer a way back. The row leaves the screen immediately either way.
-  const pendingCommits = useRef(new Map());
-
-  // What those deferred writes are about to remove. Firestore still serves the
-  // documents for as long as the write is held back, so any read landing inside
-  // the undo window would bring the deleted rows straight back — switching tabs
-  // within those few seconds was enough. Every load filters through this.
-  const pendingDeletes = useRef({ boxes: new Set(), items: new Set() });
-
-  /** The bucket a `kind:id` commit key belongs to. */
-  const deleteBucket = (kind) =>
-    kind === 'box' ? pendingDeletes.current.boxes : pendingDeletes.current.items;
-
-  const scheduleCommit = (key, commit) => {
-    const [kind, id] = key.split(':');
-    const bucket = deleteBucket(kind);
-    bucket.add(id);
-    const run = () => {
-      bucket.delete(id);
-      pendingCommits.current.delete(key);
-      commit();
-    };
-    const timer = setTimeout(run, UNDO_WINDOW_MS);
-    pendingCommits.current.set(key, { timer, commit: run });
-  };
-
-  /** Cancel a scheduled write. Returns false if it has already gone through. */
-  const cancelCommit = (key) => {
-    const entry = pendingCommits.current.get(key);
-    if (!entry) return false;
-    clearTimeout(entry.timer);
-    const [kind, id] = key.split(':');
-    deleteBucket(kind).delete(id);
-    pendingCommits.current.delete(key);
-    return true;
-  };
-
-  // Reads, with anything awaiting deletion filtered out. An item goes when its
-  // own delete is pending or when the box it sits in is on its way out. Stable
-  // identities (they close over refs only) so the listeners below can depend on
-  // them without re-subscribing on every render.
-  const loadBoxes = useCallback(async () => {
-    const list = await firebaseStorage.getBoxes();
-    return list.filter(b => !pendingDeletes.current.boxes.has(b.id));
-  }, []);
-
-  const visibleItems = useCallback((list) => list.filter(i =>
-    !pendingDeletes.current.items.has(i.id) && !pendingDeletes.current.boxes.has(i.boxId)), []);
-
-  const loadAllItems = useCallback(
-    async () => visibleItems(await firebaseStorage.getAllItems()), [visibleItems]);
-  const loadBoxItems = useCallback(
-    async (boxId) => visibleItems(await firebaseStorage.getItems(boxId)), [visibleItems]);
 
   // Leaving the page inside the undo window must not quietly resurrect what the
   // user deleted: flush anything still waiting. Firestore queues the write in
@@ -733,6 +737,7 @@ function App() {
         id,
         name: payload.name,
         description: payload.description,
+        location: payload.location || '',
         images: refs,
         image: refs[0]?.thumb || null, // Backward compatibility (thumb)
         createdAt: Date.now()
@@ -1304,7 +1309,7 @@ function App() {
     // Filter by search query
     if (boxSearchQuery) {
       const fuse = new Fuse(result, {
-        keys: ['name', 'description'],
+        keys: ['name', 'description', 'location'],
         threshold: 0.3,
       });
       result = fuse.search(boxSearchQuery).map(r => r.item);
@@ -1317,6 +1322,14 @@ function App() {
         case 'name-desc': return b.name.localeCompare(a.name);
         case 'newest': return (b.createdAt || 0) - (a.createdAt || 0);
         case 'oldest': return (a.createdAt || 0) - (b.createdAt || 0);
+        // Everything on one shelf together, and the boxes nobody has placed yet
+        // at the end — where they read as the to-do list they are.
+        case 'location': {
+          const pa = (a.location || '').trim();
+          const pb = (b.location || '').trim();
+          if (!pa !== !pb) return pa ? -1 : 1;
+          return pa.localeCompare(pb) || a.name.localeCompare(b.name);
+        }
         default: return 0;
       }
     });
@@ -1338,6 +1351,18 @@ function App() {
       handleBoxClick(box);
     }
   };
+
+  // Every place a box is already stored, offered as you type in the box modals.
+  // This is what keeps "таван" from becoming three spellings of one shelf, and
+  // it is the whole of the location "taxonomy" — see LocationInput.
+  const knownLocations = useMemo(() => {
+    const places = new Map(); // lowercased -> first spelling seen
+    boxes.forEach(box => {
+      const place = (box.location || '').trim();
+      if (place && !places.has(place.toLowerCase())) places.set(place.toLowerCase(), place);
+    });
+    return Array.from(places.values()).sort((a, b) => a.localeCompare(b));
+  }, [boxes]);
 
   // Compute all unique tags from all items (global). Normalised, so a legacy
   // "Books" and a current "books" collapse into a single entry.
@@ -1540,6 +1565,7 @@ function App() {
                   specialOptions={view === 'allItems'
                     ? [{ value: UNASSIGNED_FILTER, label: t('box.unassignedFilter') }]
                     : []}
+                  sortOptions={view === 'boxes' ? BOX_SORT_OPTIONS : undefined}
                 />
               </div>
             </div>
@@ -1692,6 +1718,14 @@ function App() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-3 text-sm text-muted">
+                    {/* First chip, and the only one that answers the question you
+                        opened the box to ask: where do I go to get this. */}
+                    {currentBox.location && (
+                      <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full border border-primary/20 flex items-center gap-1.5 max-w-full">
+                        <MapPin size={14} className="shrink-0 opacity-80" />
+                        <span className="truncate">{currentBox.location}</span>
+                      </span>
+                    )}
                     {/* Last contents change is the useful date here; fall back to
                         creation for boxes nobody has touched since packing. */}
                     <span className="bg-surface/50 px-3 py-1.5 rounded-full border border-content/15 flex items-center gap-1.5">
@@ -1820,6 +1854,7 @@ function App() {
         onClose={() => setIsAddBoxModalOpen(false)}
         onAdd={handleAddBox}
         askConfirm={askConfirm}
+        knownLocations={knownLocations}
       />
 
       <AddItemModal
@@ -1840,6 +1875,7 @@ function App() {
         onSave={handleUpdateBox}
         box={editingBox}
         askConfirm={askConfirm}
+        knownLocations={knownLocations}
       />
 
       <EditItemModal
