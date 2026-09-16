@@ -13,6 +13,8 @@ import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { ImageSlider } from './components/ImageSlider';
 import { TagManagementModal } from './components/TagManagementModal';
 import { InventoryCheckModal } from './components/InventoryCheckModal';
+import { SelectionBar } from './components/SelectionBar';
+import { BulkActionModal } from './components/BulkActionModal';
 import { SettingsMenu } from './components/SettingsMenu';
 import { OverflowMenu } from './components/OverflowMenu';
 import { ImportProgressModal } from './components/ImportProgressModal';
@@ -267,6 +269,10 @@ function App() {
 
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
   const [isInventoryCheckOpen, setIsInventoryCheckOpen] = useState(false);
+  // Re-filing a shelf is the case that made this necessary: moving ten things
+  // between boxes was ten separate edits. null = not selecting.
+  const [selectedIds, setSelectedIds] = useState(null);
+  const [bulkMode, setBulkMode] = useState(null); // 'move' | 'tag' | null
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, refs: [], name: '', startIndex: 0 });
   const [toasts, setToasts] = useState([]);
@@ -650,6 +656,7 @@ function App() {
   // Handle Box Selection
   const handleBoxClick = async (box) => {
     setCurrentBox(box);
+    setSelectedIds(null); // a selection means nothing in the list you just left
     let boxItems = [];
     if (isMockAuth()) {
       boxItems = MOCK_ITEMS.filter(i => i.boxId === box.id);
@@ -675,6 +682,7 @@ function App() {
   // flows: a reload racing their writes would bring back the deleted box.
   const goToBoxes = () => {
     setCurrentBox(null);
+    setSelectedIds(null); // a selection means nothing in the list you just left
     setView('boxes');
     setSearchQuery('');
     setBoxSearchQuery('');
@@ -1401,6 +1409,91 @@ function App() {
     return sorted;
   }, [boxes, boxSearchQuery, selectedBoxTag, boxSortOrder, allItems, itemCounts]);
 
+  // ── Selecting several items at once ────────────────────────────────────
+  const isSelecting = selectedIds !== null;
+
+  const toggleSelecting = () => setSelectedIds(prev => (prev === null ? new Set() : null));
+
+  const toggleSelected = (itemId) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId); else next.add(itemId);
+      return next;
+    });
+  };
+
+  // Acts on what is on screen, not on everything owned: selection follows the
+  // filter, so "select all" after a tag filter means "all of these".
+  const selectAllVisible = (visible) => setSelectedIds(new Set(visible.map(i => i.id)));
+
+  const applyBulk = async (patch, localPatch, toastKey) => {
+    const ids = Array.from(selectedIds || []);
+    if (ids.length === 0) return;
+
+    // Which boxes are affected — both the ones losing items and the ones
+    // gaining them — so their "contents changed" stamps stay honest.
+    const touched = new Set();
+    [...allItems, ...items].forEach(i => { if (ids.includes(i.id) && i.boxId) touched.add(i.boxId); });
+
+    const apply = (list) => list.map(i => (ids.includes(i.id) ? { ...i, ...localPatch(i) } : i));
+    setAllItems(apply);
+    setItems(apply);
+    setSelectedIds(null);
+
+    try {
+      await firebaseStorage.bulkUpdateItems(ids, patch);
+      const after = localPatch({});
+      if (after.boxId !== undefined && after.boxId) touched.add(after.boxId);
+      await touchBoxes(...touched);
+      addToast(t(toastKey, { count: ids.length }), 'success');
+    } catch (err) {
+      console.error('Bulk update failed', err);
+      refreshData(); // Revert
+      addToast(t('select.failed'), 'error');
+    }
+  };
+
+  const handleBulkMove = (boxId) =>
+    applyBulk(() => ({ boxId }), () => ({ boxId }), 'select.movedToast');
+
+  const handleBulkTag = (tags) =>
+    applyBulk(
+      (data) => ({ tags: normalizeTags([...(data.tags || []), ...tags]) }),
+      (item) => ({ tags: normalizeTags([...(item.tags || []), ...tags]) }),
+      'select.taggedToast'
+    );
+
+  // No undo here, unlike the single delete: the toast can offer one way back,
+  // not one per row, and a partial undo of a bulk delete is worse than none.
+  // So this one asks first and names the number.
+  const handleBulkDelete = () => {
+    const ids = Array.from(selectedIds || []);
+    if (ids.length === 0) return;
+    askConfirm({
+      title: t('select.deleteTitle'),
+      message: t('select.deleteMessage', { count: ids.length }),
+      type: 'danger',
+      onConfirm: async () => {
+        const touched = new Set();
+        [...allItems, ...items].forEach(i => { if (ids.includes(i.id) && i.boxId) touched.add(i.boxId); });
+
+        setAllItems(prev => prev.filter(i => !ids.includes(i.id)));
+        setItems(prev => prev.filter(i => !ids.includes(i.id)));
+        setSelectedIds(null);
+
+        try {
+          await Promise.all(ids.map(id => firebaseStorage.deleteItem(id)));
+          await touchBoxes(...touched);
+          addToast(t('select.deletedToast', { count: ids.length }), 'success');
+        } catch (err) {
+          console.error('Bulk delete failed', err);
+          refreshData(); // Revert
+          addToast(t('select.failed'), 'error');
+        }
+      }
+    });
+  };
+
   // Everything that carries tags, for the places that reason about the tag
   // vocabulary as a whole rather than about boxes or items specifically.
   const taggedEntities = useMemo(() => [...allItems, ...boxes], [allItems, boxes]);
@@ -1505,9 +1598,15 @@ function App() {
     return Array.from(tagSet).sort();
   }, [view, items]);
 
+  // What "select all" means: the rows actually on screen after the filters, not
+  // everything owned. Selecting follows the filter, which is the only reading
+  // that makes "filter to a tag, then select all" do what it looks like.
+  const visibleItemsForSelection = view === 'items' ? boxViewItems : allItemsDisplayItems;
+
   // Handle List All Items
   const handleListAllItems = async () => {
     setCurrentBox(null);
+    setSelectedIds(null); // a selection means nothing in the list you just left
     const allItems = isMockAuth() ? MOCK_ITEMS : await loadAllItems();
     const sortedItems = [...allItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     setItems(sortedItems);
@@ -1657,6 +1756,8 @@ function App() {
                     ? [{ value: UNASSIGNED_FILTER, label: t('box.unassignedFilter') }]
                     : []}
                   sortOptions={view === 'boxes' ? BOX_SORT_OPTIONS : undefined}
+                  onToggleSelect={view === 'allItems' ? toggleSelecting : undefined}
+                  isSelecting={isSelecting}
                 />
               </div>
             </div>
@@ -1863,6 +1964,8 @@ function App() {
                     onSearchChange={setSearchQuery}
                     searchPlaceholder={t('item.searchInBox')}
                     filterTitle={t('tags.itemFilterTitle')}
+                    onToggleSelect={toggleSelecting}
+                    isSelecting={isSelecting}
                   />
                 </div>
               </div>
@@ -1894,6 +1997,9 @@ function App() {
                 onEditItem={handleEditItem}
                 onImageClick={handleImageClick}
                 onTagClick={handleTagClick}
+                selectable={isSelecting}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelected}
               />
             )}
           </>
@@ -1934,6 +2040,9 @@ function App() {
                 onBoxClick={handleBoxClickFromSearch}
                 onImageClick={handleImageClick}
                 onTagClick={handleTagClick}
+                selectable={isSelecting}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelected}
               />
             )}
           </>
@@ -2048,7 +2157,7 @@ function App() {
 
       {/* Floating Action Button (FAB) */}
       <AnimatePresence>
-        {user && (view === 'boxes' || view === 'allItems' || (view === 'items' && items.length > 0)) && (
+        {user && !isSelecting && (view === 'boxes' || view === 'allItems' || (view === 'items' && items.length > 0)) && (
           <motion.button
             key="fab"
             initial={{ opacity: 0, scale: 0.5, y: 50 }}
@@ -2071,6 +2180,33 @@ function App() {
           </motion.button>
         )}
       </AnimatePresence>
+
+      {/* Selection toolbar — takes the FAB's place at the bottom of the screen. */}
+      <AnimatePresence>
+        {isSelecting && (
+          <SelectionBar
+            key="selection-bar"
+            count={selectedIds.size}
+            total={visibleItemsForSelection.length}
+            onSelectAll={() => selectAllVisible(visibleItemsForSelection)}
+            onMove={() => setBulkMode('move')}
+            onTag={() => setBulkMode('tag')}
+            onDelete={handleBulkDelete}
+            onCancel={() => setSelectedIds(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <BulkActionModal
+        key={bulkMode || 'closed'}
+        mode={bulkMode}
+        count={selectedIds?.size || 0}
+        boxes={boxes}
+        availableTags={tagsByUse}
+        onClose={() => setBulkMode(null)}
+        onMove={handleBulkMove}
+        onTag={handleBulkTag}
+      />
 
       <ConfirmationDialog
         isOpen={confirmDialog.isOpen}

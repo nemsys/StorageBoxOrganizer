@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ArrowUpDown, Tag, ChevronDown, Check } from 'lucide-react';
+import { ArrowUpDown, Tag, ChevronDown, Check, ListChecks } from 'lucide-react';
 import { SearchBar } from './SearchBar';
 import { useTranslation } from '../translations';
 import { SORT_OPTIONS } from '../utils/sortOptions';
@@ -28,6 +28,8 @@ export function SortFilterBar({
     filterTitle,
     specialOptions = [],
     sortOptions = SORT_OPTIONS,
+    onToggleSelect,
+    isSelecting = false,
 }) {
     const { t } = useTranslation();
     const [sortOpen,   setSortOpen]   = useState(false);
@@ -77,6 +79,20 @@ export function SortFilterBar({
             )}
 
             <div className="sfb__controls">
+                {/* ── Select pill ── icon only: it is a mode switch, not a
+                    setting, and the row has two labelled pills already. */}
+                {onToggleSelect && (
+                    <button
+                        onClick={onToggleSelect}
+                        aria-pressed={isSelecting}
+                        aria-label={t('select.start')}
+                        title={t('select.start')}
+                        className={`sfb__pill sfb__pill--icon ${isSelecting ? 'sfb__pill--on' : ''}`}
+                    >
+                        <ListChecks size={14} strokeWidth={2.5} />
+                    </button>
+                )}
+
                 {/* ── Sort pill ── */}
                 <div className="sfb__pill-wrap" ref={sortRef}>
                     <button

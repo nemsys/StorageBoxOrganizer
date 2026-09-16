@@ -10,7 +10,8 @@ import {
   query,
   where,
   orderBy,
-  getDoc
+  getDoc,
+  writeBatch
 } from 'firebase/firestore';
 import { makeDerivatives } from '../utils/imageUtils';
 import { imageCache } from '../utils/imageCache';
@@ -369,6 +370,46 @@ export const firebaseStorage = {
     };
     queueWrite(setDoc(itemRef, updatedItem));
     return updatedItem;
+  },
+
+  /**
+   * Apply the same change to many items at once.
+   *
+   * `patch(data)` returns the fields to merge for a given item, so a caller can
+   * express "move these into that box" and "add this tag to these" through one
+   * path. Batched in chunks of 400 — Firestore caps a batch at 500 operations,
+   * and one batch per chunk is the difference between a single round trip and
+   * one per item when someone re-files a shelf.
+   */
+  bulkUpdateItems: async (ids, patch) => {
+    const uid = getUserId();
+    const wanted = (ids || []).filter(Boolean);
+    if (wanted.length === 0) return [];
+
+    const snaps = await Promise.all(
+      wanted.map((id) => getDoc(doc(db, ITEMS_COLL, id)))
+    );
+    const updated = [];
+
+    for (let i = 0; i < snaps.length; i += 400) {
+      const batch = writeBatch(db);
+      snaps.slice(i, i + 400).forEach((snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        const next = {
+          ...data,
+          ...patch(data),
+          userId: uid,
+          id: snap.id,
+          modifiedAt: Date.now(),
+        };
+        batch.set(doc(db, ITEMS_COLL, snap.id), next);
+        updated.push(next);
+      });
+      queueWrite(batch.commit());
+    }
+
+    return updated;
   },
 
   deleteItem: async (id) => {
