@@ -6,6 +6,8 @@ import { useTranslation } from '../translations';
 const AUTHOR = 'SciScend';
 const AUTHOR_URL = 'https://sciscend.com/';
 const CONTACT_EMAIL = 'ivapopova@sciscend.com';
+// The public landing page (site/): what the app does, install steps, how to get access.
+const SITE_URL = 'https://nemsys.github.io/StorageBoxOrganizer/';
 
 /**
  * Version and authorship, reachable from the settings menu.
@@ -16,12 +18,14 @@ const CONTACT_EMAIL = 'ivapopova@sciscend.com';
  * reports a problem and you need to know exactly which deploy they are on.
  */
 export function AboutModal({ isOpen, onClose }) {
-    const { t } = useTranslation();
+    const { t, lang } = useTranslation();
 
     const rows = [
         { label: t('about.version'), value: APP_VERSION },
         { label: t('about.build'), value: BUILD_ID },
         { label: t('about.author'), value: AUTHOR, href: AUTHOR_URL },
+        // Below the author, so SciScend keeps its place; opens in the app's language.
+        { label: t('about.website'), value: t('about.websiteLink'), href: lang === 'en' ? `${SITE_URL}?lang=en` : SITE_URL },
     ];
 
     return (

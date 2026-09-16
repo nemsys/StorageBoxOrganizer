@@ -217,6 +217,8 @@
   "about.build": "Build",
   "about.author": "Made by",
   "about.contact": "Contact",
+  "about.website": "Website",
+  "about.websiteLink": "User guide",
 
   "tags.title": "Manage {{^tag.many}}",
   "tags.found_one": "{{count}} {{tag.one}} {{tag.found}}",
