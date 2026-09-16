@@ -373,43 +373,28 @@ export const firebaseStorage = {
   },
 
   /**
-   * Apply the same change to many items at once.
+   * Apply changes to many items at once, as `{ [id]: fieldsToMerge }`.
    *
-   * `patch(data)` returns the fields to merge for a given item, so a caller can
-   * express "move these into that box" and "add this tag to these" through one
-   * path. Batched in chunks of 400 — Firestore caps a batch at 500 operations,
-   * and one batch per chunk is the difference between a single round trip and
-   * one per item when someone re-files a shelf.
+   * The caller computes the fields from the copy of the item already in local
+   * state, so nothing is read back first: on the Spark plan, N reads to write N
+   * documents is a quota bill for information the screen is already showing.
+   * `update` merges, so only the named fields are touched — no need to carry
+   * the whole document through a `set`.
+   *
+   * Batched in chunks of 400; Firestore caps a batch at 500 operations.
    */
-  bulkUpdateItems: async (ids, patch) => {
-    const uid = getUserId();
-    const wanted = (ids || []).filter(Boolean);
-    if (wanted.length === 0) return [];
+  bulkUpdateItems: async (updatesById) => {
+    getUserId();
+    const entries = Object.entries(updatesById || {});
+    if (entries.length === 0) return;
 
-    const snaps = await Promise.all(
-      wanted.map((id) => getDoc(doc(db, ITEMS_COLL, id)))
-    );
-    const updated = [];
-
-    for (let i = 0; i < snaps.length; i += 400) {
+    for (let i = 0; i < entries.length; i += 400) {
       const batch = writeBatch(db);
-      snaps.slice(i, i + 400).forEach((snap) => {
-        if (!snap.exists()) return;
-        const data = snap.data();
-        const next = {
-          ...data,
-          ...patch(data),
-          userId: uid,
-          id: snap.id,
-          modifiedAt: Date.now(),
-        };
-        batch.set(doc(db, ITEMS_COLL, snap.id), next);
-        updated.push(next);
+      entries.slice(i, i + 400).forEach(([id, fields]) => {
+        batch.update(doc(db, ITEMS_COLL, id), { ...fields, modifiedAt: Date.now() });
       });
       queueWrite(batch.commit());
     }
-
-    return updated;
   },
 
   deleteItem: async (id) => {

@@ -1428,26 +1428,39 @@ function App() {
   // filter, so "select all" after a tag filter means "all of these".
   const selectAllVisible = (visible) => setSelectedIds(new Set(visible.map(i => i.id)));
 
-  const applyBulk = async (patch, localPatch, toastKey) => {
-    const ids = Array.from(selectedIds || []);
-    if (ids.length === 0) return;
+  // `fieldsFor(item)` returns what that item ends up with, computed from the
+  // copy already in local state — the list on screen is the same data, so
+  // nothing needs reading back from Firestore before writing.
+  const applyBulk = async (fieldsFor, toastKey) => {
+    const chosen = new Set(selectedIds || []);
+    if (chosen.size === 0) return;
 
-    // Which boxes are affected — both the ones losing items and the ones
-    // gaining them — so their "contents changed" stamps stay honest.
+    const known = new Map();
+    [...allItems, ...items].forEach(i => { if (chosen.has(i.id)) known.set(i.id, i); });
+
+    // Which boxes are affected — the ones losing items and the ones gaining
+    // them — so their "contents changed" stamps stay honest.
     const touched = new Set();
-    [...allItems, ...items].forEach(i => { if (ids.includes(i.id) && i.boxId) touched.add(i.boxId); });
+    const updates = {};
+    known.forEach((item, id) => {
+      if (item.boxId) touched.add(item.boxId);
+      const fields = fieldsFor(item);
+      updates[id] = fields;
+      if (fields.boxId) touched.add(fields.boxId);
+    });
 
-    const apply = (list) => list.map(i => (ids.includes(i.id) ? { ...i, ...localPatch(i) } : i));
+    const count = Object.keys(updates).length;
+    if (count === 0) return;
+
+    const apply = (list) => list.map(i => (updates[i.id] ? { ...i, ...updates[i.id] } : i));
     setAllItems(apply);
     setItems(apply);
     setSelectedIds(null);
 
     try {
-      await firebaseStorage.bulkUpdateItems(ids, patch);
-      const after = localPatch({});
-      if (after.boxId !== undefined && after.boxId) touched.add(after.boxId);
+      await firebaseStorage.bulkUpdateItems(updates);
       await touchBoxes(...touched);
-      addToast(t(toastKey, { count: ids.length }), 'success');
+      addToast(t(toastKey, { count }), 'success');
     } catch (err) {
       console.error('Bulk update failed', err);
       refreshData(); // Revert
@@ -1455,12 +1468,10 @@ function App() {
     }
   };
 
-  const handleBulkMove = (boxId) =>
-    applyBulk(() => ({ boxId }), () => ({ boxId }), 'select.movedToast');
+  const handleBulkMove = (boxId) => applyBulk(() => ({ boxId }), 'select.movedToast');
 
   const handleBulkTag = (tags) =>
     applyBulk(
-      (data) => ({ tags: normalizeTags([...(data.tags || []), ...tags]) }),
       (item) => ({ tags: normalizeTags([...(item.tags || []), ...tags]) }),
       'select.taggedToast'
     );
