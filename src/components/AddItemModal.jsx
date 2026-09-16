@@ -3,7 +3,7 @@ import Fuse from 'fuse.js';
 import { Modal } from './Modal';
 import { CameraCaptureModal } from './CameraCaptureModal';
 import { TagInput } from './TagInput';
-import { Upload, Trash2, Search, Camera, Package, X, Check } from 'lucide-react';
+import { Upload, Trash2, Search, Camera, Package, X, Check, Plus } from 'lucide-react';
 import { makeDerivatives, refsToThumbs, getImageRefs } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
 import { usePhotoCapture } from '../native/usePhotoCapture';
@@ -21,7 +21,12 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
     const [tags, setTags] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedExistingId, setSelectedExistingId] = useState('');
+    // How many have gone in during this sitting. Packing is a burst, and the
+    // count is the only sign the burst is working — each save empties the form.
+    const [addedCount, setAddedCount] = useState(0);
     const fileInputRef = useRef(null);
+    const formRef = useRef(null);
+    const nameInputRef = useRef(null);
 
     const draftKey = 'add-item';
 
@@ -32,6 +37,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
             setMode('create');
             setSearchQuery('');
             setSelectedExistingId('');
+            setAddedCount(0);
         }
     }, [isOpen]);
 
@@ -142,26 +148,48 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
         }
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    // `keepOpen` is the difference between filing one thing and packing a box.
+    // Twenty items go into a box in one sitting, and every one of them used to
+    // cost a full modal round trip; the box and the tags they share are exactly
+    // what should survive the save, so only the item's own fields are cleared.
+    const submit = (keepOpen) => {
         onAdd({
             name,
             description,
             images,
             tags: parseTagInput(tags),
-            boxId: selectedBoxId
+            boxId: selectedBoxId,
+            keepOpen
         });
-        // reset
-        // reset
+
         setName('');
         setDescription('');
         setImages([]);
         setImagePreviews([]);
+        if (fileInputRef.current) fileInputRef.current.value = null;
+
+        if (keepOpen) {
+            setAddedCount(n => n + 1);
+            nameInputRef.current?.focus();
+            return;
+        }
+
         setTags('');
         setSelectedBoxId('');
-        if (fileInputRef.current) fileInputRef.current.value = null;
         clearDraft(draftKey);
         if (typeof onClose === 'function') onClose();
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        submit(false);
+    };
+
+    // Not a submit button, so nothing enforces `required` on the name for us —
+    // hand that back to the browser rather than saving a nameless item.
+    const handleAddAnother = () => {
+        if (formRef.current && !formRef.current.reportValidity()) return;
+        submit(true);
     };
 
     const getBoxName = (boxId) => {
@@ -198,10 +226,11 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
 
             {/* Create New Mode */}
             {mode === 'create' && (
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-muted mb-1">{t('common.name')}</label>
                         <input
+                            ref={nameInputRef}
                             type="text"
                             required
                             value={name}
@@ -318,8 +347,19 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     </div>
 
 
-                    <div className="pt-4 flex justify-end gap-3">
-                        <button type="button" onClick={handleClose} className="btn btn-ghost">{t('common.cancel')}</button>
+                    <div className="pt-4 flex flex-wrap items-center justify-end gap-3">
+                        {addedCount > 0 && (
+                            <span className="mr-auto text-xs font-semibold text-success" aria-live="polite">
+                                {t('item.addedCount', { count: addedCount })}
+                            </span>
+                        )}
+                        <button type="button" onClick={handleClose} className="btn btn-ghost">
+                            {addedCount > 0 ? t('common.done') : t('common.cancel')}
+                        </button>
+                        <button type="button" onClick={handleAddAnother} className="btn btn-secondary">
+                            <Plus size={16} />
+                            {t('item.addAnother')}
+                        </button>
                         <button type="submit" className="btn btn-primary">{t('item.add')}</button>
                     </div>
                 </form>

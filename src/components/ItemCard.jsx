@@ -1,4 +1,4 @@
-import { Package, PackageMinus, Edit, Trash2, Tag, ChevronRight, ZoomIn } from 'lucide-react';
+import { Package, PackageMinus, Edit, Trash2, Tag, ChevronRight, ZoomIn, Check } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 import { OverflowMenu } from './OverflowMenu';
 import { getImageRefs, refsToThumbs } from '../utils/imageUtils';
@@ -9,7 +9,7 @@ import { useTranslation } from '../translations';
 const VISIBLE_TAGS = 2;
 const VISIBLE_TAGS_NARROW = 1;
 
-export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onBoxClick, onImageClick, onTagClick }) {
+export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onBoxClick, onImageClick, onTagClick, selectable = false, selected = false, onToggleSelect }) {
     const { t } = useTranslation();
     // Browse from inline thumbnails; full-res is fetched on demand (fullscreen).
     const imageRefs = getImageRefs(item);
@@ -18,8 +18,14 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
     const tags = item.tags || [];
     const shownTags = tags.slice(0, VISIBLE_TAGS);
 
-    // The whole card opens the item, exactly as a box card opens the box.
-    const open = () => { if (typeof onEdit === 'function') onEdit(item); };
+    // The whole card opens the item, exactly as a box card opens the box —
+    // except while selecting, when the same tap picks it instead. One gesture
+    // with one meaning at a time: a checkbox you must hit precisely is the
+    // wrong target on a 156px card.
+    const open = () => {
+        if (selectable) { onToggleSelect?.(item.id); return; }
+        if (typeof onEdit === 'function') onEdit(item);
+    };
 
     const menuItems = [
         onEdit && { id: 'edit', label: t('item.edit'), icon: <Edit size={18} />, onClick: () => onEdit(item) },
@@ -35,7 +41,8 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
             role="button"
             tabIndex={0}
             aria-label={onEdit ? t('item.editAria', { name: item.name }) : item.name}
-            className="card group cursor-pointer flex flex-col h-full relative overflow-hidden bg-base"
+            aria-pressed={selectable ? selected : undefined}
+            className={`card group cursor-pointer flex flex-col h-full relative overflow-hidden bg-base ${selected ? 'card--selected' : ''}`}
         >
             {/* Image Area — same contract as the box card: the photo opens the
                 entity, the two visible corner buttons do the rest. The in-card
@@ -60,7 +67,7 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                     </div>
                 )}
 
-                {hasImages && onImageClick && (
+                {hasImages && onImageClick && !selectable && (
                     <button
                         type="button"
                         onClick={(e) => {
@@ -78,7 +85,13 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                 {/* Actions live over the photo, opposite the zoom button. Beside
                     the title they were 42px of a 156px card, which cut the name
                     to about eight Cyrillic characters. */}
-                {menuItems.length > 0 && (
+                {selectable && (
+                    <span className={`card-check ${selected ? 'card-check--on' : ''}`} aria-hidden="true">
+                        {selected && <Check size={14} strokeWidth={3} />}
+                    </span>
+                )}
+
+                {!selectable && menuItems.length > 0 && (
                     <OverflowMenu
                         label={t('item.actions')}
                         align="left"

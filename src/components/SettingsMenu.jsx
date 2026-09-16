@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw, ImageDown, LogOut, Languages, Info, RotateCw, User } from 'lucide-react';
+import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw, ImageDown, LogOut, Languages, Info, RotateCw, User, ClipboardCheck, Printer } from 'lucide-react';
 import { useTranslation, LANGUAGES } from '../translations';
 
-export const SettingsMenu = ({ email, onRefresh, onManageTags, onExport, onImport, onOptimizeImages, theme, onToggleTheme, onCheckUpdates, onAbout, onSignOut }) => {
+export const SettingsMenu = ({ email, onRefresh, onManageTags,
+  onInventoryCheck,
+  onPrintLabels, onExport, onImport, onOptimizeImages, theme, onToggleTheme, onCheckUpdates, onAbout, onSignOut }) => {
   const { t, lang, setLang } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -80,6 +82,28 @@ export const SettingsMenu = ({ email, onRefresh, onManageTags, onExport, onImpor
         setIsOpen(false);
       }
     },
+    ...(onInventoryCheck ? [
+      {
+        id: 'inventory-check',
+        label: t('settings.inventoryCheck'),
+        icon: <ClipboardCheck size={18} />,
+        onClick: () => {
+          onInventoryCheck();
+          setIsOpen(false);
+        }
+      }
+    ] : []),
+    ...(onPrintLabels ? [
+      {
+        id: 'print-labels',
+        label: t('settings.printLabels'),
+        icon: <Printer size={18} />,
+        onClick: () => {
+          onPrintLabels();
+          setIsOpen(false);
+        }
+      }
+    ] : []),
     ...(onOptimizeImages ? [
       {
         id: 'optimize-images',

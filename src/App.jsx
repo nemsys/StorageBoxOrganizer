@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Fuse from 'fuse.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BoxList } from './components/BoxList';
@@ -12,6 +12,10 @@ import { AccessPendingScreen } from './components/AccessPendingScreen';
 import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { ImageSlider } from './components/ImageSlider';
 import { TagManagementModal } from './components/TagManagementModal';
+import { InventoryCheckModal } from './components/InventoryCheckModal';
+import { LabelSheetModal } from './components/LabelSheetModal';
+import { SelectionBar } from './components/SelectionBar';
+import { BulkActionModal } from './components/BulkActionModal';
 import { SettingsMenu } from './components/SettingsMenu';
 import { OverflowMenu } from './components/OverflowMenu';
 import { ImportProgressModal } from './components/ImportProgressModal';
@@ -21,13 +25,14 @@ import { ConfirmationDialog } from './components/ConfirmationDialog';
 import { EmptyState } from './components/EmptyState';
 import { SkeletonGrid } from './components/SkeletonGrid';
 import { AppIntro } from './components/AppIntro';
-import { ArrowLeft, PackageOpen, LogOut, Package, Edit, Trash2, Calendar, History, Plus, SearchX, WifiOff, Pencil } from 'lucide-react';
+import { ArrowLeft, PackageOpen, LogOut, Package, Edit, Trash2, Calendar, History, Plus, SearchX, WifiOff, Pencil, MapPin } from 'lucide-react';
 import { firebaseStorage } from './services/firebaseStorage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { formatDate } from './utils/dateUtils';
 import { getImageRefs, refsToThumbs, makeDerivatives } from './utils/imageUtils';
 import { SortFilterBar } from './components/SortFilterBar';
+import { BOX_SORT_OPTIONS } from './utils/sortOptions';
 import { checkForUpdate, applyUpdate } from './native/updates';
 import { hideSplash } from './native';
 import { v4 as uuidv4 } from 'uuid';
@@ -49,6 +54,8 @@ const MOCK_BOXES = [
     id: "mock-box-1",
     name: "Кутия със зимни дрехи - таван",
     description: "Пуловери, шалове и якета от миналата зима",
+    location: "Таван, рафт 1",
+    tags: ["зимно", "дрехи"],
     image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%233b82f6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 1.1</text></svg>",
     images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%233b82f6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 1.1</text></svg>", "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%236366f1'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 1.2</text></svg>"],
     userId: "mock-user-123",
@@ -58,6 +65,8 @@ const MOCK_BOXES = [
     id: "mock-box-2",
     name: "Документи и гаранции 2019-2024",
     description: "Договори, гаранционни карти, стари сметки",
+    location: "Кабинет, шкаф",
+    tags: ["документи"],
     image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%238b5cf6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 2.1</text></svg>",
     images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%238b5cf6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 2.1</text></svg>"],
     userId: "mock-user-123",
@@ -67,6 +76,7 @@ const MOCK_BOXES = [
     id: "mock-box-3",
     name: "Инструменти",
     description: "Отвертки, клещи, свредла",
+    location: "Мазе",
     image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%230ea5e9'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 3.1</text></svg>",
     images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%230ea5e9'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 3.1</text></svg>", "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%2314b8a6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 3.2</text></svg>", "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%2322c55e'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 3.3</text></svg>"],
     userId: "mock-user-123",
@@ -259,6 +269,12 @@ function App() {
   const [selectedBoxTag, setSelectedBoxTag] = useState('');
 
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
+  const [isInventoryCheckOpen, setIsInventoryCheckOpen] = useState(false);
+  const [isLabelSheetOpen, setIsLabelSheetOpen] = useState(false);
+  // Re-filing a shelf is the case that made this necessary: moving ten things
+  // between boxes was ten separate edits. null = not selecting.
+  const [selectedIds, setSelectedIds] = useState(null);
+  const [bulkMode, setBulkMode] = useState(null); // 'move' | 'tag' | null
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, refs: [], name: '', startIndex: 0 });
   const [toasts, setToasts] = useState([]);
@@ -368,6 +384,61 @@ function App() {
     }
   }, [user]);
 
+  // Deletes are held for a few seconds before they are written, so the toast
+  // can offer a way back. The row leaves the screen immediately either way.
+  const pendingCommits = useRef(new Map());
+
+  // What those deferred writes are about to remove. Firestore still serves the
+  // documents for as long as the write is held back, so any read landing inside
+  // the undo window would bring the deleted rows straight back — switching tabs
+  // within those few seconds was enough. Every load filters through this.
+  const pendingDeletes = useRef({ boxes: new Set(), items: new Set() });
+
+  /** The bucket a `kind:id` commit key belongs to. */
+  const deleteBucket = (kind) =>
+    kind === 'box' ? pendingDeletes.current.boxes : pendingDeletes.current.items;
+
+  const scheduleCommit = (key, commit) => {
+    const [kind, id] = key.split(':');
+    const bucket = deleteBucket(kind);
+    bucket.add(id);
+    const run = () => {
+      bucket.delete(id);
+      pendingCommits.current.delete(key);
+      commit();
+    };
+    const timer = setTimeout(run, UNDO_WINDOW_MS);
+    pendingCommits.current.set(key, { timer, commit: run });
+  };
+
+  /** Cancel a scheduled write. Returns false if it has already gone through. */
+  const cancelCommit = (key) => {
+    const entry = pendingCommits.current.get(key);
+    if (!entry) return false;
+    clearTimeout(entry.timer);
+    const [kind, id] = key.split(':');
+    deleteBucket(kind).delete(id);
+    pendingCommits.current.delete(key);
+    return true;
+  };
+
+  // Reads, with anything awaiting deletion filtered out. An item goes when its
+  // own delete is pending or when the box it sits in is on its way out. Stable
+  // identities (they close over refs only) so the listeners below can depend on
+  // them without re-subscribing on every render.
+  const loadBoxes = useCallback(async () => {
+    const list = await firebaseStorage.getBoxes();
+    return list.filter(b => !pendingDeletes.current.boxes.has(b.id));
+  }, []);
+
+  const visibleItems = useCallback((list) => list.filter(i =>
+    !pendingDeletes.current.items.has(i.id) && !pendingDeletes.current.boxes.has(i.boxId)), []);
+
+  const loadAllItems = useCallback(
+    async () => visibleItems(await firebaseStorage.getAllItems()), [visibleItems]);
+  const loadBoxItems = useCallback(
+    async (boxId) => visibleItems(await firebaseStorage.getItems(boxId)), [visibleItems]);
+
   // Browser history support
   useEffect(() => {
     const handlePopState = async (event) => {
@@ -384,9 +455,9 @@ function App() {
             setBoxes(MOCK_BOXES);
             setItems(MOCK_ITEMS);
           } else if (user) {
-            const loadedBoxes = await firebaseStorage.getBoxes();
+            const loadedBoxes = await loadBoxes();
             setBoxes(loadedBoxes);
-            const allItems = await firebaseStorage.getAllItems();
+            const allItems = await loadAllItems();
             setItems(allItems);
           }
         } else if (historyView === 'items' && boxId) {
@@ -394,14 +465,14 @@ function App() {
           setCurrentBox(box);
           setItems(isMockAuth()
             ? MOCK_ITEMS.filter(i => i.boxId === boxId)
-            : await firebaseStorage.getItems(boxId));
+            : await loadBoxItems(boxId));
           setView('items');
           setSearchQuery('');
           setBoxSearchQuery('');
           setSelectedTag('');
         } else if (historyView === 'allItems') {
           setCurrentBox(null);
-          setItems(isMockAuth() ? MOCK_ITEMS : await firebaseStorage.getAllItems());
+          setItems(isMockAuth() ? MOCK_ITEMS : await loadAllItems());
           setView('allItems');
           setSearchQuery('');
           setBoxSearchQuery('');
@@ -412,13 +483,21 @@ function App() {
 
     window.addEventListener('popstate', handlePopState);
 
-    // Initialize history state if not set
+    // Initialize history state if not set. The hash has to be carried over:
+    // this runs on mount, before the boxes are loaded, and writing only
+    // pathname + search dropped `#box/<id>` — so by the time the effect below
+    // looked for a deep link there was nothing left to find, and every shared
+    // or reopened box link landed on the box list instead.
     if (!window.history.state) {
-      window.history.replaceState({ view: 'boxes' }, '', window.location.pathname + window.location.search);
+      window.history.replaceState(
+        { view: 'boxes' },
+        '',
+        window.location.pathname + window.location.search + window.location.hash
+      );
     }
 
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [user, boxes]);
+  }, [user, boxes, loadBoxes, loadAllItems, loadBoxItems]);
 
   // Handle Initial Hash on Load
   useEffect(() => {
@@ -479,27 +558,6 @@ function App() {
     };
   }, []);
 
-  // Deletes are held for a few seconds before they are written, so the toast
-  // can offer a way back. The row leaves the screen immediately either way.
-  const pendingCommits = useRef(new Map());
-
-  const scheduleCommit = (key, commit) => {
-    const timer = setTimeout(() => {
-      pendingCommits.current.delete(key);
-      commit();
-    }, UNDO_WINDOW_MS);
-    pendingCommits.current.set(key, { timer, commit });
-  };
-
-  /** Cancel a scheduled write. Returns false if it has already gone through. */
-  const cancelCommit = (key) => {
-    const entry = pendingCommits.current.get(key);
-    if (!entry) return false;
-    clearTimeout(entry.timer);
-    pendingCommits.current.delete(key);
-    return true;
-  };
-
   // Leaving the page inside the undo window must not quietly resurrect what the
   // user deleted: flush anything still waiting. Firestore queues the write in
   // its offline layer, so it survives the unload.
@@ -550,16 +608,16 @@ function App() {
     setDataLoading(true);
     lastSyncAt.current = Date.now();
     try {
-      const loadedBoxes = await firebaseStorage.getBoxes();
+      const loadedBoxes = await loadBoxes();
       setBoxes(loadedBoxes);
 
       // Always load all items for selection purposes
-      const allItemsData = await firebaseStorage.getAllItems();
+      const allItemsData = await loadAllItems();
       const sortedAllItems = [...allItemsData].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       setAllItems(sortedAllItems);
 
       if (currentBox) {
-        const loadedItems = await firebaseStorage.getItems(currentBox.id);
+        const loadedItems = await loadBoxItems(currentBox.id);
         const sortedItems = [...loadedItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         setItems(sortedItems);
       } else {
@@ -600,11 +658,12 @@ function App() {
   // Handle Box Selection
   const handleBoxClick = async (box) => {
     setCurrentBox(box);
+    setSelectedIds(null); // a selection means nothing in the list you just left
     let boxItems = [];
     if (isMockAuth()) {
       boxItems = MOCK_ITEMS.filter(i => i.boxId === box.id);
     } else {
-      boxItems = await firebaseStorage.getItems(box.id);
+      boxItems = await loadBoxItems(box.id);
     }
     const sortedItems = [...boxItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     setItems(sortedItems);
@@ -625,6 +684,7 @@ function App() {
   // flows: a reload racing their writes would bring back the deleted box.
   const goToBoxes = () => {
     setCurrentBox(null);
+    setSelectedIds(null); // a selection means nothing in the list you just left
     setView('boxes');
     setSearchQuery('');
     setBoxSearchQuery('');
@@ -699,6 +759,8 @@ function App() {
         id,
         name: payload.name,
         description: payload.description,
+        location: payload.location || '',
+        tags: payload.tags || [],
         images: refs,
         image: refs[0]?.thumb || null, // Backward compatibility (thumb)
         createdAt: Date.now()
@@ -737,7 +799,9 @@ function App() {
       // Update local state
       setItems(prev => [newItem, ...prev]);
       setAllItems(prev => [newItem, ...prev]);
-      setIsAddItemModalOpen(false);
+      // "Save & add another" keeps the form up, holding on to the box and tags
+      // the next item almost certainly shares. The modal clears its own fields.
+      if (!payload.keepOpen) setIsAddItemModalOpen(false);
       await touchBoxes(newItem.boxId);
     } catch (error) {
       console.error("Error adding item:", error);
@@ -830,16 +894,22 @@ function App() {
     });
   };
 
+  // Delete a box and everything in it. Cascading, so the confirmation names the
+  // scope — and, like an item delete, the write is deferred by the undo window:
+  // this is the most destructive thing the app can do, and once the cascade has
+  // run the items' photos are gone with them, so the only honest way back is to
+  // not have deleted yet.
   async function handleDeleteBox(id) {
-    // Cascading and immediate — name the scope, since there is no way back.
-    const doomedCount = allItems.filter(i => i.boxId === id).length;
+    const doomedItems = allItems.filter(i => i.boxId === id);
     askConfirm({
       title: t('box.deleteTitle'),
-      message: doomedCount > 0
-        ? t('box.deleteMessageCount', { count: doomedCount })
+      message: doomedItems.length > 0
+        ? t('box.deleteMessageCount', { count: doomedItems.length })
         : t('box.deleteMessageEmpty'),
       type: 'danger',
-      onConfirm: async () => {
+      onConfirm: () => {
+        const boxSnapshot = boxes.find(b => b.id === id) || currentBox;
+
         // Optimistic update
         setBoxes(prev => prev.filter(b => b.id !== id));
         setItems(prev => prev.filter(i => i.boxId !== id));
@@ -849,14 +919,27 @@ function App() {
           goToBoxes();
         }
 
-        try {
-          await firebaseStorage.deleteBox(id);
-          addToast(t('box.deletedToast'), "success");
-        } catch (err) {
-          console.error('Failed to delete box', err);
-          refreshData(); // Revert
-          addToast(t('box.deleteFailed'), "error");
-        }
+        scheduleCommit(`box:${id}`, async () => {
+          try {
+            await firebaseStorage.deleteBox(id);
+          } catch (err) {
+            console.error('Failed to delete box', err);
+            refreshData(); // Revert
+            addToast(t('box.deleteFailed'), "error");
+          }
+        });
+
+        addToast(t('box.deletedToast'), "success", {
+          duration: UNDO_WINDOW_MS,
+          actionLabel: t('common.undo'),
+          onAction: () => {
+            if (!cancelCommit(`box:${id}`) || !boxSnapshot) return;
+            setBoxes(prev => [boxSnapshot, ...prev.filter(b => b.id !== id)]);
+            const restore = (prev) => [...doomedItems, ...prev.filter(i => i.boxId !== id)];
+            setItems(restore);
+            setAllItems(restore);
+          }
+        });
       }
     });
   };
@@ -998,7 +1081,7 @@ function App() {
   // every stored spelling of the tag, not just the one the list happens to show.
   const handleRenameTag = async (oldName, newName) => {
     const canonical = normalizeTag(newName);
-    const variants = tagVariants(allItems, oldName);
+    const variants = tagVariants([...allItems, ...boxes], oldName);
     const matches = new Set(variants.map(normalizeTag));
     await firebaseStorage.renameTag(variants, canonical);
     // Update local state for all items
@@ -1011,6 +1094,8 @@ function App() {
     };
     setAllItems(prev => prev.map(updateItemTags));
     setItems(prev => prev.map(updateItemTags));
+    setBoxes(prev => prev.map(updateItemTags));
+    setCurrentBox(prev => (prev ? updateItemTags(prev) : prev));
 
     // The filter pills may still point at the old name.
     const renamePill = (prev) => (matches.has(normalizeTag(prev)) ? canonical : prev);
@@ -1019,7 +1104,7 @@ function App() {
   };
 
   const handleDeleteTag = async (tagName) => {
-    const variants = tagVariants(allItems, tagName);
+    const variants = tagVariants([...allItems, ...boxes], tagName);
     const matches = new Set(variants.map(normalizeTag));
     await firebaseStorage.deleteTag(variants);
     // Update local state for all items
@@ -1029,6 +1114,8 @@ function App() {
     };
     setAllItems(prev => prev.map(removeItemTag));
     setItems(prev => prev.map(removeItemTag));
+    setBoxes(prev => prev.map(removeItemTag));
+    setCurrentBox(prev => (prev ? removeItemTag(prev) : prev));
 
     const clearPill = (prev) => (matches.has(normalizeTag(prev)) ? '' : prev);
     setSelectedTag(clearPill);
@@ -1041,21 +1128,26 @@ function App() {
 
     try {
       const previousBoxId = findItemBoxId(itemId);
+      const snapshot = allItems.find(i => i.id === itemId);
 
       // Update the item's boxId to the current box
       const updates = { boxId: currentBox.id };
       await firebaseStorage.updateItem(itemId, updates);
 
+      // Both lists hold their own copy of the item. Re-reading only the box
+      // view left All Items showing the old box name, and the item-count badge
+      // on every box card — which is computed from allItems — wrong until the
+      // next manual refresh.
+      setAllItems(prev => prev.map(i => i.id === itemId ? { ...i, boxId: currentBox.id } : i));
+      if (view === 'items' && snapshot) {
+        setItems(prev => [{ ...snapshot, boxId: currentBox.id }, ...prev.filter(i => i.id !== itemId)]);
+      }
+
       // Both ends of the move changed contents.
       await touchBoxes(previousBoxId, currentBox.id);
-
-      // Refresh data to show the updated item in the current box
-      if (view === 'items') {
-        const boxItems = await firebaseStorage.getItems(currentBox.id);
-        setItems(boxItems);
-      }
     } catch (err) {
       console.error('Failed to move item', err);
+      refreshData(); // Revert on error
       addToast(t('item.moveFailed', { error: err.message }), "error");
     }
   };
@@ -1231,25 +1323,59 @@ function App() {
     event.target.value = ''; // Reset input
   };
 
+  // How many items each box holds. One pass over the inventory, shared by the
+  // "fullest" sort and the count badge on every card, which was recomputing it
+  // per card with a filter over the whole list.
+  const itemCounts = useMemo(() => {
+    const counts = new Map();
+    allItems.forEach(item => {
+      if (item.boxId) counts.set(item.boxId, (counts.get(item.boxId) || 0) + 1);
+    });
+    return counts;
+  }, [allItems]);
+
   // Box Search Logic
   const filteredBoxes = useMemo(() => {
     let result = boxes;
 
     // Filter by tag
     if (selectedBoxTag) {
-      result = result.filter(box => {
-        // Find if this box has any items with the selected tag
-        return allItems.some(item => item.boxId === box.id && hasTag(item, selectedBoxTag));
-      });
+      // A box matches on its own tags or on those of anything inside it. Both
+      // are true statements about the box, and requiring the user to know which
+      // kind of tag they were looking at would be a distinction without a
+      // difference — "show me the winter things" means both.
+      result = result.filter(box =>
+        hasTag(box, selectedBoxTag) ||
+        allItems.some(item => item.boxId === box.id && hasTag(item, selectedBoxTag))
+      );
     }
 
-    // Filter by search query
+    // Filter by search query. A box matches on its own fields *or* on anything
+    // inside it: "винтоверт" used to return nothing here while the screwdriver
+    // sat in a box called Инструменти, which is the one thing a person searching
+    // a list of boxes is actually trying to do. Contents hits are carried back
+    // on the box as `matchedItems`, so the card can say why it is in the list —
+    // an unexplained match is indistinguishable from a broken search.
     if (boxSearchQuery) {
-      const fuse = new Fuse(result, {
-        keys: ['name', 'description'],
+      const boxFuse = new Fuse(result, {
+        keys: ['name', 'description', 'location'],
         threshold: 0.3,
       });
-      result = fuse.search(boxSearchQuery).map(r => r.item);
+      const directHits = new Set(boxFuse.search(boxSearchQuery).map(r => r.item.id));
+
+      const itemFuse = new Fuse(allItems.filter(i => i.boxId), {
+        keys: ['name', 'description', 'tags'],
+        threshold: 0.3,
+      });
+      const itemHits = new Map();
+      itemFuse.search(boxSearchQuery).forEach(({ item }) => {
+        if (!itemHits.has(item.boxId)) itemHits.set(item.boxId, []);
+        itemHits.get(item.boxId).push(item.name);
+      });
+
+      result = result
+        .filter(box => directHits.has(box.id) || itemHits.has(box.id))
+        .map(box => itemHits.has(box.id) ? { ...box, matchedItems: itemHits.get(box.id) } : box);
     }
 
     // Sort
@@ -1259,12 +1385,138 @@ function App() {
         case 'name-desc': return b.name.localeCompare(a.name);
         case 'newest': return (b.createdAt || 0) - (a.createdAt || 0);
         case 'oldest': return (a.createdAt || 0) - (b.createdAt || 0);
+        // The box you were last working in. `updatedAt` is only stamped by a
+        // contents change, so this is genuinely "where things last moved", and
+        // it falls back to creation for boxes untouched since packing.
+        case 'updated':
+          return (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0);
+        // Fullest first; the empty ones collect at the end, which is the other
+        // thing you want to see — a box standing empty is either a mistake or
+        // somewhere to put the next thing.
+        case 'fullest':
+          return (itemCounts.get(b.id) || 0) - (itemCounts.get(a.id) || 0)
+            || a.name.localeCompare(b.name);
+        // Everything on one shelf together, and the boxes nobody has placed yet
+        // at the end — where they read as the to-do list they are.
+        case 'location': {
+          const pa = (a.location || '').trim();
+          const pb = (b.location || '').trim();
+          if (!pa !== !pb) return pa ? -1 : 1;
+          return pa.localeCompare(pb) || a.name.localeCompare(b.name);
+        }
         default: return 0;
       }
     });
 
     return sorted;
-  }, [boxes, boxSearchQuery, selectedBoxTag, boxSortOrder, allItems]);
+  }, [boxes, boxSearchQuery, selectedBoxTag, boxSortOrder, allItems, itemCounts]);
+
+  // ── Selecting several items at once ────────────────────────────────────
+  const isSelecting = selectedIds !== null;
+
+  const toggleSelecting = () => setSelectedIds(prev => (prev === null ? new Set() : null));
+
+  const toggleSelected = (itemId) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId); else next.add(itemId);
+      return next;
+    });
+  };
+
+  // Acts on what is on screen, not on everything owned: selection follows the
+  // filter, so "select all" after a tag filter means "all of these".
+  const selectAllVisible = (visible) => setSelectedIds(new Set(visible.map(i => i.id)));
+
+  // `fieldsFor(item)` returns what that item ends up with, computed from the
+  // copy already in local state — the list on screen is the same data, so
+  // nothing needs reading back from Firestore before writing.
+  const applyBulk = async (fieldsFor, toastKey) => {
+    const chosen = new Set(selectedIds || []);
+    if (chosen.size === 0) return;
+
+    const known = new Map();
+    [...allItems, ...items].forEach(i => { if (chosen.has(i.id)) known.set(i.id, i); });
+
+    // Which boxes are affected — the ones losing items and the ones gaining
+    // them — so their "contents changed" stamps stay honest.
+    const touched = new Set();
+    const updates = {};
+    known.forEach((item, id) => {
+      if (item.boxId) touched.add(item.boxId);
+      const fields = fieldsFor(item);
+      updates[id] = fields;
+      if (fields.boxId) touched.add(fields.boxId);
+    });
+
+    const count = Object.keys(updates).length;
+    if (count === 0) return;
+
+    const apply = (list) => list.map(i => (updates[i.id] ? { ...i, ...updates[i.id] } : i));
+    setAllItems(apply);
+    setItems(apply);
+    setSelectedIds(null);
+
+    try {
+      await firebaseStorage.bulkUpdateItems(updates);
+      await touchBoxes(...touched);
+      addToast(t(toastKey, { count }), 'success');
+    } catch (err) {
+      console.error('Bulk update failed', err);
+      refreshData(); // Revert
+      addToast(t('select.failed'), 'error');
+    }
+  };
+
+  const handleBulkMove = (boxId) => applyBulk(() => ({ boxId }), 'select.movedToast');
+
+  const handleBulkTag = (tags) =>
+    applyBulk(
+      (item) => ({ tags: normalizeTags([...(item.tags || []), ...tags]) }),
+      'select.taggedToast'
+    );
+
+  // No undo here, unlike the single delete: the toast can offer one way back,
+  // not one per row, and a partial undo of a bulk delete is worse than none.
+  // So this one asks first and names the number.
+  const handleBulkDelete = () => {
+    const ids = Array.from(selectedIds || []);
+    if (ids.length === 0) return;
+    askConfirm({
+      title: t('select.deleteTitle'),
+      message: t('select.deleteMessage', { count: ids.length }),
+      type: 'danger',
+      onConfirm: async () => {
+        const touched = new Set();
+        [...allItems, ...items].forEach(i => { if (ids.includes(i.id) && i.boxId) touched.add(i.boxId); });
+
+        setAllItems(prev => prev.filter(i => !ids.includes(i.id)));
+        setItems(prev => prev.filter(i => !ids.includes(i.id)));
+        setSelectedIds(null);
+
+        try {
+          await Promise.all(ids.map(id => firebaseStorage.deleteItem(id)));
+          await touchBoxes(...touched);
+          addToast(t('select.deletedToast', { count: ids.length }), 'success');
+        } catch (err) {
+          console.error('Bulk delete failed', err);
+          refreshData(); // Revert
+          addToast(t('select.failed'), 'error');
+        }
+      }
+    });
+  };
+
+  // Everything that carries tags, for the places that reason about the tag
+  // vocabulary as a whole rather than about boxes or items specifically.
+  const taggedEntities = useMemo(() => [...allItems, ...boxes], [allItems, boxes]);
+
+  // Tapping a tag chip on a box card filters the box list by it, exactly as the
+  // item version does for items.
+  const handleBoxTagClick = (tag) => {
+    setSelectedBoxTag(prev => (normalizeTag(prev) === normalizeTag(tag) ? '' : normalizeTag(tag)));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Tapping a tag chip on a card filters by it — the shortest path from
   // "this looks relevant" to "show me everything like it".
@@ -1281,15 +1533,42 @@ function App() {
     }
   };
 
+  // Every place a box is already stored, offered as you type in the box modals.
+  // This is what keeps "таван" from becoming three spellings of one shelf, and
+  // it is the whole of the location "taxonomy" — see LocationInput.
+  const knownLocations = useMemo(() => {
+    const places = new Map(); // lowercased -> first spelling seen
+    boxes.forEach(box => {
+      const place = (box.location || '').trim();
+      if (place && !places.has(place.toLowerCase())) places.set(place.toLowerCase(), place);
+    });
+    return Array.from(places.values()).sort((a, b) => a.localeCompare(b));
+  }, [boxes]);
+
   // Compute all unique tags from all items (global). Normalised, so a legacy
   // "Books" and a current "books" collapse into a single entry.
   const allTags = useMemo(() => {
     const tagSet = new Set();
-    allItems.forEach(item => {
-      normalizeTags(item.tags).forEach(tag => tagSet.add(tag));
+    [...allItems, ...boxes].forEach(entity => {
+      normalizeTags(entity.tags).forEach(tag => tagSet.add(tag));
     });
     return Array.from(tagSet).sort();
-  }, [allItems]);
+  }, [allItems, boxes]);
+
+  // The same tags, most-used first. This is the order the suggestion ribbon in
+  // the item modals wants: it is a horizontally scrolling strip, so alphabetical
+  // order buried the four tags someone actually uses behind whatever happens to
+  // start with "а". The filter dropdown keeps the alphabetical list — that one
+  // is scanned for a known name rather than reached for by habit.
+  const tagsByUse = useMemo(() => {
+    const counts = new Map();
+    [...allItems, ...boxes].forEach(entity => {
+      normalizeTags(entity.tags).forEach(tag => counts.set(tag, (counts.get(tag) || 0) + 1));
+    });
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([tag]) => tag);
+  }, [allItems, boxes]);
 
   // All Items View Filtering and Sorting
   const allItemsDisplayItems = useMemo(() => {
@@ -1332,10 +1611,16 @@ function App() {
     return Array.from(tagSet).sort();
   }, [view, items]);
 
+  // What "select all" means: the rows actually on screen after the filters, not
+  // everything owned. Selecting follows the filter, which is the only reading
+  // that makes "filter to a tag, then select all" do what it looks like.
+  const visibleItemsForSelection = view === 'items' ? boxViewItems : allItemsDisplayItems;
+
   // Handle List All Items
   const handleListAllItems = async () => {
     setCurrentBox(null);
-    const allItems = isMockAuth() ? MOCK_ITEMS : await firebaseStorage.getAllItems();
+    setSelectedIds(null); // a selection means nothing in the list you just left
+    const allItems = isMockAuth() ? MOCK_ITEMS : await loadAllItems();
     const sortedItems = [...allItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     setItems(sortedItems);
     setView('allItems');
@@ -1449,6 +1734,8 @@ function App() {
                     email={user.email}
                     onRefresh={handleManualRefresh}
                     onManageTags={() => setIsTagManagementModalOpen(true)}
+                    onInventoryCheck={() => setIsInventoryCheckOpen(true)}
+                    onPrintLabels={() => setIsLabelSheetOpen(true)}
                     onExport={handleExportData}
                     onImport={handleImportButtonClick}
                     onOptimizeImages={handleOptimizeImages}
@@ -1482,6 +1769,9 @@ function App() {
                   specialOptions={view === 'allItems'
                     ? [{ value: UNASSIGNED_FILTER, label: t('box.unassignedFilter') }]
                     : []}
+                  sortOptions={view === 'boxes' ? BOX_SORT_OPTIONS : undefined}
+                  onToggleSelect={view === 'allItems' ? toggleSelecting : undefined}
+                  isSelecting={isSelecting}
                 />
               </div>
             </div>
@@ -1596,9 +1886,10 @@ function App() {
             ) : (
               <BoxList
                 boxes={filteredBoxes}
-                allItems={allItems}
+                itemCounts={itemCounts}
                 onBoxClick={handleBoxClick}
                 onImageClick={handleImageClick}
+                onTagClick={handleBoxTagClick}
               />
             )}
           </>
@@ -1634,6 +1925,14 @@ function App() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-3 text-sm text-muted">
+                    {/* First chip, and the only one that answers the question you
+                        opened the box to ask: where do I go to get this. */}
+                    {currentBox.location && (
+                      <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full border border-primary/20 flex items-center gap-1.5 max-w-full">
+                        <MapPin size={14} className="shrink-0 opacity-80" />
+                        <span className="truncate">{currentBox.location}</span>
+                      </span>
+                    )}
                     {/* Last contents change is the useful date here; fall back to
                         creation for boxes nobody has touched since packing. */}
                     <span className="bg-surface/50 px-3 py-1.5 rounded-full border border-content/15 flex items-center gap-1.5">
@@ -1679,6 +1978,8 @@ function App() {
                     onSearchChange={setSearchQuery}
                     searchPlaceholder={t('item.searchInBox')}
                     filterTitle={t('tags.itemFilterTitle')}
+                    onToggleSelect={toggleSelecting}
+                    isSelecting={isSelecting}
                   />
                 </div>
               </div>
@@ -1710,6 +2011,9 @@ function App() {
                 onEditItem={handleEditItem}
                 onImageClick={handleImageClick}
                 onTagClick={handleTagClick}
+                selectable={isSelecting}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelected}
               />
             )}
           </>
@@ -1750,6 +2054,9 @@ function App() {
                 onBoxClick={handleBoxClickFromSearch}
                 onImageClick={handleImageClick}
                 onTagClick={handleTagClick}
+                selectable={isSelecting}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelected}
               />
             )}
           </>
@@ -1762,6 +2069,8 @@ function App() {
         onClose={() => setIsAddBoxModalOpen(false)}
         onAdd={handleAddBox}
         askConfirm={askConfirm}
+        knownLocations={knownLocations}
+        availableTags={tagsByUse}
       />
 
       <AddItemModal
@@ -1771,7 +2080,7 @@ function App() {
         boxes={boxes}
         initialBoxId={currentBox?.id}
         availableItems={allItems}
-        availableTags={allTags}
+        availableTags={tagsByUse}
         onSelectExisting={handleSelectExistingItem}
         askConfirm={askConfirm}
       />
@@ -1782,6 +2091,8 @@ function App() {
         onSave={handleUpdateBox}
         box={editingBox}
         askConfirm={askConfirm}
+        knownLocations={knownLocations}
+        availableTags={tagsByUse}
       />
 
       <EditItemModal
@@ -1790,7 +2101,7 @@ function App() {
         onSave={handleUpdateItem}
         item={editingItem}
         boxes={boxes}
-        availableTags={allTags}
+        availableTags={tagsByUse}
         askConfirm={askConfirm}
       />
 
@@ -1801,10 +2112,25 @@ function App() {
         itemName={fullscreenImage.name}
         startIndex={fullscreenImage.startIndex}
       />
+      <LabelSheetModal
+        key={isLabelSheetOpen ? 'labels-open' : 'labels-closed'}
+        isOpen={isLabelSheetOpen}
+        onClose={() => setIsLabelSheetOpen(false)}
+        boxes={boxes}
+      />
+      <InventoryCheckModal
+        isOpen={isInventoryCheckOpen}
+        onClose={() => setIsInventoryCheckOpen(false)}
+        boxes={boxes}
+        allItems={allItems}
+        itemCounts={itemCounts}
+        onEditBox={handleEditBox}
+        onEditItem={handleEditItem}
+      />
       <TagManagementModal
         isOpen={isTagManagementModalOpen}
         onClose={() => setIsTagManagementModalOpen(false)}
-        allItems={allItems}
+        taggedEntities={taggedEntities}
         onRenameTag={handleRenameTag}
         onDeleteTag={handleDeleteTag}
         addToast={addToast}
@@ -1851,7 +2177,7 @@ function App() {
 
       {/* Floating Action Button (FAB) */}
       <AnimatePresence>
-        {user && (view === 'boxes' || view === 'allItems' || (view === 'items' && items.length > 0)) && (
+        {user && !isSelecting && (view === 'boxes' || view === 'allItems' || (view === 'items' && items.length > 0)) && (
           <motion.button
             key="fab"
             initial={{ opacity: 0, scale: 0.5, y: 50 }}
@@ -1874,6 +2200,33 @@ function App() {
           </motion.button>
         )}
       </AnimatePresence>
+
+      {/* Selection toolbar — takes the FAB's place at the bottom of the screen. */}
+      <AnimatePresence>
+        {isSelecting && (
+          <SelectionBar
+            key="selection-bar"
+            count={selectedIds.size}
+            total={visibleItemsForSelection.length}
+            onSelectAll={() => selectAllVisible(visibleItemsForSelection)}
+            onMove={() => setBulkMode('move')}
+            onTag={() => setBulkMode('tag')}
+            onDelete={handleBulkDelete}
+            onCancel={() => setSelectedIds(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <BulkActionModal
+        key={bulkMode || 'closed'}
+        mode={bulkMode}
+        count={selectedIds?.size || 0}
+        boxes={boxes}
+        availableTags={tagsByUse}
+        onClose={() => setBulkMode(null)}
+        onMove={handleBulkMove}
+        onTag={handleBulkTag}
+      />
 
       <ConfirmationDialog
         isOpen={confirmDialog.isOpen}

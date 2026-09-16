@@ -197,6 +197,21 @@
     }
   }
 
+  /* A second, quieter affirmative next to .btn-primary — "save and add another"
+     beside "add". Tinted rather than filled: it is the button that gets pressed
+     nineteen times out of twenty while packing, and a second solid block of
+     primary would leave the row with no primary action at all. */
+  .btn-secondary {
+    background-color: rgba(var(--color-primary-rgb), 0.12);
+    color: var(--color-primary);
+    border: 1px solid rgba(var(--color-primary-rgb), 0.25);
+  }
+  @media (hover: hover) {
+    .btn-secondary:hover {
+      background-color: rgba(var(--color-primary-rgb), 0.2);
+    }
+  }
+
   .btn-danger {
     background-color: var(--color-danger);
     color: #fff;
@@ -471,11 +486,16 @@
     background-color: var(--color-primary);
     flex-shrink: 0;
   }
+  /* Both pills sit in the right-hand cluster of the find bar, so the menus hang
+     from their right edge and grow leftwards — anchored left, a label wider
+     than the min-width (any of the longer sort orders in Bulgarian) pushed the
+     menu off the side of a phone screen and got clipped. */
   .sfb__drop {
     position: absolute;
     top: calc(100% + 6px);
-    left: 0;
+    right: 0;
     min-width: 168px;
+    max-width: calc(100vw - 2rem);
     background-color: var(--color-surface);
     border: 1px solid rgba(var(--color-text-rgb), 0.13);
     border-radius: 1rem;
@@ -483,7 +503,7 @@
     overflow: hidden;
     z-index: 200;
     animation: sfb-drop-in 0.15s cubic-bezier(0.32, 1.25, 0.68, 1) both;
-    transform-origin: top left;
+    transform-origin: top right;
   }
   .sfb__drop--wide {
     min-width: 210px;
@@ -632,6 +652,203 @@
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
   }
+  /* Where the box physically is, overlaid bottom-left on a box card — opposite
+     the item count, on the strip of photo the gradient has already darkened.
+     It earns the space a text line under the name would have cost, and puts the
+     answer to "so where do I go?" in the grid itself. Same dark-glass treatment
+     as .badge-count; it truncates rather than pushing the count off the card. */
+  .badge-place {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    max-width: calc(100% - 3.5rem);
+  }
+  .badge-place > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* "Matched on something in here" line (box cards, while searching). Primary
+     tinted, because it is the answer to a question the user just asked; one
+     line, truncating, so a long item name cannot change the card's height. */
+  .box-match {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--color-primary);
+    min-width: 0;
+  }
+
+  /* Icon-only variant of the find-bar pill (the selection toggle). */
+  .sfb__pill--icon {
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
+  }
+
+  /* ── Printable box labels ──────────────────────────────────────────────
+     Parked off-screen while on screen (not display:none, which would stop the
+     QR images loading) and promoted to the whole page when printing. */
+  .label-sheet {
+    position: absolute;
+    left: -10000px;
+    top: 0;
+    width: 190mm;
+  }
+  .label {
+    display: flex;
+    align-items: center;
+    gap: 4mm;
+    width: 90mm;
+    height: 45mm;
+    padding: 4mm;
+    box-sizing: border-box;
+    border: 1px dashed #999;
+    border-radius: 3mm;
+    background: #fff;
+    color: #000;
+    overflow: hidden;
+  }
+  .label__qr {
+    width: 34mm;
+    height: 34mm;
+    flex-shrink: 0;
+  }
+  .label__text {
+    min-width: 0;
+    flex: 1;
+  }
+  .label__name {
+    font-size: 13pt;
+    font-weight: 700;
+    line-height: 1.15;
+    /* Three lines of a long Bulgarian box name, then clipped — the QR is the
+       identifier that always works; the text is for reading across a cellar. */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .label__place {
+    display: flex;
+    align-items: center;
+    gap: 1mm;
+    margin-top: 1.5mm;
+    font-size: 10pt;
+    font-weight: 600;
+  }
+  .label__hint {
+    margin-top: 2mm;
+    font-size: 7pt;
+    color: #555;
+  }
+
+  /* ── Selecting several items at once ───────────────────────────────────
+     The card itself is the target while selecting (see ItemCard): a checkbox
+     small enough to sit in a corner of a 156px card is not a touch target, so
+     the box in the corner is an indicator and the whole card is the control. */
+  .card-check {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 25;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background-color: rgba(0, 0, 0, 0.55);
+    border: 2px solid rgba(255, 255, 255, 0.75);
+    color: #fff;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .card-check--on {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-bg);
+  }
+  .card--selected {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+
+  /* Replaces the FAB while selecting — same corner of the screen, same thumb. */
+  .selection-bar {
+    position: fixed;
+    left: 50%;
+    /* calc(-1 * …), not -min(…): a bare minus in front of a function is not
+       valid CSS, so the declaration was dropped and the bar hung off the right
+       of the screen with its actions out of reach. Same centring trick as
+       .fab-btn, and for the same reason — see the note about `transform`. */
+    margin-left: calc(-1 * min(15rem, 44vw));
+    width: min(30rem, 88vw);
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    z-index: 55;
+  }
+  .selection-bar__inner {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.4rem;
+    border-radius: 999px;
+    background-color: var(--color-surface);
+    border: 1px solid rgba(var(--color-text-rgb), 0.15);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+  }
+  .selection-bar__count {
+    flex: 1;
+    min-width: 0;
+    padding: 0 0.35rem;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .selection-bar__divider {
+    width: 1px;
+    align-self: stretch;
+    margin: 0.2rem 0.15rem;
+    background-color: rgba(var(--color-text-rgb), 0.15);
+  }
+  .selection-bar__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    color: var(--color-text-muted);
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .selection-bar__btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .selection-bar__btn--danger:not(:disabled) {
+    color: var(--color-danger);
+  }
+  @media (hover: hover) {
+    .selection-bar__btn:not(:disabled):hover {
+      background-color: rgba(var(--color-text-rgb), 0.1);
+      color: var(--color-text);
+    }
+    .selection-bar__btn--danger:not(:disabled):hover {
+      background-color: rgba(var(--color-danger-rgb), 0.12);
+      color: var(--color-danger);
+    }
+  }
+
   /* Footer "which box" row (item cards, all-items / search view) */
   .card-footer {
     display: flex;
@@ -668,6 +885,7 @@
   .btn:focus-visible,
   .btn-primary:focus-visible,
   .btn-ghost:focus-visible,
+  .btn-secondary:focus-visible,
   .btn-danger:focus-visible,
   .btn-icon:focus-visible,
   .fab-btn:focus-visible,
@@ -967,5 +1185,42 @@
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+/* ============================================================================
+   Print — box labels only
+   ----------------------------------------------------------------------------
+   Hiding everything by visibility rather than display keeps the sheet's own
+   layout intact; display:none on an ancestor would take the labels with it.
+   ========================================================================== */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .label-sheet,
+  .label-sheet * {
+    visibility: visible;
+  }
+
+  .label-sheet {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5mm;
+    width: auto;
+  }
+
+  .label {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  @page {
+    size: A4;
+    margin: 10mm;
   }
 }

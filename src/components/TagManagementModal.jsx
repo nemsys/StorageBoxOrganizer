@@ -4,19 +4,20 @@ import { Tag, Edit2, Trash2, Check, X } from 'lucide-react';
 import { useTranslation } from '../translations';
 import { normalizeTag } from '../utils/tagUtils';
 
-export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onDeleteTag, addToast, askConfirm }) {
+export function TagManagementModal({ isOpen, onClose, taggedEntities = [], onRenameTag, onDeleteTag, addToast, askConfirm }) {
     const { t } = useTranslation();
     const [editingTag, setEditingTag] = useState(null); // { oldName, newName }
     const [isProcessing, setIsProcessing] = useState(false);
     const [tagSortOrder, setTagSortOrder] = useState('alpha'); // 'alpha' | 'count'
 
     // Tags are case-insensitive, so a legacy "Books" and a current "books" are
-    // counted and listed as one row under the canonical (lowercase) name.
+    // counted and listed as one row under the canonical (lowercase) name. Boxes
+    // carry tags too, and a rename here rewrites both — so both are counted.
     const tagCounts = useMemo(() => {
         const counts = {};
-        allItems.forEach(item => {
+        taggedEntities.forEach(entity => {
             const seen = new Set();
-            (item.tags || []).forEach(raw => {
+            (entity.tags || []).forEach(raw => {
                 const tag = normalizeTag(raw);
                 if (!tag || seen.has(tag)) return;
                 seen.add(tag);
@@ -31,7 +32,7 @@ export function TagManagementModal({ isOpen, onClose, allItems, onRenameTag, onD
                 return (b[1] - a[1]) || a[0].localeCompare(b[0]);
             }
         });
-    }, [allItems, tagSortOrder]);
+    }, [taggedEntities, tagSortOrder]);
 
     const handleStartRename = (tag) => {
         setEditingTag({ oldName: tag, newName: tag });

@@ -1,17 +1,19 @@
 import { BoxCard } from './BoxCard';
 
-export function BoxList({ boxes, allItems = [], onBoxClick, onImageClick }) {
+// `itemCounts` is a Map built once in App, not a list to filter per card: the
+// old shape walked the whole inventory again for every box on screen.
+export function BoxList({ boxes, itemCounts, onBoxClick, onImageClick, onTagClick }) {
     return (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {boxes.map(box => {
-                const itemCount = allItems.filter(item => item.boxId === box.id).length;
                 return (
                     <BoxCard
                         key={box.id}
                         box={box}
-                        itemCount={itemCount}
+                        itemCount={itemCounts?.get(box.id) || 0}
                         onClick={onBoxClick}
                         onImageClick={onImageClick}
+                        onTagClick={onTagClick}
                     />
                 );
             })}

@@ -4,7 +4,7 @@ import { ItemCard } from './ItemCard';
 // photo and a name — so they get the same column count at every width. One
 // column on a phone showed 1.5 cards per screen, which is a long scroll for an
 // inventory of a few hundred things.
-export function ItemList({ items, onDeleteItem, onRemoveFromBox, onEditItem, onBoxClick, onImageClick, onTagClick }) {
+export function ItemList({ items, onDeleteItem, onRemoveFromBox, onEditItem, onBoxClick, onImageClick, onTagClick, selectable = false, selectedIds, onToggleSelect }) {
     return (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {items.map(item => (
@@ -18,6 +18,9 @@ export function ItemList({ items, onDeleteItem, onRemoveFromBox, onEditItem, onB
                     onBoxClick={onBoxClick}
                     onImageClick={onImageClick}
                     onTagClick={onTagClick}
+                    selectable={selectable}
+                    selected={!!selectedIds?.has(item.id)}
+                    onToggleSelect={onToggleSelect}
                 />
             ))}
         </div>

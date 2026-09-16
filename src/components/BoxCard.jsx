@@ -1,10 +1,15 @@
-import { Package, ZoomIn } from 'lucide-react';
+import { Package, ZoomIn, MapPin, Search, Tag } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 import { getImageRefs, refsToThumbs } from '../utils/imageUtils';
 import { useTranslation } from '../translations';
 
-export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
+// Matches ItemCard: at two columns on a 360px phone the card is one chip wide.
+const VISIBLE_TAGS = 2;
+const VISIBLE_TAGS_NARROW = 1;
+
+export function BoxCard({ box, onClick, onImageClick, onTagClick, itemCount = 0 }) {
     const { t } = useTranslation();
+    const tags = box.tags || [];
     // Browse from inline thumbnails; full-res is fetched on demand (fullscreen).
     const imageRefs = getImageRefs(box);
     const displayImages = refsToThumbs(imageRefs);
@@ -80,6 +85,19 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
                 >
                     <span aria-hidden="true">{itemCount}</span>
                 </div>
+
+                {/* Where the box actually is. The grid's whole job is to get you
+                    to the right box; without this it stops one step short. */}
+                {box.location && (
+                    <div
+                        className="badge badge-place absolute z-20 bottom-2 left-2 pointer-events-none"
+                        role="img"
+                        aria-label={t('box.locatedAt', { location: box.location })}
+                    >
+                        <MapPin size={11} className="shrink-0" aria-hidden="true" />
+                        <span aria-hidden="true">{box.location}</span>
+                    </div>
+                )}
             </div>
 
             <div className="p-4 flex flex-col flex-1">
@@ -92,6 +110,58 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
                 <p className="text-sm text-muted line-clamp-2 leading-relaxed">
                     {box.description || t('common.noDescription')}
                 </p>
+
+                {/* Everything that hangs off the bottom of the card, in one
+                    block, so whichever parts are present stay pinned together
+                    below the description. */}
+                {(box.matchedItems?.length > 0 || tags.length > 0) && (
+                    <div className="mt-auto pt-3 space-y-2 min-w-0">
+                        {/* Why this box is in the results — it matched on
+                            something inside it, not on anything printed above.
+                            Without the line the box reads as a false positive. */}
+                        {box.matchedItems?.length > 0 && (
+                            <p
+                                className="box-match"
+                                title={t('box.matchedItems', { names: box.matchedItems.join(', ') })}
+                            >
+                                <Search size={11} className="shrink-0" aria-hidden="true" />
+                                <span className="truncate">{box.matchedItems[0]}</span>
+                                {box.matchedItems.length > 1 && (
+                                    <span className="shrink-0">+{box.matchedItems.length - 1}</span>
+                                )}
+                            </p>
+                        )}
+
+                        {/* Same one-line tag row as an item card — the two cards
+                            are deliberately the same object. */}
+                        {tags.length > 0 && (
+                            <div className="flex flex-nowrap gap-2">
+                                {tags.slice(0, VISIBLE_TAGS).map((tag, index) => (
+                                    <button
+                                        key={tag}
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); onTagClick?.(tag); }}
+                                        className={`tag-chip shrink min-w-0 ${index >= VISIBLE_TAGS_NARROW ? 'hidden sm:inline-flex' : ''}`}
+                                        title={t('tags.filterBy', { tag })}
+                                    >
+                                        <Tag size={10} className="mr-1 shrink-0" />
+                                        <span className="min-w-0 truncate">{tag}</span>
+                                    </button>
+                                ))}
+                                {tags.length > VISIBLE_TAGS_NARROW && (
+                                    <span className="tag-count shrink-0 inline-flex sm:hidden" title={tags.join(', ')}>
+                                        +{tags.length - VISIBLE_TAGS_NARROW}
+                                    </span>
+                                )}
+                                {tags.length > VISIBLE_TAGS && (
+                                    <span className="tag-count shrink-0 hidden sm:inline-flex" title={tags.join(', ')}>
+                                        +{tags.length - VISIBLE_TAGS}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
