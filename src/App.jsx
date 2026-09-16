@@ -1041,21 +1041,26 @@ function App() {
 
     try {
       const previousBoxId = findItemBoxId(itemId);
+      const snapshot = allItems.find(i => i.id === itemId);
 
       // Update the item's boxId to the current box
       const updates = { boxId: currentBox.id };
       await firebaseStorage.updateItem(itemId, updates);
 
+      // Both lists hold their own copy of the item. Re-reading only the box
+      // view left All Items showing the old box name, and the item-count badge
+      // on every box card — which is computed from allItems — wrong until the
+      // next manual refresh.
+      setAllItems(prev => prev.map(i => i.id === itemId ? { ...i, boxId: currentBox.id } : i));
+      if (view === 'items' && snapshot) {
+        setItems(prev => [{ ...snapshot, boxId: currentBox.id }, ...prev.filter(i => i.id !== itemId)]);
+      }
+
       // Both ends of the move changed contents.
       await touchBoxes(previousBoxId, currentBox.id);
-
-      // Refresh data to show the updated item in the current box
-      if (view === 'items') {
-        const boxItems = await firebaseStorage.getItems(currentBox.id);
-        setItems(boxItems);
-      }
     } catch (err) {
       console.error('Failed to move item', err);
+      refreshData(); // Revert on error
       addToast(t('item.moveFailed', { error: err.message }), "error");
     }
   };
