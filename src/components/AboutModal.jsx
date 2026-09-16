@@ -1,27 +1,29 @@
 import { Modal } from './Modal';
 import { Package, Mail } from 'lucide-react';
-import { APP_VERSION, BUILD_ID } from '../native/updates';
+import { APP_VERSION } from '../native/updates';
 import { useTranslation } from '../translations';
 
 const AUTHOR = 'SciScend';
 const AUTHOR_URL = 'https://sciscend.com/';
 const CONTACT_EMAIL = 'ivapopova@sciscend.com';
+// The public landing page (site/): what the app does, install steps, how to get access.
+const SITE_URL = 'https://nemsys.github.io/StorageBoxOrganizer/';
 
 /**
  * Version and authorship, reachable from the settings menu.
  *
  * The version comes from package.json via vite's define (see vite.config.js),
  * so the release workflow's bump is the single source of truth. The build id
- * is the same one the update check compares against — useful when someone
- * reports a problem and you need to know exactly which deploy they are on.
+ * is deliberately not shown: it meant nothing to the people using the app.
  */
 export function AboutModal({ isOpen, onClose }) {
-    const { t } = useTranslation();
+    const { t, lang } = useTranslation();
 
     const rows = [
         { label: t('about.version'), value: APP_VERSION },
-        { label: t('about.build'), value: BUILD_ID },
         { label: t('about.author'), value: AUTHOR, href: AUTHOR_URL },
+        // Below the author, so SciScend keeps its place; opens in the app's language.
+        { label: t('about.website'), value: t('about.websiteLink'), href: lang === 'en' ? `${SITE_URL}?lang=en` : SITE_URL },
     ];
 
     return (

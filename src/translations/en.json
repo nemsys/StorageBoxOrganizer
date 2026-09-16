@@ -172,7 +172,7 @@
   "camera.starting": "Camera is still starting — please tap again.",
   "camera.captureFailed": "Failed to capture the photo. Please try again.",
 
-  "auth.welcomeBack": "Welcome Back",
+  "auth.welcomeBack": "Welcome back",
   "auth.createAccount": "Create Account",
   "auth.email": "Email",
   "auth.password": "Password",
@@ -190,6 +190,7 @@
   "auth.error.invalidCredential": "Wrong email or password.",
   "auth.error.userNotFound": "No account exists for this email.",
   "auth.error.wrongPassword": "Wrong email or password.",
+  "auth.signInInstead": "Sign in instead",
   "auth.error.emailInUse": "An account with this email already exists.",
   "auth.error.weakPassword": "The password must be at least 6 characters.",
   "auth.error.tooManyRequests": "Too many attempts. Please try again later.",
@@ -214,9 +215,10 @@
   "about.tagline": "Know what is in your {{box.many}}.",
   "intro.by": "by",
   "about.version": "Version",
-  "about.build": "Build",
   "about.author": "Made by",
   "about.contact": "Contact",
+  "about.website": "Website",
+  "about.websiteLink": "User guide",
 
   "tags.title": "Manage {{^tag.many}}",
   "tags.found_one": "{{count}} {{tag.one}} {{tag.found}}",

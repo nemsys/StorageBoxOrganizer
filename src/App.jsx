@@ -39,6 +39,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { loadDraft, saveDraft, clearDraft } from './utils/draftStorage';
 import { useTranslation } from './translations';
 import { normalizeTag, normalizeTags, tagVariants, hasTag } from './utils/tagUtils';
+import { rememberSignedIn } from './utils/authMemory';
 
 // Visual-inspection fixtures. `import.meta.env.DEV` is inlined as a literal at
 // build time, so every branch below folds away and the data never reaches the
@@ -344,6 +345,9 @@ function App() {
     }
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      // Covers people already signed in before this was remembered, too: after
+      // a sign-out their sign-in screen still opens on sign-in.
+      if (currentUser) rememberSignedIn();
       setUser(currentUser);
       setAuthLoading(false);
     });
