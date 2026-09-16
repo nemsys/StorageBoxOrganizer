@@ -1425,6 +1425,21 @@ function App() {
     return Array.from(tagSet).sort();
   }, [allItems]);
 
+  // The same tags, most-used first. This is the order the suggestion ribbon in
+  // the item modals wants: it is a horizontally scrolling strip, so alphabetical
+  // order buried the four tags someone actually uses behind whatever happens to
+  // start with "а". The filter dropdown keeps the alphabetical list — that one
+  // is scanned for a known name rather than reached for by habit.
+  const tagsByUse = useMemo(() => {
+    const counts = new Map();
+    allItems.forEach(item => {
+      normalizeTags(item.tags).forEach(tag => counts.set(tag, (counts.get(tag) || 0) + 1));
+    });
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([tag]) => tag);
+  }, [allItems]);
+
   // All Items View Filtering and Sorting
   const allItemsDisplayItems = useMemo(() => {
     if (view !== 'allItems') return [];
@@ -1915,7 +1930,7 @@ function App() {
         boxes={boxes}
         initialBoxId={currentBox?.id}
         availableItems={allItems}
-        availableTags={allTags}
+        availableTags={tagsByUse}
         onSelectExisting={handleSelectExistingItem}
         askConfirm={askConfirm}
       />
@@ -1935,7 +1950,7 @@ function App() {
         onSave={handleUpdateItem}
         item={editingItem}
         boxes={boxes}
-        availableTags={allTags}
+        availableTags={tagsByUse}
         askConfirm={askConfirm}
       />
 
