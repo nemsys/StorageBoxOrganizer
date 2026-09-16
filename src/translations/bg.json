@@ -239,6 +239,8 @@
   "sort.nameAsc": "Име А → Я",
   "sort.nameDesc": "Име Я → А",
   "sort.location": "По {{box.place}}",
+  "sort.updated": "Скоро променяни",
+  "sort.fullest": "Първо пълните",
 
   "import.title": "Внасяне на данните",
   "import.complete": "Внасянето завърши",

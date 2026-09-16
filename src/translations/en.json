@@ -239,6 +239,8 @@
   "sort.nameAsc": "Name A → Z",
   "sort.nameDesc": "Name Z → A",
   "sort.location": "By {{box.place}}",
+  "sort.updated": "Recently changed",
+  "sort.fullest": "Fullest first",
 
   "import.title": "Importing Your Data",
   "import.complete": "Import Complete",

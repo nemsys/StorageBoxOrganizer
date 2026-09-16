@@ -486,11 +486,16 @@
     background-color: var(--color-primary);
     flex-shrink: 0;
   }
+  /* Both pills sit in the right-hand cluster of the find bar, so the menus hang
+     from their right edge and grow leftwards — anchored left, a label wider
+     than the min-width (any of the longer sort orders in Bulgarian) pushed the
+     menu off the side of a phone screen and got clipped. */
   .sfb__drop {
     position: absolute;
     top: calc(100% + 6px);
-    left: 0;
+    right: 0;
     min-width: 168px;
+    max-width: calc(100vw - 2rem);
     background-color: var(--color-surface);
     border: 1px solid rgba(var(--color-text-rgb), 0.13);
     border-radius: 1rem;
@@ -498,7 +503,7 @@
     overflow: hidden;
     z-index: 200;
     animation: sfb-drop-in 0.15s cubic-bezier(0.32, 1.25, 0.68, 1) both;
-    transform-origin: top left;
+    transform-origin: top right;
   }
   .sfb__drop--wide {
     min-width: 210px;

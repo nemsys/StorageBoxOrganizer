@@ -1304,6 +1304,17 @@ function App() {
     event.target.value = ''; // Reset input
   };
 
+  // How many items each box holds. One pass over the inventory, shared by the
+  // "fullest" sort and the count badge on every card, which was recomputing it
+  // per card with a filter over the whole list.
+  const itemCounts = useMemo(() => {
+    const counts = new Map();
+    allItems.forEach(item => {
+      if (item.boxId) counts.set(item.boxId, (counts.get(item.boxId) || 0) + 1);
+    });
+    return counts;
+  }, [allItems]);
+
   // Box Search Logic
   const filteredBoxes = useMemo(() => {
     let result = boxes;
@@ -1351,6 +1362,17 @@ function App() {
         case 'name-desc': return b.name.localeCompare(a.name);
         case 'newest': return (b.createdAt || 0) - (a.createdAt || 0);
         case 'oldest': return (a.createdAt || 0) - (b.createdAt || 0);
+        // The box you were last working in. `updatedAt` is only stamped by a
+        // contents change, so this is genuinely "where things last moved", and
+        // it falls back to creation for boxes untouched since packing.
+        case 'updated':
+          return (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0);
+        // Fullest first; the empty ones collect at the end, which is the other
+        // thing you want to see — a box standing empty is either a mistake or
+        // somewhere to put the next thing.
+        case 'fullest':
+          return (itemCounts.get(b.id) || 0) - (itemCounts.get(a.id) || 0)
+            || a.name.localeCompare(b.name);
         // Everything on one shelf together, and the boxes nobody has placed yet
         // at the end — where they read as the to-do list they are.
         case 'location': {
@@ -1364,7 +1386,7 @@ function App() {
     });
 
     return sorted;
-  }, [boxes, boxSearchQuery, selectedBoxTag, boxSortOrder, allItems]);
+  }, [boxes, boxSearchQuery, selectedBoxTag, boxSortOrder, allItems, itemCounts]);
 
   // Tapping a tag chip on a card filters by it — the shortest path from
   // "this looks relevant" to "show me everything like it".
@@ -1709,7 +1731,7 @@ function App() {
             ) : (
               <BoxList
                 boxes={filteredBoxes}
-                allItems={allItems}
+                itemCounts={itemCounts}
                 onBoxClick={handleBoxClick}
                 onImageClick={handleImageClick}
               />
