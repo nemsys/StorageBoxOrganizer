@@ -12,6 +12,7 @@ import { AccessPendingScreen } from './components/AccessPendingScreen';
 import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { ImageSlider } from './components/ImageSlider';
 import { TagManagementModal } from './components/TagManagementModal';
+import { InventoryCheckModal } from './components/InventoryCheckModal';
 import { SettingsMenu } from './components/SettingsMenu';
 import { OverflowMenu } from './components/OverflowMenu';
 import { ImportProgressModal } from './components/ImportProgressModal';
@@ -263,6 +264,7 @@ function App() {
   const [selectedBoxTag, setSelectedBoxTag] = useState('');
 
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
+  const [isInventoryCheckOpen, setIsInventoryCheckOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState({ isOpen: false, refs: [], name: '', startIndex: 0 });
   const [toasts, setToasts] = useState([]);
@@ -1598,6 +1600,7 @@ function App() {
                     email={user.email}
                     onRefresh={handleManualRefresh}
                     onManageTags={() => setIsTagManagementModalOpen(true)}
+                    onInventoryCheck={() => setIsInventoryCheckOpen(true)}
                     onExport={handleExportData}
                     onImport={handleImportButtonClick}
                     onOptimizeImages={handleOptimizeImages}
@@ -1960,6 +1963,15 @@ function App() {
         imageRefs={fullscreenImage.refs}
         itemName={fullscreenImage.name}
         startIndex={fullscreenImage.startIndex}
+      />
+      <InventoryCheckModal
+        isOpen={isInventoryCheckOpen}
+        onClose={() => setIsInventoryCheckOpen(false)}
+        boxes={boxes}
+        allItems={allItems}
+        itemCounts={itemCounts}
+        onEditBox={handleEditBox}
+        onEditItem={handleEditItem}
       />
       <TagManagementModal
         isOpen={isTagManagementModalOpen}
