@@ -248,6 +248,8 @@
   "tags.boxFilterTitle": "Tagged, or holding something tagged",
   "tags.itemFilterTitle": "Filter by {{tag.one}}",
   "tags.filterBy": "Filter by \"{{tag}}\"",
+  "tags.filterSearch": "Find a {{tag.one}}…",
+  "tags.filterNoMatch": "No matching {{tag.many}}",
   "tags.remove": "Remove {{tag.the}} \"{{tag}}\"",
 
   "sort.newest": "Newest first",
