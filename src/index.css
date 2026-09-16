@@ -197,6 +197,21 @@
     }
   }
 
+  /* A second, quieter affirmative next to .btn-primary — "save and add another"
+     beside "add". Tinted rather than filled: it is the button that gets pressed
+     nineteen times out of twenty while packing, and a second solid block of
+     primary would leave the row with no primary action at all. */
+  .btn-secondary {
+    background-color: rgba(var(--color-primary-rgb), 0.12);
+    color: var(--color-primary);
+    border: 1px solid rgba(var(--color-primary-rgb), 0.25);
+  }
+  @media (hover: hover) {
+    .btn-secondary:hover {
+      background-color: rgba(var(--color-primary-rgb), 0.2);
+    }
+  }
+
   .btn-danger {
     background-color: var(--color-danger);
     color: #fff;
@@ -703,6 +718,7 @@
   .btn:focus-visible,
   .btn-primary:focus-visible,
   .btn-ghost:focus-visible,
+  .btn-secondary:focus-visible,
   .btn-danger:focus-visible,
   .btn-icon:focus-visible,
   .fab-btn:focus-visible,

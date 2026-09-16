@@ -776,7 +776,9 @@ function App() {
       // Update local state
       setItems(prev => [newItem, ...prev]);
       setAllItems(prev => [newItem, ...prev]);
-      setIsAddItemModalOpen(false);
+      // "Save & add another" keeps the form up, holding on to the box and tags
+      // the next item almost certainly shares. The modal clears its own fields.
+      if (!payload.keepOpen) setIsAddItemModalOpen(false);
       await touchBoxes(newItem.boxId);
     } catch (error) {
       console.error("Error adding item:", error);
