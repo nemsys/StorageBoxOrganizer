@@ -221,7 +221,10 @@ export const SettingsMenu = ({ email, onRefresh, onManageTags,
                 {LANGUAGES.map((option) => (
                   <button
                     key={option.code}
-                    onClick={() => setLang(option.code)}
+                    onClick={() => {
+                      setLang(option.code);
+                      setIsOpen(false);
+                    }}
                     aria-pressed={lang === option.code}
                     title={option.name}
                     className={`px-2.5 py-1 text-xs font-bold rounded-md transition-colors ${
