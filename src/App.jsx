@@ -1452,7 +1452,11 @@ function App() {
     const count = Object.keys(updates).length;
     if (count === 0) return;
 
-    const apply = (list) => list.map(i => (updates[i.id] ? { ...i, ...updates[i.id] } : i));
+    // Stamp locally too, not just in the batch: the suggestion ribbon orders by
+    // last use, so a bulk tag should reorder it now rather than after a reload.
+    const now = Date.now();
+    const apply = (list) =>
+      list.map(i => (updates[i.id] ? { ...i, ...updates[i.id], modifiedAt: now } : i));
     setAllItems(apply);
     setItems(apply);
     setSelectedIds(null);
@@ -1555,18 +1559,35 @@ function App() {
     return Array.from(tagSet).sort();
   }, [allItems, boxes]);
 
-  // The same tags, most-used first. This is the order the suggestion ribbon in
-  // the item modals wants: it is a horizontally scrolling strip, so alphabetical
-  // order buried the four tags someone actually uses behind whatever happens to
-  // start with "а". The filter dropdown keeps the alphabetical list — that one
-  // is scanned for a known name rather than reached for by habit.
-  const tagsByUse = useMemo(() => {
-    const counts = new Map();
+  // The same tags, most recently used first.
+  //
+  // The ribbon is reached for by habit, and the strongest habit is what you
+  // just did: filing a run of winter clothes, the tag you put on the last item
+  // is the one you want on this one, whatever its lifetime count. Frequency
+  // only breaks ties — it was the primary key first, and it meant a tag used
+  // twice a year outranked the one used a minute ago.
+  //
+  // "Recently" is the most recent touch of anything carrying the tag
+  // (`modifiedAt`, falling back to `createdAt`; boxes only have the latter).
+  // The filter dropdown keeps the alphabetical list — that one is scanned for
+  // a name you already know.
+  const tagSuggestions = useMemo(() => {
+    const seen = new Map(); // tag -> { last, count }
     [...allItems, ...boxes].forEach(entity => {
-      normalizeTags(entity.tags).forEach(tag => counts.set(tag, (counts.get(tag) || 0) + 1));
+      const when = entity.modifiedAt || entity.createdAt || 0;
+      normalizeTags(entity.tags).forEach(tag => {
+        const entry = seen.get(tag);
+        if (entry) {
+          entry.count += 1;
+          if (when > entry.last) entry.last = when;
+        } else {
+          seen.set(tag, { last: when, count: 1 });
+        }
+      });
     });
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    return Array.from(seen.entries())
+      .sort(([tagA, a], [tagB, b]) =>
+        b.last - a.last || b.count - a.count || tagA.localeCompare(tagB))
       .map(([tag]) => tag);
   }, [allItems, boxes]);
 
@@ -2070,7 +2091,7 @@ function App() {
         onAdd={handleAddBox}
         askConfirm={askConfirm}
         knownLocations={knownLocations}
-        availableTags={tagsByUse}
+        availableTags={tagSuggestions}
       />
 
       <AddItemModal
@@ -2080,7 +2101,7 @@ function App() {
         boxes={boxes}
         initialBoxId={currentBox?.id}
         availableItems={allItems}
-        availableTags={tagsByUse}
+        availableTags={tagSuggestions}
         onSelectExisting={handleSelectExistingItem}
         askConfirm={askConfirm}
       />
@@ -2092,7 +2113,7 @@ function App() {
         box={editingBox}
         askConfirm={askConfirm}
         knownLocations={knownLocations}
-        availableTags={tagsByUse}
+        availableTags={tagSuggestions}
       />
 
       <EditItemModal
@@ -2101,7 +2122,7 @@ function App() {
         onSave={handleUpdateItem}
         item={editingItem}
         boxes={boxes}
-        availableTags={tagsByUse}
+        availableTags={tagSuggestions}
         askConfirm={askConfirm}
       />
 
@@ -2222,7 +2243,7 @@ function App() {
         mode={bulkMode}
         count={selectedIds?.size || 0}
         boxes={boxes}
-        availableTags={tagsByUse}
+        availableTags={tagSuggestions}
         onClose={() => setBulkMode(null)}
         onMove={handleBulkMove}
         onTag={handleBulkTag}
