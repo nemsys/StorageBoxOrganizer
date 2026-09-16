@@ -3,6 +3,10 @@ import { ArrowUpDown, Tag, ChevronDown, Check, ListChecks } from 'lucide-react';
 import { SearchBar } from './SearchBar';
 import { useTranslation } from '../translations';
 import { SORT_OPTIONS } from '../utils/sortOptions';
+import { normalizeTag } from '../utils/tagUtils';
+
+/** Below this many tags the list fits on screen and a search field is clutter. */
+const TAG_SEARCH_THRESHOLD = 8;
 
 /**
  * The sticky find bar: search, sort, filter.
@@ -12,9 +16,12 @@ import { SORT_OPTIONS } from '../utils/sortOptions';
  * you set once and forget, stayed pinned. On a narrow screen the two pills drop
  * their labels so the search field keeps a usable width.
  *
- * `filterTitle` labels the filter dropdown. In the box view the tags belong to
- * *items*, and the filter answers "which boxes contain something tagged X" —
- * a relationship nothing on screen explained before.
+ * `filterTitle` is the filter pill's accessible name. It used to be a visible
+ * heading inside the dropdown too, but the tag icon already says what the menu
+ * is, and the heading pushed the list down.
+ *
+ * A long tag list gets a search field at its top: scrolling for a tag whose
+ * name you already know is slower than typing its first letters.
  */
 export function SortFilterBar({
     sortOrder,
@@ -34,8 +41,25 @@ export function SortFilterBar({
     const { t } = useTranslation();
     const [sortOpen,   setSortOpen]   = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
+    const [tagQuery,   setTagQuery]   = useState('');
     const sortRef   = useRef(null);
     const filterRef = useRef(null);
+    const tagSearchRef = useRef(null);
+
+    const showTagSearch = tags.length > TAG_SEARCH_THRESHOLD;
+    const query = normalizeTag(tagQuery);
+    const visibleTags = query ? tags.filter(tag => normalizeTag(tag).includes(query)) : tags;
+
+    // Focus the field only where there is a physical keyboard: on a phone it
+    // would pop the on-screen keyboard over the list every time, even when the
+    // user just wants to tap a tag.
+    useEffect(() => {
+        if (filterOpen && showTagSearch && window.matchMedia?.('(hover: hover) and (pointer: fine)').matches) {
+            tagSearchRef.current?.focus();
+        }
+    }, [filterOpen, showTagSearch]);
+
+    const pickTag = (value) => { onTagChange(value); setFilterOpen(false); };
 
     // Close on outside pointer-down
     useEffect(() => {
@@ -130,7 +154,7 @@ export function SortFilterBar({
                 {/* ── Filter / Tag pill ── */}
                 <div className="sfb__pill-wrap" ref={filterRef}>
                     <button
-                        onClick={() => { setFilterOpen(o => !o); setSortOpen(false); }}
+                        onClick={() => { setTagQuery(''); setFilterOpen(o => !o); setSortOpen(false); }}
                         aria-expanded={filterOpen}
                         aria-haspopup="listbox"
                         aria-label={filterTitle || t('tags.all')}
@@ -148,12 +172,33 @@ export function SortFilterBar({
                     {filterOpen && (
                         <div className="sfb__drop sfb__drop--wide" role="listbox"
                             style={{ left: 'auto', right: 0, transformOrigin: 'top right' }}>
-                            {filterTitle && <div className="sfb__drop-title">{filterTitle}</div>}
+                            {showTagSearch && (
+                                <div className="sfb__drop-search">
+                                    <input
+                                        ref={tagSearchRef}
+                                        type="search"
+                                        value={tagQuery}
+                                        onChange={e => setTagQuery(e.target.value)}
+                                        onKeyDown={e => {
+                                            if (e.key === 'Enter' && query && visibleTags.length > 0) {
+                                                e.preventDefault();
+                                                pickTag(visibleTags[0]);
+                                            }
+                                        }}
+                                        placeholder={t('tags.filterSearch')}
+                                        aria-label={t('tags.filterSearch')}
+                                        autoComplete="off"
+                                        autoCapitalize="none"
+                                        spellCheck={false}
+                                        enterKeyHint="go"
+                                    />
+                                </div>
+                            )}
                             <div className="sfb__drop-scroll">
                                 <button
                                     role="option"
                                     aria-selected={!selectedTag}
-                                    onClick={() => { onTagChange(''); setFilterOpen(false); }}
+                                    onClick={() => pickTag('')}
                                     className={`sfb__drop-item ${!selectedTag ? 'sfb__drop-item--on' : ''}`}
                                 >
                                     {t('tags.all')}
@@ -165,7 +210,7 @@ export function SortFilterBar({
                                         key={opt.value}
                                         role="option"
                                         aria-selected={selectedTag === opt.value}
-                                        onClick={() => { onTagChange(opt.value); setFilterOpen(false); }}
+                                        onClick={() => pickTag(opt.value)}
                                         className={`sfb__drop-item ${selectedTag === opt.value ? 'sfb__drop-item--on' : ''}`}
                                     >
                                         <span className="sfb__drop-item-label">{opt.label}</span>
@@ -175,12 +220,12 @@ export function SortFilterBar({
                                     </button>
                                 ))}
 
-                                {tags.length > 0 ? tags.map(tag => (
+                                {visibleTags.length > 0 ? visibleTags.map(tag => (
                                     <button
                                         key={tag}
                                         role="option"
                                         aria-selected={selectedTag === tag}
-                                        onClick={() => { onTagChange(tag); setFilterOpen(false); }}
+                                        onClick={() => pickTag(tag)}
                                         className={`sfb__drop-item ${selectedTag === tag ? 'sfb__drop-item--on' : ''}`}
                                     >
                                         <span className="sfb__drop-item-label">{tag}</span>
@@ -189,7 +234,9 @@ export function SortFilterBar({
                                         )}
                                     </button>
                                 )) : (
-                                    <div className="sfb__drop-empty">{t('tags.none')}</div>
+                                    <div className="sfb__drop-empty">
+                                        {tags.length > 0 ? t('tags.filterNoMatch') : t('tags.none')}
+                                    </div>
                                 )}
                             </div>
                         </div>

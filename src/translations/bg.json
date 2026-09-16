@@ -248,6 +248,8 @@
   "tags.boxFilterTitle": "С етикета — или съдържащи го",
   "tags.itemFilterTitle": "Филтрирай по {{tag.one}}",
   "tags.filterBy": "Филтрирай по „{{tag}}“",
+  "tags.filterSearch": "Търси {{tag.one}}…",
+  "tags.filterNoMatch": "Няма такива {{tag.many}}",
   "tags.remove": "Премахни {{tag.the}} „{{tag}}“",
 
   "sort.newest": "Първо новите",
