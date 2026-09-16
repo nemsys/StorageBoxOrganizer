@@ -102,10 +102,13 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm, knownLo
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Pass updates to parent
-        onSave({ name, description, location: location.trim(), tags: parseTagInput(tags), images });
+        const saved = await onSave({ name, description, location: location.trim(), tags: parseTagInput(tags), images });
+
+        // Keep the edits on screen if the save did not go through.
+        if (saved === false) return;
+
         clearDraft(draftKey);
         if (typeof onClose === 'function') onClose();
     };
