@@ -55,11 +55,22 @@ export function TagInput({ value, onChange, suggestions = [], placeholder = '', 
                                 type="button"
                                 className={`tag-chip ${isActive ? 'active' : ''}`}
                                 aria-pressed={isActive}
-                                // Keep focus in the field: the default blur would fire
-                                // onBlur first, committing the half-typed draft ("кл")
-                                // and re-filtering the ribbon out from under the tap.
+                                // Don't let the tap move focus by itself: the default
+                                // blur would fire onBlur first, committing the
+                                // half-typed draft ("кл") and re-filtering the ribbon
+                                // out from under the tap.
                                 onPointerDown={(e) => e.preventDefault()}
-                                onClick={() => (isActive ? removeTag(normalizeTag(suggestion)) : addTag(suggestion))}
+                                onClick={(e) => {
+                                    const chip = e.currentTarget;
+                                    if (isActive) removeTag(normalizeTag(suggestion));
+                                    else addTag(suggestion);
+                                    // …but do place it deliberately, on the chip. With
+                                    // focus merely left where it was, tapping a tag
+                                    // meant the caret — and on a phone the keyboard —
+                                    // stayed in the name field, which is neither where
+                                    // you are working nor what you just touched.
+                                    chip.focus();
+                                }}
                             >
                                 {suggestion}
                             </button>
