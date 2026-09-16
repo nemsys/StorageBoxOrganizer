@@ -92,10 +92,13 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm, knownLocations
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // pass base64 strings to parent
-        onAdd({ name, description, location: location.trim(), tags: parseTagInput(tags), images });
+        const saved = await onAdd({ name, description, location: location.trim(), tags: parseTagInput(tags), images });
+
+        // Only discard what was typed once the save has actually happened.
+        if (saved === false) return;
+
         setName('');
         setDescription('');
         setLocation('');

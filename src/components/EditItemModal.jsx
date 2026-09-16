@@ -100,16 +100,19 @@ export function EditItemModal({ isOpen, onClose, onSave, item, boxes = [], avail
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Pass updates to parent
-        onSave({
+        const saved = await onSave({
             name,
             description,
             images,
             tags: parseTagInput(tags),
             boxId: selectedBoxId
         });
+
+        // Keep the edits on screen if the save did not go through.
+        if (saved === false) return;
+
         clearDraft(draftKey);
         if (typeof onClose === 'function') onClose();
     };

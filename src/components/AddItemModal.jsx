@@ -147,15 +147,20 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
     // (initialBoxId), and the tag ribbon now leads with the tags from the item
     // just filed, so a run of similar things is a couple of taps apart without
     // making every single-item add choose between two near-identical buttons.
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onAdd({
+        const saved = await onAdd({
             name,
             description,
             images,
             tags: parseTagInput(tags),
             boxId: selectedBoxId
         });
+
+        // Only discard what was typed once the save has actually happened. The
+        // handler resolves false on failure (it has already said so with a
+        // toast), and the form stays as it was so nothing has to be retyped.
+        if (saved === false) return;
 
         setName('');
         setDescription('');

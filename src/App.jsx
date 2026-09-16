@@ -770,9 +770,12 @@ function App() {
 
       setBoxes(prev => [savedBox, ...prev]);
       setIsAddBoxModalOpen(false);
+      return true;
     } catch (error) {
       console.error("Error adding box:", error);
       addToast(t('box.addFailed'), "error");
+      // The modal keeps what was typed and stays open — see handleAddItem.
+      return false;
     }
   };
 
@@ -801,9 +804,14 @@ function App() {
       setAllItems(prev => [newItem, ...prev]);
       setIsAddItemModalOpen(false);
       await touchBoxes(newItem.boxId);
+      return true;
     } catch (error) {
       console.error("Error adding item:", error);
       addToast(t('item.addFailed'), "error");
+      // Say so rather than swallowing it: the modal clears its draft and closes
+      // on the strength of this answer, and a save that failed must not take
+      // the typed name, the tags and the photos with it.
+      return false;
     }
   };
 
@@ -1024,10 +1032,12 @@ function App() {
       }
 
       setEditingBox(null);
+      return true;
     } catch (err) {
       console.error('Failed to update box', err);
       refreshData(); // Revert on error
       addToast(t('box.updateFailed', { error: err.message }), "error");
+      return false;
     }
   };
 
@@ -1069,9 +1079,11 @@ function App() {
       if (previousBoxId !== nextBoxId) {
         await touchBoxes(previousBoxId, nextBoxId);
       }
+      return true;
     } catch (error) {
       console.error("Error updating item:", error);
       addToast(t('item.updateFailed'), "error");
+      return false;
     }
   };
 
