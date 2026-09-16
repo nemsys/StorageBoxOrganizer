@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Fuse from 'fuse.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BoxList } from './components/BoxList';
@@ -384,9 +384,9 @@ function App() {
             setBoxes(MOCK_BOXES);
             setItems(MOCK_ITEMS);
           } else if (user) {
-            const loadedBoxes = await firebaseStorage.getBoxes();
+            const loadedBoxes = await loadBoxes();
             setBoxes(loadedBoxes);
-            const allItems = await firebaseStorage.getAllItems();
+            const allItems = await loadAllItems();
             setItems(allItems);
           }
         } else if (historyView === 'items' && boxId) {
@@ -394,14 +394,14 @@ function App() {
           setCurrentBox(box);
           setItems(isMockAuth()
             ? MOCK_ITEMS.filter(i => i.boxId === boxId)
-            : await firebaseStorage.getItems(boxId));
+            : await loadBoxItems(boxId));
           setView('items');
           setSearchQuery('');
           setBoxSearchQuery('');
           setSelectedTag('');
         } else if (historyView === 'allItems') {
           setCurrentBox(null);
-          setItems(isMockAuth() ? MOCK_ITEMS : await firebaseStorage.getAllItems());
+          setItems(isMockAuth() ? MOCK_ITEMS : await loadAllItems());
           setView('allItems');
           setSearchQuery('');
           setBoxSearchQuery('');
@@ -418,7 +418,7 @@ function App() {
     }
 
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [user, boxes]);
+  }, [user, boxes, loadBoxes, loadAllItems, loadBoxItems]);
 
   // Handle Initial Hash on Load
   useEffect(() => {
@@ -483,12 +483,27 @@ function App() {
   // can offer a way back. The row leaves the screen immediately either way.
   const pendingCommits = useRef(new Map());
 
+  // What those deferred writes are about to remove. Firestore still serves the
+  // documents for as long as the write is held back, so any read landing inside
+  // the undo window would bring the deleted rows straight back — switching tabs
+  // within those few seconds was enough. Every load filters through this.
+  const pendingDeletes = useRef({ boxes: new Set(), items: new Set() });
+
+  /** The bucket a `kind:id` commit key belongs to. */
+  const deleteBucket = (kind) =>
+    kind === 'box' ? pendingDeletes.current.boxes : pendingDeletes.current.items;
+
   const scheduleCommit = (key, commit) => {
-    const timer = setTimeout(() => {
+    const [kind, id] = key.split(':');
+    const bucket = deleteBucket(kind);
+    bucket.add(id);
+    const run = () => {
+      bucket.delete(id);
       pendingCommits.current.delete(key);
       commit();
-    }, UNDO_WINDOW_MS);
-    pendingCommits.current.set(key, { timer, commit });
+    };
+    const timer = setTimeout(run, UNDO_WINDOW_MS);
+    pendingCommits.current.set(key, { timer, commit: run });
   };
 
   /** Cancel a scheduled write. Returns false if it has already gone through. */
@@ -496,9 +511,28 @@ function App() {
     const entry = pendingCommits.current.get(key);
     if (!entry) return false;
     clearTimeout(entry.timer);
+    const [kind, id] = key.split(':');
+    deleteBucket(kind).delete(id);
     pendingCommits.current.delete(key);
     return true;
   };
+
+  // Reads, with anything awaiting deletion filtered out. An item goes when its
+  // own delete is pending or when the box it sits in is on its way out. Stable
+  // identities (they close over refs only) so the listeners below can depend on
+  // them without re-subscribing on every render.
+  const loadBoxes = useCallback(async () => {
+    const list = await firebaseStorage.getBoxes();
+    return list.filter(b => !pendingDeletes.current.boxes.has(b.id));
+  }, []);
+
+  const visibleItems = useCallback((list) => list.filter(i =>
+    !pendingDeletes.current.items.has(i.id) && !pendingDeletes.current.boxes.has(i.boxId)), []);
+
+  const loadAllItems = useCallback(
+    async () => visibleItems(await firebaseStorage.getAllItems()), [visibleItems]);
+  const loadBoxItems = useCallback(
+    async (boxId) => visibleItems(await firebaseStorage.getItems(boxId)), [visibleItems]);
 
   // Leaving the page inside the undo window must not quietly resurrect what the
   // user deleted: flush anything still waiting. Firestore queues the write in
@@ -550,16 +584,16 @@ function App() {
     setDataLoading(true);
     lastSyncAt.current = Date.now();
     try {
-      const loadedBoxes = await firebaseStorage.getBoxes();
+      const loadedBoxes = await loadBoxes();
       setBoxes(loadedBoxes);
 
       // Always load all items for selection purposes
-      const allItemsData = await firebaseStorage.getAllItems();
+      const allItemsData = await loadAllItems();
       const sortedAllItems = [...allItemsData].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       setAllItems(sortedAllItems);
 
       if (currentBox) {
-        const loadedItems = await firebaseStorage.getItems(currentBox.id);
+        const loadedItems = await loadBoxItems(currentBox.id);
         const sortedItems = [...loadedItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         setItems(sortedItems);
       } else {
@@ -604,7 +638,7 @@ function App() {
     if (isMockAuth()) {
       boxItems = MOCK_ITEMS.filter(i => i.boxId === box.id);
     } else {
-      boxItems = await firebaseStorage.getItems(box.id);
+      boxItems = await loadBoxItems(box.id);
     }
     const sortedItems = [...boxItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     setItems(sortedItems);
@@ -830,16 +864,22 @@ function App() {
     });
   };
 
+  // Delete a box and everything in it. Cascading, so the confirmation names the
+  // scope — and, like an item delete, the write is deferred by the undo window:
+  // this is the most destructive thing the app can do, and once the cascade has
+  // run the items' photos are gone with them, so the only honest way back is to
+  // not have deleted yet.
   async function handleDeleteBox(id) {
-    // Cascading and immediate — name the scope, since there is no way back.
-    const doomedCount = allItems.filter(i => i.boxId === id).length;
+    const doomedItems = allItems.filter(i => i.boxId === id);
     askConfirm({
       title: t('box.deleteTitle'),
-      message: doomedCount > 0
-        ? t('box.deleteMessageCount', { count: doomedCount })
+      message: doomedItems.length > 0
+        ? t('box.deleteMessageCount', { count: doomedItems.length })
         : t('box.deleteMessageEmpty'),
       type: 'danger',
-      onConfirm: async () => {
+      onConfirm: () => {
+        const boxSnapshot = boxes.find(b => b.id === id) || currentBox;
+
         // Optimistic update
         setBoxes(prev => prev.filter(b => b.id !== id));
         setItems(prev => prev.filter(i => i.boxId !== id));
@@ -849,14 +889,27 @@ function App() {
           goToBoxes();
         }
 
-        try {
-          await firebaseStorage.deleteBox(id);
-          addToast(t('box.deletedToast'), "success");
-        } catch (err) {
-          console.error('Failed to delete box', err);
-          refreshData(); // Revert
-          addToast(t('box.deleteFailed'), "error");
-        }
+        scheduleCommit(`box:${id}`, async () => {
+          try {
+            await firebaseStorage.deleteBox(id);
+          } catch (err) {
+            console.error('Failed to delete box', err);
+            refreshData(); // Revert
+            addToast(t('box.deleteFailed'), "error");
+          }
+        });
+
+        addToast(t('box.deletedToast'), "success", {
+          duration: UNDO_WINDOW_MS,
+          actionLabel: t('common.undo'),
+          onAction: () => {
+            if (!cancelCommit(`box:${id}`) || !boxSnapshot) return;
+            setBoxes(prev => [boxSnapshot, ...prev.filter(b => b.id !== id)]);
+            const restore = (prev) => [...doomedItems, ...prev.filter(i => i.boxId !== id)];
+            setItems(restore);
+            setAllItems(restore);
+          }
+        });
       }
     });
   };
@@ -1340,7 +1393,7 @@ function App() {
   // Handle List All Items
   const handleListAllItems = async () => {
     setCurrentBox(null);
-    const allItems = isMockAuth() ? MOCK_ITEMS : await firebaseStorage.getAllItems();
+    const allItems = isMockAuth() ? MOCK_ITEMS : await loadAllItems();
     const sortedItems = [...allItems].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     setItems(sortedItems);
     setView('allItems');
