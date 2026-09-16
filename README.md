@@ -24,6 +24,13 @@ A clean, cloud-synced web app for cataloguing your physical storage boxes and th
 
 The app is deployed on Firebase Hosting. Sign in with your Google account or email to get started.
 
+**New here?** The [landing page](https://nemsys.github.io/StorageBoxOrganizer/)
+(Bulgarian, with English) explains what the app does, how to install it and how
+to get access, in plain words for non-technical people. Its source is the static
+`site/` folder, published to GitHub Pages by `.github/workflows/pages.yml` on any
+change under `site/`; it has no build step and nothing to do with the Firebase
+deploy.
+
 ### Installing it on a phone
 
 Two ways, same app — both load the same hosted build, so both stay up to date on
