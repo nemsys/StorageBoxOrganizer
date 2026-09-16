@@ -1,0 +1,42 @@
+name: Landing page
+
+# Publishes site/ — the static, bilingual landing page for non-technical users —
+# to GitHub Pages at https://nemsys.github.io/StorageBoxOrganizer/.
+# It is independent of the app: no build step, no Firebase, and it runs only
+# when something under site/ changes, so app pushes never redeploy it.
+# The download buttons ask the GitHub API for the newest Release's APK at
+# page load, so a new release needs no change here.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'site/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v5
