@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.19.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.18.2...v1.19.0) (2026-09-16)
+
+
+### Features
+
+* **filter:** search field in the tag filter dropdown ([#57](https://github.com/nemsys/StorageBoxOrganizer/issues/57)) ([1b87660](https://github.com/nemsys/StorageBoxOrganizer/commit/1b87660679b4cec8a694f349c0f28da210755432))
+* sign-up-first auth screen and a landing page link in About ([#60](https://github.com/nemsys/StorageBoxOrganizer/issues/60)) ([caf4d10](https://github.com/nemsys/StorageBoxOrganizer/commit/caf4d10f7a4b7f55fe8690640e86b7a4bb3b212c))
+
 ## [1.18.2](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.18.1...v1.18.2) (2026-09-16)
 
 
