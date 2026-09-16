@@ -47,6 +47,7 @@
   "box.locationPlaceholder": "e.g., Attic, shelf 2",
   "box.locationHint": "Where {{box.the}} physically is, so finding something tells you where to go.",
   "box.locatedAt": "{{^box.place}}: {{location}}",
+  "box.matchedItems": "Matches {{item.many}}: {{names}}",
   "box.addTitle": "Add {{box.new}} {{box.one}}",
   "box.add": "Add {{box.one}}",
   "box.create": "Create {{^box.one}}",

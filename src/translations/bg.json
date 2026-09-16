@@ -47,6 +47,7 @@
   "box.locationPlaceholder": "напр. Таван, рафт 2",
   "box.locationHint": "Къде физически се намира {{box.theSubj}}, за да знаеш къде да отидеш, щом намериш нещо.",
   "box.locatedAt": "{{^box.place}}: {{location}}",
+  "box.matchedItems": "Съвпадащи {{item.many}}: {{names}}",
   "box.addTitle": "{{^box.new}} {{box.one}}",
   "box.add": "Добави {{box.one}}",
   "box.create": "Създай {{box.one}}",

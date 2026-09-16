@@ -1,4 +1,4 @@
-import { Package, ZoomIn, MapPin } from 'lucide-react';
+import { Package, ZoomIn, MapPin, Search } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
 import { getImageRefs, refsToThumbs } from '../utils/imageUtils';
 import { useTranslation } from '../translations';
@@ -105,6 +105,22 @@ export function BoxCard({ box, onClick, onImageClick, itemCount = 0 }) {
                 <p className="text-sm text-muted line-clamp-2 leading-relaxed">
                     {box.description || t('common.noDescription')}
                 </p>
+
+                {/* Why this box is in the results — it matched on something
+                    inside it, not on anything printed above. Without the line
+                    the box reads as a false positive. */}
+                {box.matchedItems?.length > 0 && (
+                    <p
+                        className="box-match mt-auto pt-3"
+                        title={t('box.matchedItems', { names: box.matchedItems.join(', ') })}
+                    >
+                        <Search size={11} className="shrink-0" aria-hidden="true" />
+                        <span className="truncate">{box.matchedItems[0]}</span>
+                        {box.matchedItems.length > 1 && (
+                            <span className="shrink-0">+{box.matchedItems.length - 1}</span>
+                        )}
+                    </p>
+                )}
             </div>
         </div>
     );

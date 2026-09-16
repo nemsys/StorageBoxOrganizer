@@ -1306,13 +1306,32 @@ function App() {
       });
     }
 
-    // Filter by search query
+    // Filter by search query. A box matches on its own fields *or* on anything
+    // inside it: "винтоверт" used to return nothing here while the screwdriver
+    // sat in a box called Инструменти, which is the one thing a person searching
+    // a list of boxes is actually trying to do. Contents hits are carried back
+    // on the box as `matchedItems`, so the card can say why it is in the list —
+    // an unexplained match is indistinguishable from a broken search.
     if (boxSearchQuery) {
-      const fuse = new Fuse(result, {
+      const boxFuse = new Fuse(result, {
         keys: ['name', 'description', 'location'],
         threshold: 0.3,
       });
-      result = fuse.search(boxSearchQuery).map(r => r.item);
+      const directHits = new Set(boxFuse.search(boxSearchQuery).map(r => r.item.id));
+
+      const itemFuse = new Fuse(allItems.filter(i => i.boxId), {
+        keys: ['name', 'description', 'tags'],
+        threshold: 0.3,
+      });
+      const itemHits = new Map();
+      itemFuse.search(boxSearchQuery).forEach(({ item }) => {
+        if (!itemHits.has(item.boxId)) itemHits.set(item.boxId, []);
+        itemHits.get(item.boxId).push(item.name);
+      });
+
+      result = result
+        .filter(box => directHits.has(box.id) || itemHits.has(box.id))
+        .map(box => itemHits.has(box.id) ? { ...box, matchedItems: itemHits.get(box.id) } : box);
     }
 
     // Sort
