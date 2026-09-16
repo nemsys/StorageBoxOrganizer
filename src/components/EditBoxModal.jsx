@@ -9,12 +9,15 @@ import { useModalDraft, clearDraft } from '../utils/draftStorage';
 import { usePhotoCapture } from '../native/usePhotoCapture';
 import { useTranslation } from '../translations';
 import { LocationInput } from './LocationInput';
+import { TagInput } from './TagInput';
+import { parseTagInput } from '../utils/tagUtils';
 
-export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm, knownLocations = [] }) {
+export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm, knownLocations = [], availableTags = [] }) {
     const { t } = useTranslation();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
+    const [tags, setTags] = useState('');
     const [images, setImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
     const [viewerIndex, setViewerIndex] = useState(null); // null = closed
@@ -27,11 +30,12 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm, knownLo
     useModalDraft(
         draftKey,
         isOpen,
-        { name, description, location, images },
+        { name, description, location, tags, images },
         (draft) => {
             setName(draft.name || '');
             setDescription(draft.description || '');
             setLocation(draft.location || '');
+            setTags(draft.tags || '');
             setImages(draft.images || []);
             setImagePreviews(refsToThumbs(draft.images || []));
         },
@@ -39,6 +43,7 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm, knownLo
             name: box?.name || '',
             description: box?.description || '',
             location: box?.location || '',
+            tags: (box?.tags || []).join(', '),
             // Refs ({id, thumb}) for existing images; new captures append {thumb, full}.
             images: getImageRefs(box)
         })
@@ -100,7 +105,7 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm, knownLo
     const handleSubmit = (e) => {
         e.preventDefault();
         // Pass updates to parent
-        onSave({ name, description, location: location.trim(), images });
+        onSave({ name, description, location: location.trim(), tags: parseTagInput(tags), images });
         clearDraft(draftKey);
         if (typeof onClose === 'function') onClose();
     };
@@ -226,6 +231,21 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm, knownLo
                         </div>
                     )}
                 </div>
+
+                <div>
+                    <div className="flex justify-between items-end mb-1">
+                        <label className="block text-sm font-medium text-muted">{t('common.tags')}</label>
+                        <span className="text-[10px] text-muted uppercase tracking-wider">{t('item.tagsHint')}</span>
+                    </div>
+                    <TagInput
+                        value={tags}
+                        onChange={setTags}
+                        suggestions={availableTags}
+                        placeholder={t('box.tagsPlaceholder')}
+                        hint={{ remove: (tag) => t('tags.remove', { tag }) }}
+                    />
+                </div>
+
 
                 <div className="pt-4 flex justify-end gap-3">
                     <button type="button" onClick={handleClose} className="btn btn-ghost">{t('common.cancel')}</button>

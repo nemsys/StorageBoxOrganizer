@@ -7,12 +7,15 @@ import { useModalDraft, clearDraft } from '../utils/draftStorage';
 import { usePhotoCapture } from '../native/usePhotoCapture';
 import { useTranslation } from '../translations';
 import { LocationInput } from './LocationInput';
+import { TagInput } from './TagInput';
+import { parseTagInput } from '../utils/tagUtils';
 
-export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm, knownLocations = [] }) {
+export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm, knownLocations = [], availableTags = [] }) {
     const { t } = useTranslation();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
+    const [tags, setTags] = useState('');
     const [images, setImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
     const fileInputRef = useRef(null);
@@ -24,15 +27,16 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm, knownLocations
     useModalDraft(
         draftKey,
         isOpen,
-        { name, description, location, images },
+        { name, description, location, tags, images },
         (draft) => {
             setName(draft.name || '');
             setDescription(draft.description || '');
             setLocation(draft.location || '');
+            setTags(draft.tags || '');
             setImages(draft.images || []);
             setImagePreviews(refsToThumbs(draft.images || []));
         },
-        () => ({ name: '', description: '', location: '', images: [] })
+        () => ({ name: '', description: '', location: '', tags: '', images: [] })
     );
 
     const handleClose = () => {
@@ -91,10 +95,11 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm, knownLocations
     const handleSubmit = (e) => {
         e.preventDefault();
         // pass base64 strings to parent
-        onAdd({ name, description, location: location.trim(), images });
+        onAdd({ name, description, location: location.trim(), tags: parseTagInput(tags), images });
         setName('');
         setDescription('');
         setLocation('');
+        setTags('');
         setImages([]);
         setImagePreviews([]);
         if (fileInputRef.current) fileInputRef.current.value = null;
@@ -198,6 +203,20 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm, knownLocations
                     />
                 </div>
 
+
+                <div>
+                    <div className="flex justify-between items-end mb-1">
+                        <label className="block text-sm font-medium text-muted">{t('common.tags')}</label>
+                        <span className="text-[10px] text-muted uppercase tracking-wider">{t('item.tagsHint')}</span>
+                    </div>
+                    <TagInput
+                        value={tags}
+                        onChange={setTags}
+                        suggestions={availableTags}
+                        placeholder={t('box.tagsPlaceholder')}
+                        hint={{ remove: (tag) => t('tags.remove', { tag }) }}
+                    />
+                </div>
                 <div className="pt-4 flex justify-end gap-3">
                     <button type="button" onClick={handleClose} className="btn btn-ghost">{t('common.cancel')}</button>
                     <button type="submit" className="btn btn-primary">{t('box.create')}</button>

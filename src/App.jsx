@@ -52,6 +52,7 @@ const MOCK_BOXES = [
     name: "Кутия със зимни дрехи - таван",
     description: "Пуловери, шалове и якета от миналата зима",
     location: "Таван, рафт 1",
+    tags: ["зимно", "дрехи"],
     image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%233b82f6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 1.1</text></svg>",
     images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%233b82f6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 1.1</text></svg>", "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%236366f1'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 1.2</text></svg>"],
     userId: "mock-user-123",
@@ -62,6 +63,7 @@ const MOCK_BOXES = [
     name: "Документи и гаранции 2019-2024",
     description: "Договори, гаранционни карти, стари сметки",
     location: "Кабинет, шкаф",
+    tags: ["документи"],
     image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%238b5cf6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 2.1</text></svg>",
     images: ["data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' fill='%238b5cf6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='11' font-family='sans-serif'>Box 2.1</text></svg>"],
     userId: "mock-user-123",
@@ -748,6 +750,7 @@ function App() {
         name: payload.name,
         description: payload.description,
         location: payload.location || '',
+        tags: payload.tags || [],
         images: refs,
         image: refs[0]?.thumb || null, // Backward compatibility (thumb)
         createdAt: Date.now()
@@ -1068,7 +1071,7 @@ function App() {
   // every stored spelling of the tag, not just the one the list happens to show.
   const handleRenameTag = async (oldName, newName) => {
     const canonical = normalizeTag(newName);
-    const variants = tagVariants(allItems, oldName);
+    const variants = tagVariants([...allItems, ...boxes], oldName);
     const matches = new Set(variants.map(normalizeTag));
     await firebaseStorage.renameTag(variants, canonical);
     // Update local state for all items
@@ -1081,6 +1084,8 @@ function App() {
     };
     setAllItems(prev => prev.map(updateItemTags));
     setItems(prev => prev.map(updateItemTags));
+    setBoxes(prev => prev.map(updateItemTags));
+    setCurrentBox(prev => (prev ? updateItemTags(prev) : prev));
 
     // The filter pills may still point at the old name.
     const renamePill = (prev) => (matches.has(normalizeTag(prev)) ? canonical : prev);
@@ -1089,7 +1094,7 @@ function App() {
   };
 
   const handleDeleteTag = async (tagName) => {
-    const variants = tagVariants(allItems, tagName);
+    const variants = tagVariants([...allItems, ...boxes], tagName);
     const matches = new Set(variants.map(normalizeTag));
     await firebaseStorage.deleteTag(variants);
     // Update local state for all items
@@ -1099,6 +1104,8 @@ function App() {
     };
     setAllItems(prev => prev.map(removeItemTag));
     setItems(prev => prev.map(removeItemTag));
+    setBoxes(prev => prev.map(removeItemTag));
+    setCurrentBox(prev => (prev ? removeItemTag(prev) : prev));
 
     const clearPill = (prev) => (matches.has(normalizeTag(prev)) ? '' : prev);
     setSelectedTag(clearPill);
@@ -1323,10 +1330,14 @@ function App() {
 
     // Filter by tag
     if (selectedBoxTag) {
-      result = result.filter(box => {
-        // Find if this box has any items with the selected tag
-        return allItems.some(item => item.boxId === box.id && hasTag(item, selectedBoxTag));
-      });
+      // A box matches on its own tags or on those of anything inside it. Both
+      // are true statements about the box, and requiring the user to know which
+      // kind of tag they were looking at would be a distinction without a
+      // difference — "show me the winter things" means both.
+      result = result.filter(box =>
+        hasTag(box, selectedBoxTag) ||
+        allItems.some(item => item.boxId === box.id && hasTag(item, selectedBoxTag))
+      );
     }
 
     // Filter by search query. A box matches on its own fields *or* on anything
@@ -1390,6 +1401,17 @@ function App() {
     return sorted;
   }, [boxes, boxSearchQuery, selectedBoxTag, boxSortOrder, allItems, itemCounts]);
 
+  // Everything that carries tags, for the places that reason about the tag
+  // vocabulary as a whole rather than about boxes or items specifically.
+  const taggedEntities = useMemo(() => [...allItems, ...boxes], [allItems, boxes]);
+
+  // Tapping a tag chip on a box card filters the box list by it, exactly as the
+  // item version does for items.
+  const handleBoxTagClick = (tag) => {
+    setSelectedBoxTag(prev => (normalizeTag(prev) === normalizeTag(tag) ? '' : normalizeTag(tag)));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Tapping a tag chip on a card filters by it — the shortest path from
   // "this looks relevant" to "show me everything like it".
   const handleTagClick = (tag) => {
@@ -1421,11 +1443,11 @@ function App() {
   // "Books" and a current "books" collapse into a single entry.
   const allTags = useMemo(() => {
     const tagSet = new Set();
-    allItems.forEach(item => {
-      normalizeTags(item.tags).forEach(tag => tagSet.add(tag));
+    [...allItems, ...boxes].forEach(entity => {
+      normalizeTags(entity.tags).forEach(tag => tagSet.add(tag));
     });
     return Array.from(tagSet).sort();
-  }, [allItems]);
+  }, [allItems, boxes]);
 
   // The same tags, most-used first. This is the order the suggestion ribbon in
   // the item modals wants: it is a horizontally scrolling strip, so alphabetical
@@ -1434,13 +1456,13 @@ function App() {
   // is scanned for a known name rather than reached for by habit.
   const tagsByUse = useMemo(() => {
     const counts = new Map();
-    allItems.forEach(item => {
-      normalizeTags(item.tags).forEach(tag => counts.set(tag, (counts.get(tag) || 0) + 1));
+    [...allItems, ...boxes].forEach(entity => {
+      normalizeTags(entity.tags).forEach(tag => counts.set(tag, (counts.get(tag) || 0) + 1));
     });
     return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .map(([tag]) => tag);
-  }, [allItems]);
+  }, [allItems, boxes]);
 
   // All Items View Filtering and Sorting
   const allItemsDisplayItems = useMemo(() => {
@@ -1752,6 +1774,7 @@ function App() {
                 itemCounts={itemCounts}
                 onBoxClick={handleBoxClick}
                 onImageClick={handleImageClick}
+                onTagClick={handleBoxTagClick}
               />
             )}
           </>
@@ -1924,6 +1947,7 @@ function App() {
         onAdd={handleAddBox}
         askConfirm={askConfirm}
         knownLocations={knownLocations}
+        availableTags={tagsByUse}
       />
 
       <AddItemModal
@@ -1945,6 +1969,7 @@ function App() {
         box={editingBox}
         askConfirm={askConfirm}
         knownLocations={knownLocations}
+        availableTags={tagsByUse}
       />
 
       <EditItemModal
@@ -1976,7 +2001,7 @@ function App() {
       <TagManagementModal
         isOpen={isTagManagementModalOpen}
         onClose={() => setIsTagManagementModalOpen(false)}
-        allItems={allItems}
+        taggedEntities={taggedEntities}
         onRenameTag={handleRenameTag}
         onDeleteTag={handleDeleteTag}
         addToast={addToast}

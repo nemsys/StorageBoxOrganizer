@@ -146,16 +146,17 @@ export function resolveImportId(rawId, uid, ownedIds) {
   return `${uid}_${id}`;
 }
 
-// Items carrying any of the given tag spellings. `array-contains-any` caps at
-// 10 values per query, so the variants are fetched in chunks and de-duplicated.
-async function findItemsWithAnyTag(tags) {
+// Documents in `collName` carrying any of the given tag spellings.
+// `array-contains-any` caps at 10 values per query, so the variants are fetched
+// in chunks and de-duplicated. Boxes carry tags too, so this is not item-only.
+async function findDocsWithAnyTag(collName, tags) {
   const uid = getUserId();
   const wanted = tags.filter(Boolean);
   if (wanted.length === 0) return [];
   const byId = new Map();
   for (let i = 0; i < wanted.length; i += 10) {
     const q = query(
-      collection(db, ITEMS_COLL),
+      collection(db, collName),
       where('userId', '==', uid),
       where('tags', 'array-contains-any', wanted.slice(i, i + 10))
     );
@@ -163,6 +164,26 @@ async function findItemsWithAnyTag(tags) {
     snap.docs.forEach((d) => byId.set(d.id, d));
   }
   return Array.from(byId.values());
+}
+
+// Apply a tag rewrite across both tagged collections. `rewrite` returns the new
+// tag array for a document's current one. Items record `modifiedAt`; boxes
+// deliberately do not get `updatedAt` touched — that field means "the contents
+// changed", and renaming a tag is not a contents change.
+async function rewriteTags(targets, rewrite) {
+  const matches = new Set(targets.map(normalizeTag));
+  for (const [collName, stamp] of [[ITEMS_COLL, true], [BOXES_COLL, false]]) {
+    const docs = await findDocsWithAnyTag(collName, targets);
+    docs.forEach((docSnap) => {
+      const data = docSnap.data();
+      const next = rewrite(data.tags || [], matches);
+      queueWrite(setDoc(doc(db, collName, docSnap.id), {
+        ...data,
+        tags: next,
+        ...(stamp ? { modifiedAt: Date.now() } : {}),
+      }));
+    });
+  }
 }
 
 // Whether an entity still holds legacy inline images (needs migration).
@@ -367,27 +388,15 @@ export const firebaseStorage = {
     const canonical = normalizeTag(newName);
     if (!canonical) return;
     const targets = Array.isArray(oldNames) ? oldNames : [oldNames];
-    const docs = await findItemsWithAnyTag(targets);
-    const matches = new Set(targets.map(normalizeTag));
-    docs.forEach(docSnap => {
-      const data = docSnap.data();
-      const updatedTags = normalizeTags(
-        (data.tags || []).map(t => matches.has(normalizeTag(t)) ? canonical : t)
-      );
-      queueWrite(setDoc(doc(db, ITEMS_COLL, docSnap.id), { ...data, tags: updatedTags, modifiedAt: Date.now() }));
-    });
+    await rewriteTags(targets, (tags, matches) =>
+      normalizeTags(tags.map(t => matches.has(normalizeTag(t)) ? canonical : t)));
   },
 
-  /** Remove a tag — and any other-cased spelling of it — from every item. */
+  /** Remove a tag — and any other-cased spelling of it — everywhere it occurs. */
   deleteTag: async (tagNames) => {
     const targets = Array.isArray(tagNames) ? tagNames : [tagNames];
-    const docs = await findItemsWithAnyTag(targets);
-    const matches = new Set(targets.map(normalizeTag));
-    docs.forEach(docSnap => {
-      const data = docSnap.data();
-      const updatedTags = (data.tags || []).filter(t => !matches.has(normalizeTag(t)));
-      queueWrite(setDoc(doc(db, ITEMS_COLL, docSnap.id), { ...data, tags: updatedTags, modifiedAt: Date.now() }));
-    });
+    await rewriteTags(targets, (tags, matches) =>
+      tags.filter(t => !matches.has(normalizeTag(t))));
   },
 
   seed: async () => {
