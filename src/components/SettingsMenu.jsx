@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw, ImageDown, LogOut, Languages, Info, RotateCw, User, ClipboardCheck } from 'lucide-react';
+import { Settings, Tags, Download, Upload, Sun, Moon, RefreshCw, ImageDown, LogOut, Languages, Info, RotateCw, User, ClipboardCheck, Printer } from 'lucide-react';
 import { useTranslation, LANGUAGES } from '../translations';
 
 export const SettingsMenu = ({ email, onRefresh, onManageTags,
-  onInventoryCheck, onExport, onImport, onOptimizeImages, theme, onToggleTheme, onCheckUpdates, onAbout, onSignOut }) => {
+  onInventoryCheck,
+  onPrintLabels, onExport, onImport, onOptimizeImages, theme, onToggleTheme, onCheckUpdates, onAbout, onSignOut }) => {
   const { t, lang, setLang } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -88,6 +89,17 @@ export const SettingsMenu = ({ email, onRefresh, onManageTags,
         icon: <ClipboardCheck size={18} />,
         onClick: () => {
           onInventoryCheck();
+          setIsOpen(false);
+        }
+      }
+    ] : []),
+    ...(onPrintLabels ? [
+      {
+        id: 'print-labels',
+        label: t('settings.printLabels'),
+        icon: <Printer size={18} />,
+        onClick: () => {
+          onPrintLabels();
           setIsOpen(false);
         }
       }

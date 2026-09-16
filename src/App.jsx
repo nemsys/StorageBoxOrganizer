@@ -13,6 +13,7 @@ import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { ImageSlider } from './components/ImageSlider';
 import { TagManagementModal } from './components/TagManagementModal';
 import { InventoryCheckModal } from './components/InventoryCheckModal';
+import { LabelSheetModal } from './components/LabelSheetModal';
 import { SelectionBar } from './components/SelectionBar';
 import { BulkActionModal } from './components/BulkActionModal';
 import { SettingsMenu } from './components/SettingsMenu';
@@ -269,6 +270,7 @@ function App() {
 
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
   const [isInventoryCheckOpen, setIsInventoryCheckOpen] = useState(false);
+  const [isLabelSheetOpen, setIsLabelSheetOpen] = useState(false);
   // Re-filing a shelf is the case that made this necessary: moving ten things
   // between boxes was ten separate edits. null = not selecting.
   const [selectedIds, setSelectedIds] = useState(null);
@@ -1722,6 +1724,7 @@ function App() {
                     onRefresh={handleManualRefresh}
                     onManageTags={() => setIsTagManagementModalOpen(true)}
                     onInventoryCheck={() => setIsInventoryCheckOpen(true)}
+                    onPrintLabels={() => setIsLabelSheetOpen(true)}
                     onExport={handleExportData}
                     onImport={handleImportButtonClick}
                     onOptimizeImages={handleOptimizeImages}
@@ -2097,6 +2100,12 @@ function App() {
         imageRefs={fullscreenImage.refs}
         itemName={fullscreenImage.name}
         startIndex={fullscreenImage.startIndex}
+      />
+      <LabelSheetModal
+        key={isLabelSheetOpen ? 'labels-open' : 'labels-closed'}
+        isOpen={isLabelSheetOpen}
+        onClose={() => setIsLabelSheetOpen(false)}
+        boxes={boxes}
       />
       <InventoryCheckModal
         isOpen={isInventoryCheckOpen}

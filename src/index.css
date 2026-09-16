@@ -693,6 +693,63 @@
     padding-right: 0.6rem;
   }
 
+  /* ── Printable box labels ──────────────────────────────────────────────
+     Parked off-screen while on screen (not display:none, which would stop the
+     QR images loading) and promoted to the whole page when printing. */
+  .label-sheet {
+    position: absolute;
+    left: -10000px;
+    top: 0;
+    width: 190mm;
+  }
+  .label {
+    display: flex;
+    align-items: center;
+    gap: 4mm;
+    width: 90mm;
+    height: 45mm;
+    padding: 4mm;
+    box-sizing: border-box;
+    border: 1px dashed #999;
+    border-radius: 3mm;
+    background: #fff;
+    color: #000;
+    overflow: hidden;
+  }
+  .label__qr {
+    width: 34mm;
+    height: 34mm;
+    flex-shrink: 0;
+  }
+  .label__text {
+    min-width: 0;
+    flex: 1;
+  }
+  .label__name {
+    font-size: 13pt;
+    font-weight: 700;
+    line-height: 1.15;
+    /* Three lines of a long Bulgarian box name, then clipped — the QR is the
+       identifier that always works; the text is for reading across a cellar. */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .label__place {
+    display: flex;
+    align-items: center;
+    gap: 1mm;
+    margin-top: 1.5mm;
+    font-size: 10pt;
+    font-weight: 600;
+  }
+  .label__hint {
+    margin-top: 2mm;
+    font-size: 7pt;
+    color: #555;
+  }
+
   /* ── Selecting several items at once ───────────────────────────────────
      The card itself is the target while selecting (see ItemCard): a checkbox
      small enough to sit in a corner of a 156px card is not a touch target, so
@@ -1128,5 +1185,42 @@
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+/* ============================================================================
+   Print — box labels only
+   ----------------------------------------------------------------------------
+   Hiding everything by visibility rather than display keeps the sheet's own
+   layout intact; display:none on an ancestor would take the labels with it.
+   ========================================================================== */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .label-sheet,
+  .label-sheet * {
+    visibility: visible;
+  }
+
+  .label-sheet {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5mm;
+    width: auto;
+  }
+
+  .label {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  @page {
+    size: A4;
+    margin: 10mm;
   }
 }
