@@ -471,9 +471,17 @@ function App() {
 
     window.addEventListener('popstate', handlePopState);
 
-    // Initialize history state if not set
+    // Initialize history state if not set. The hash has to be carried over:
+    // this runs on mount, before the boxes are loaded, and writing only
+    // pathname + search dropped `#box/<id>` — so by the time the effect below
+    // looked for a deep link there was nothing left to find, and every shared
+    // or reopened box link landed on the box list instead.
     if (!window.history.state) {
-      window.history.replaceState({ view: 'boxes' }, '', window.location.pathname + window.location.search);
+      window.history.replaceState(
+        { view: 'boxes' },
+        '',
+        window.location.pathname + window.location.search + window.location.hash
+      );
     }
 
     return () => window.removeEventListener('popstate', handlePopState);
