@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Modal } from './Modal';
 import { CameraCaptureModal } from './CameraCaptureModal';
+import { FullscreenImageModal } from './FullscreenImageModal';
 import { Upload, Trash2, Camera } from 'lucide-react';
 import { makeDerivatives, refsToThumbs } from '../utils/imageUtils';
 import { useModalDraft, clearDraft } from '../utils/draftStorage';
@@ -18,6 +19,7 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm, knownLocations
     const [tags, setTags] = useState('');
     const [images, setImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
+    const [viewerIndex, setViewerIndex] = useState(null); // null = closed
     const fileInputRef = useRef(null);
 
     const draftKey = 'add-box';
@@ -152,7 +154,8 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm, knownLocations
                                     <img
                                         src={preview}
                                         alt={t('photo.preview', { index: index + 1 })}
-                                        className="w-full h-full object-cover rounded-lg"
+                                        onClick={() => setViewerIndex(index)}
+                                        className="w-full h-full object-cover rounded-lg cursor-pointer"
                                     />
                                     <button
                                         type="button"
@@ -203,6 +206,16 @@ export function AddBoxModal({ isOpen, onClose, onAdd, askConfirm, knownLocations
                         isOpen={cameraOpen}
                         onClose={() => setCameraOpen(false)}
                         onCapture={handleCameraCapture}
+                    />
+                    {/* Not saved yet, so each ref carries `full` inline and the
+                        viewer shows it without a fetch. */}
+                    <FullscreenImageModal
+                        isOpen={viewerIndex !== null}
+                        onClose={() => setViewerIndex(null)}
+                        imageRefs={images}
+                        startIndex={viewerIndex ?? 0}
+                        itemName={name}
+                        onDelete={requestRemoveImage}
                     />
                 </div>
 

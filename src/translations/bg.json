@@ -171,6 +171,9 @@
   "camera.failed": "Камерата не можа да се отвори. Използвай „Галерия“.",
   "camera.starting": "Камерата още се стартира — докосни пак.",
   "camera.captureFailed": "Снимката не се получи. Опитай пак.",
+  "camera.review": "Направената снимка",
+  "camera.retake": "Отново",
+  "camera.use": "Използвай",
 
   "auth.welcomeBack": "Здравей отново",
   "auth.createAccount": "Създай профил",
