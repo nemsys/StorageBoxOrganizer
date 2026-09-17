@@ -171,6 +171,9 @@
   "camera.failed": "Could not open the camera. Use the Gallery option instead.",
   "camera.starting": "Camera is still starting — please tap again.",
   "camera.captureFailed": "Failed to capture the photo. Please try again.",
+  "camera.review": "Captured photo",
+  "camera.retake": "Retake",
+  "camera.use": "Use photo",
 
   "auth.welcomeBack": "Welcome back",
   "auth.createAccount": "Create Account",

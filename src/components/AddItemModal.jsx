@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import Fuse from 'fuse.js';
 import { Modal } from './Modal';
 import { CameraCaptureModal } from './CameraCaptureModal';
+import { FullscreenImageModal } from './FullscreenImageModal';
 import { TagInput } from './TagInput';
 import { Upload, Trash2, Search, Camera, Package, X, Check } from 'lucide-react';
 import { makeDerivatives, refsToThumbs, getImageRefs } from '../utils/imageUtils';
@@ -21,6 +22,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
     const [tags, setTags] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedExistingId, setSelectedExistingId] = useState('');
+    const [viewerIndex, setViewerIndex] = useState(null); // null = closed
     const fileInputRef = useRef(null);
 
     const draftKey = 'add-item';
@@ -257,7 +259,8 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                                         <img
                                             src={preview}
                                             alt={t('photo.preview', { index: index + 1 })}
-                                            className="w-full h-full object-cover rounded-lg"
+                                            onClick={() => setViewerIndex(index)}
+                                            className="w-full h-full object-cover rounded-lg cursor-pointer"
                                         />
                                         <button
                                             type="button"
@@ -308,6 +311,16 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                             isOpen={cameraOpen}
                             onClose={() => setCameraOpen(false)}
                             onCapture={handleCameraCapture}
+                        />
+                        {/* Not saved yet, so each ref carries `full` inline and the
+                            viewer shows it without a fetch. */}
+                        <FullscreenImageModal
+                            isOpen={viewerIndex !== null}
+                            onClose={() => setViewerIndex(null)}
+                            imageRefs={images}
+                            startIndex={viewerIndex ?? 0}
+                            itemName={name}
+                            onDelete={requestRemoveImage}
                         />
                     </div>
 

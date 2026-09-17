@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, RefreshCw, Loader2 } from 'lucide-react';
+import { X, RefreshCw, Loader2, RotateCcw, Check } from 'lucide-react';
 import { makeDerivatives } from '../utils/imageUtils';
 import { useBackHandler } from '../native/backHandler';
 import { useTranslation } from '../translations';
@@ -10,6 +10,11 @@ import { useTranslation } from '../translations';
  * grabs a still frame on shutter — all without leaving the page. This avoids the
  * native `<input capture>` flow, which on low-RAM devices (e.g. ColorOS / OPPO)
  * gets the page discarded while the Camera app is foregrounded, losing the photo.
+ *
+ * The shutter does not hand the photo over straight away: the frame is shown
+ * full-screen first, with Retake and Use. The form behind it only has room for
+ * a thumbnail, and a blurred or badly framed shot is cheaper to redo while the
+ * camera is still open than to find later.
  *
  * Props:
  *   isOpen     - whether the camera is shown
@@ -27,6 +32,8 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
     // <video> (which briefly shows the WebView's default play-poster icon) with
     // a loading spinner.
     const [ready, setReady] = useState(false);
+    // The captured { thumb, full } awaiting Retake / Use; null while live.
+    const [captured, setCaptured] = useState(null);
 
     const stopStream = () => {
         if (streamRef.current) {
@@ -50,6 +57,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
         setBusy(false);
         setError('');
         setReady(false);
+        setCaptured(null);
 
         (async () => {
             try {
@@ -107,8 +115,19 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
         onClose();
     };
 
-    // Android hardware back closes the camera (web fallback overlay).
-    useBackHandler(isOpen, handleClose);
+    const handleRetake = () => {
+        setCaptured(null);
+        setBusy(false);
+    };
+
+    const handleUse = () => {
+        onCapture(captured);
+        handleClose();
+    };
+
+    // Android hardware back leaves the review for the live camera, and closes
+    // the camera from there.
+    useBackHandler(isOpen, captured ? handleRetake : handleClose);
 
     const handleCapture = async () => {
         const video = videoRef.current;
@@ -141,8 +160,8 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
             // synchronous, avoiding the toBlob callback that could stall.
             const frame = canvas.toDataURL('image/jpeg', 0.9);
             const derivatives = await makeDerivatives(frame);
-            onCapture(derivatives);
-            handleClose();
+            if (!derivatives) throw new Error('encode failed');
+            setCaptured(derivatives);
         } catch {
             setError(t('camera.captureFailed'));
             setBusy(false);
@@ -171,7 +190,8 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                 <button
                     type="button"
                     onClick={() => setFacingMode(m => (m === 'environment' ? 'user' : 'environment'))}
-                    className="btn-icon btn-ghost text-white"
+                    disabled={!!captured}
+                    className={`btn-icon btn-ghost text-white ${captured ? 'invisible' : ''}`}
                     aria-label={t('camera.switch')}
                 >
                     <RefreshCw size={20} />
@@ -204,7 +224,16 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                     while a captured frame encodes, so the UI never looks broken
                     or unresponsive. Opaque before the first frame, translucent
                     over the live preview during capture. */}
-                {!error && (busy || !ready) && (
+                {/* Review — over the still-running stream, so Retake is instant. */}
+                {captured && (
+                    <img
+                        src={captured.full || captured.thumb}
+                        alt={t('camera.review')}
+                        className="absolute inset-0 w-full h-full object-contain bg-black"
+                    />
+                )}
+
+                {!error && !captured && (busy || !ready) && (
                     <div className={`absolute inset-0 flex items-center justify-center pointer-events-none ${ready ? 'bg-black/40' : 'bg-black'}`}>
                         <Loader2 size={44} className="animate-spin text-white" />
                     </div>
@@ -217,6 +246,26 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                 className="shrink-0 flex items-center justify-center px-6 pt-4"
                 style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.5rem)' }}
             >
+                {captured ? (
+                    <div className="flex w-full max-w-sm gap-3">
+                        <button
+                            type="button"
+                            onClick={handleRetake}
+                            className="flex-1 flex items-center justify-center gap-2 h-12 rounded-full bg-slate-800 hover:bg-slate-700 text-white font-semibold"
+                        >
+                            <RotateCcw size={18} />
+                            {t('camera.retake')}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleUse}
+                            className="flex-1 flex items-center justify-center gap-2 h-12 rounded-full bg-white hover:bg-slate-200 text-slate-900 font-semibold"
+                        >
+                            <Check size={18} />
+                            {t('camera.use')}
+                        </button>
+                    </div>
+                ) : (
                 <button
                     type="button"
                     onClick={handleCapture}
@@ -236,6 +285,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                         transition: 'transform 0.1s ease',
                     }}
                 />
+                )}
             </div>
         </div>,
         document.body
