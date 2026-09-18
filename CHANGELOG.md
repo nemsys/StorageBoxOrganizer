@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.20.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.19.0...v1.20.0) (2026-09-18)
+
+
+### Features
+
+* **photos:** view unsaved photos full-size and review camera shots ([#63](https://github.com/nemsys/StorageBoxOrganizer/issues/63)) ([159e0c4](https://github.com/nemsys/StorageBoxOrganizer/commit/159e0c4f1fcb3667041fd93847ba202f4dbdddac))
+
+
+### Bug Fixes
+
+* close settings menu after choosing a language ([#61](https://github.com/nemsys/StorageBoxOrganizer/issues/61)) ([d65205c](https://github.com/nemsys/StorageBoxOrganizer/commit/d65205cf904c894a903bcecb9ab5ac46aa154704))
+* **site:** hero shows the search screen the caption promises ([#64](https://github.com/nemsys/StorageBoxOrganizer/issues/64)) ([19df211](https://github.com/nemsys/StorageBoxOrganizer/commit/19df211ebf7a52bb94f713bb68474157b99bbf36))
+* **site:** show real photos on the photo feature card ([#65](https://github.com/nemsys/StorageBoxOrganizer/issues/65)) ([fb07f2c](https://github.com/nemsys/StorageBoxOrganizer/commit/fb07f2c953f70a2b57d8d596b30b1c84b8f272fe))
+
 ## [1.19.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.18.2...v1.19.0) (2026-09-16)
 
 
