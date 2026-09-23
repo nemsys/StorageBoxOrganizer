@@ -2026,6 +2026,7 @@ function App() {
                 icon={<Package size={28} />}
                 title={t('item.emptyTitle')}
                 hint={t('item.emptyHint')}
+                compact
                 actionLabel={t('item.add')}
                 actionIcon={<Plus size={18} />}
                 onAction={() => setIsAddItemModalOpen(true)}

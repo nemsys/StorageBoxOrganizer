@@ -5,13 +5,19 @@
  * yet" (offer the way to create one) and "your search/filter matched nothing"
  * (offer the way to clear it). Showing the first when the user has 40 boxes and
  * a typo in the search field is how an app reads as broken.
+ *
+ * `compact` is for views where it sits under a tall header (the box view: hero
+ * photo, description, chips) — there the full-size version pushed the action
+ * button below the fold on a phone.
  */
-export function EmptyState({ icon, title, hint, actionLabel, onAction, actionIcon }) {
+export function EmptyState({ icon, title, hint, actionLabel, onAction, actionIcon, compact = false }) {
     return (
-        <div className="flex flex-col items-center justify-center text-center py-16 px-6">
-            <div className="p-4 rounded-full bg-surface/60 mb-4 text-muted">
-                {icon}
-            </div>
+        <div className={`flex flex-col items-center justify-center text-center px-6 ${compact ? 'py-6' : 'py-16'}`}>
+            {!compact && (
+                <div className="p-4 rounded-full bg-surface/60 mb-4 text-muted">
+                    {icon}
+                </div>
+            )}
             <p className="text-muted text-lg font-medium">{title}</p>
             {hint && <p className="text-muted text-sm mt-1 mb-5 max-w-sm">{hint}</p>}
             {actionLabel && onAction && (
