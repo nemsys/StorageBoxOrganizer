@@ -943,7 +943,7 @@
   .zoom-btn {
     position: absolute;
     top: 0.5rem;
-    right: 0.5rem;
+    left: 0.5rem;
     z-index: 20;
     display: inline-flex;
     align-items: center;
@@ -960,10 +960,12 @@
     -webkit-tap-highlight-color: transparent;
   }
   /* The card's actions "⋮", same pill as the zoom button in the opposite
-     corner. Beside the title it cost 42px of a 156px two-column card. */
+     corner. Beside the title it cost 42px of a 156px two-column card. Top
+     right, like the ⋮ in the box header, so actions are in one place app-wide;
+     zoom takes top left on both cards so it does not move between them. */
   .card-menu-btn {
-    left: 0.5rem;
-    right: auto;
+    left: auto;
+    right: 0.5rem;
   }
 
   @media (hover: hover) {

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MoreVertical } from 'lucide-react';
@@ -19,28 +19,34 @@ export const OverflowMenu = ({ items = [], align = 'right', label, buttonClassNa
   const { t } = useTranslation();
   const triggerLabel = label ?? t('common.moreActions');
   const [isOpen, setIsOpen] = useState(false);
-  const [coords, setCoords] = useState({ top: 0, left: 0, right: 0 });
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
   const triggerRef = useRef(null);
+  const buttonRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  const updatePosition = () => {
-    const el = triggerRef.current;
+  const updatePosition = useCallback(() => {
+    // Measure the button, not the wrapper: on a card the button is absolutely
+    // positioned into the photo's corner while the wrapper stays in the flow.
+    const el = buttonRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    // Keep the panel off the screen edges: a trigger sitting flush against the
-    // viewport edge would otherwise push long labels (Bulgarian ones are wide)
-    // out of sight.
+    // Keep the panel off both screen edges: a trigger near either edge would
+    // otherwise push long labels (Bulgarian ones are wide) out of sight — a
+    // right-aligned menu on a left-column card runs off the left edge. The
+    // panel is measured (offsetWidth ignores the open animation's scale) and
+    // clamped into the viewport.
     const gutter = 12;
+    const width = dropdownRef.current?.offsetWidth ?? 0;
+    const preferred = align === 'right' ? r.right - width : r.left;
     setCoords({
       top: r.bottom + 8,
-      left: Math.max(gutter, r.left),
-      right: Math.max(gutter, window.innerWidth - r.right),
+      left: Math.max(gutter, Math.min(preferred, window.innerWidth - gutter - width)),
     });
-  };
+  }, [align]);
 
   useLayoutEffect(() => {
     if (isOpen) updatePosition();
-  }, [isOpen]);
+  }, [isOpen, updatePosition]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -66,7 +72,7 @@ export const OverflowMenu = ({ items = [], align = 'right', label, buttonClassNa
       window.removeEventListener('scroll', reposition, true);
       window.removeEventListener('resize', reposition);
     };
-  }, [isOpen]);
+  }, [isOpen, updatePosition]);
 
   const run = (item) => (e) => {
     e.stopPropagation();
@@ -74,13 +80,10 @@ export const OverflowMenu = ({ items = [], align = 'right', label, buttonClassNa
     item.onClick?.(e);
   };
 
-  const positionStyle = align === 'right'
-    ? { top: coords.top, right: coords.right }
-    : { top: coords.top, left: coords.left };
-
   return (
     <div ref={triggerRef} style={{ display: 'inline-block' }}>
       <button
+        ref={buttonRef}
         onClick={(e) => { e.stopPropagation(); setIsOpen((v) => !v); }}
         className={buttonClassName || 'p-2.5 rounded-xl text-muted hover:bg-elevated hover:text-content transition-all hover:scale-105 active:scale-95'}
         title={triggerLabel}
@@ -101,7 +104,7 @@ export const OverflowMenu = ({ items = [], align = 'right', label, buttonClassNa
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.1, ease: 'easeOut' }}
               role="menu"
-              style={{ position: 'fixed', zIndex: 1000, maxWidth: 'calc(100vw - 24px)', ...positionStyle }}
+              style={{ position: 'fixed', zIndex: 1000, maxWidth: 'calc(100vw - 24px)', top: coords.top, left: coords.left }}
               className="w-max min-w-52 py-2 bg-base border border-content/25 rounded-xl shadow-2xl overflow-hidden"
             >
               {items.map((item) => (
