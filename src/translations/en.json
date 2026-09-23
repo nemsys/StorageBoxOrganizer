@@ -133,6 +133,8 @@
   "item.noneAvailable": "No {{item.many}} available to select",
   "item.filterPlaceholder": "Filter {{item.many}}...",
   "item.showingCount": "Showing {{shown}} of {{total}} {{item.counted}}",
+  "item.pickerUnassigned": "No {{box.one}} ({{count}})",
+  "item.pickerInOtherBoxes": "In other {{box.many}}",
   "item.move": "Move {{^item.one}}",
   "item.removeFromBoxTitle": "Remove from {{^box.one}}?",
   "item.removeFromBoxMessage": "Remove this {{item.one}} from {{box.the}}? (It will remain in \"All {{^item.many}}\")",
