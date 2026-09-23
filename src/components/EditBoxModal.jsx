@@ -220,21 +220,6 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm, knownLo
                     />
                 </div>
 
-                {/* The box view shows the last contents change; creation date
-                    stays available here. */}
-                <div className="pt-6 mt-2 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-muted">
-                    <div className="flex items-center gap-1.5">
-                        <Calendar size={12} className="text-content/40" />
-                        <span>{t('box.createdOn', { date: formatDate(box?.createdAt) })}</span>
-                    </div>
-                    {box?.updatedAt && (
-                        <div className="flex items-center gap-1.5">
-                            <History size={12} className="text-content/40" />
-                            <span>{t('box.updatedOn', { date: formatDate(box.updatedAt) })}</span>
-                        </div>
-                    )}
-                </div>
-
                 <div>
                     <div className="flex justify-between items-end mb-1">
                         <label className="block text-sm font-medium text-muted">{t('common.tags')}</label>
@@ -249,6 +234,21 @@ export function EditBoxModal({ isOpen, onClose, onSave, box, askConfirm, knownLo
                     />
                 </div>
 
+
+                {/* The box view shows the last contents change; creation date
+                    stays available here. */}
+                <div className="pt-6 mt-2 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-muted">
+                    <div className="flex items-center gap-1.5">
+                        <Calendar size={12} className="text-content/40" />
+                        <span>{t('box.createdOn', { date: formatDate(box?.createdAt) })}</span>
+                    </div>
+                    {box?.updatedAt && (
+                        <div className="flex items-center gap-1.5">
+                            <History size={12} className="text-content/40" />
+                            <span>{t('box.updatedOn', { date: formatDate(box.updatedAt) })}</span>
+                        </div>
+                    )}
+                </div>
 
                 <div className="pt-4 flex justify-end gap-3">
                     <button type="button" onClick={handleClose} className="btn btn-ghost">{t('common.cancel')}</button>
