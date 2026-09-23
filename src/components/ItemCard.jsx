@@ -94,7 +94,6 @@ export function ItemCard({ item, onDelete, onRemoveFromBox, onEdit, boxName, onB
                 {!selectable && menuItems.length > 0 && (
                     <OverflowMenu
                         label={t('item.actions')}
-                        align="left"
                         buttonClassName="zoom-btn card-menu-btn"
                         items={menuItems}
                     />
