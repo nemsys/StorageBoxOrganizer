@@ -316,6 +316,21 @@ function App() {
     });
   };
 
+  // Translate a confirmation message with the named params rendered bold and,
+  // when too long for the line, cut off with "…". Naming the box/item makes a
+  // mis-tap on the neighbouring card obvious before anything is lost.
+  const tNamed = (key, names, params = {}) => {
+    const slots = Object.keys(names);
+    const marked = Object.fromEntries(slots.map(slot => [slot, `\u0000${slot}\u0000`]));
+    return t(key, { ...params, ...marked })
+      .split('\u0000')
+      .map((part, i) => i % 2 === 0 ? part : (
+        <strong key={i} className="inline-block max-w-full truncate align-bottom font-semibold text-content">
+          {names[part]}
+        </strong>
+      ));
+  };
+
   // Check the live deployment for a newer build and offer to reload into it.
   const handleCheckForUpdates = async () => {
     addToast(t('update.checking'), 'info');
@@ -821,9 +836,11 @@ function App() {
 
   // Remove an item from its box without deleting it (it stays in "All Items").
   const handleRemoveItemFromBox = async (itemId) => {
+    const item = items.find(i => i.id === itemId) || allItems.find(i => i.id === itemId);
+    const box = boxes.find(b => b.id === item?.boxId) || currentBox;
     askConfirm({
       title: t('item.removeFromBoxTitle'),
-      message: t('item.removeFromBoxMessage'),
+      message: tNamed('item.removeFromBoxMessage', { name: item?.name || '', boxName: box?.name || '' }),
       type: 'primary',
       onConfirm: async () => {
         const previousBoxId = findItemBoxId(itemId);
@@ -867,9 +884,10 @@ function App() {
   // image documents, so a delete that has actually happened cannot be undone by
   // writing the item back — the only honest "undo" is to not have deleted yet.
   const handleDeleteItem = async (itemId) => {
+    const item = items.find(i => i.id === itemId) || allItems.find(i => i.id === itemId);
     askConfirm({
       title: t('item.deleteTitle'),
-      message: t('item.deleteMessage'),
+      message: tNamed('item.deleteMessage', { name: item?.name || '' }),
       type: 'danger',
       onConfirm: () => {
         const previousBoxId = findItemBoxId(itemId);
@@ -911,11 +929,12 @@ function App() {
   // not have deleted yet.
   async function handleDeleteBox(id) {
     const doomedItems = allItems.filter(i => i.boxId === id);
+    const boxName = (boxes.find(b => b.id === id) || currentBox)?.name || '';
     askConfirm({
       title: t('box.deleteTitle'),
       message: doomedItems.length > 0
-        ? t('box.deleteMessageCount', { count: doomedItems.length })
-        : t('box.deleteMessageEmpty'),
+        ? tNamed('box.deleteMessageCount', { name: boxName }, { count: doomedItems.length })
+        : tNamed('box.deleteMessageEmpty', { name: boxName }),
       type: 'danger',
       onConfirm: () => {
         const boxSnapshot = boxes.find(b => b.id === id) || currentBox;
@@ -955,9 +974,10 @@ function App() {
   };
 
   async function handleRemoveBox(id) {
+    const boxName = (boxes.find(b => b.id === id) || currentBox)?.name || '';
     askConfirm({
       title: t('box.removeTitle'),
-      message: t('box.removeMessage', { unassigned: t('box.unassigned') }),
+      message: tNamed('box.removeMessage', { name: boxName }, { unassigned: t('box.unassigned') }),
       type: 'primary',
       onConfirm: async () => {
         // Optimistic update - remove box from list and unassign items
