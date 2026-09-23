@@ -133,6 +133,8 @@
   "item.noneAvailable": "Няма {{item.many}} за избор",
   "item.filterPlaceholder": "Филтрирай {{item.theMany}}...",
   "item.showingCount": "Показани {{shown}} от {{total}} {{item.counted}}",
+  "item.pickerUnassigned": "Без {{box.one}} ({{count}})",
+  "item.pickerInOtherBoxes": "В други {{box.many}}",
   "item.move": "Премести {{item.the}}",
   "item.removeFromBoxTitle": "Да се премахне ли от {{box.the}}?",
   "item.removeFromBoxMessage": "Да се премахне ли {{item.this}} {{item.one}} от {{box.the}}? (Ще остане в „{{^item.many}}“.)",

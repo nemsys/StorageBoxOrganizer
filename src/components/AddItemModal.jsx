@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, Fragment } from 'react';
 import Fuse from 'fuse.js';
 import { Modal } from './Modal';
 import { CameraCaptureModal } from './CameraCaptureModal';
@@ -12,7 +12,7 @@ import { useTranslation } from '../translations';
 import { parseTagInput } from '../utils/tagUtils';
 
 export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId = '', availableItems = [], availableTags = [], onSelectExisting, askConfirm }) {
-    const { t } = useTranslation();
+    const { t, lang } = useTranslation();
     const [mode, setMode] = useState('create'); // 'create' | 'select'
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -81,6 +81,23 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
         });
         return fuse.search(searchQuery).map(r => r.item);
     }, [selectableItems, searchQuery]);
+
+    // Unbrowsed, the list leads with the items in no box — the pile still
+    // waiting to be put away, and the likeliest thing to be added — then the
+    // rest A–Я. The collator follows the UI language: a plain sort compares
+    // code units, which puts every Latin name before every Cyrillic one and
+    // capitals before lowercase. A search keeps Fuse's relevance order.
+    const collator = useMemo(() => new Intl.Collator(lang, { sensitivity: 'base', numeric: true }), [lang]);
+    const listedItems = useMemo(() => {
+        if (searchQuery) return filteredItems;
+        return [...filteredItems].sort((a, b) =>
+            (a.boxId ? 1 : 0) - (b.boxId ? 1 : 0) || collator.compare(a.name || '', b.name || '')
+        );
+    }, [filteredItems, searchQuery, collator]);
+    const unassignedCount = searchQuery ? 0 : listedItems.filter(item => !item.boxId).length;
+    // Headings only when both groups are on screen: otherwise the list is
+    // simply alphabetical, and one heading would label nothing.
+    const showGroups = unassignedCount > 0 && unassignedCount < listedItems.length;
 
     // Auto-select if search results in exactly one item
     useEffect(() => {
@@ -377,31 +394,40 @@ export function AddItemModal({ isOpen, onClose, onAdd, boxes = [], initialBoxId 
                     </div>
 
                     <div className="max-h-72 overflow-y-auto -mx-1 px-1 space-y-1" role="listbox" aria-label={t('item.selectLabel')}>
-                        {filteredItems.map(item => {
+                        {listedItems.map((item, index) => {
                             const thumb = refsToThumbs(getImageRefs(item))[0];
                             const isSelected = selectedExistingId === item.id;
+                            const heading = showGroups && (index === 0
+                                ? t('item.pickerUnassigned', { count: unassignedCount })
+                                : index === unassignedCount ? t('item.pickerInOtherBoxes') : null);
                             return (
-                                <button
-                                    key={item.id}
-                                    type="button"
-                                    role="option"
-                                    aria-selected={isSelected}
-                                    onClick={() => setSelectedExistingId(isSelected ? '' : item.id)}
-                                    className={`picker-row ${isSelected ? 'picker-row--on' : ''}`}
-                                >
-                                    {thumb ? (
-                                        <img src={thumb} alt="" className="picker-row__thumb" />
-                                    ) : (
-                                        <span className="picker-row__thumb flex items-center justify-center text-muted">
-                                            <Package size={18} />
-                                        </span>
+                                <Fragment key={item.id}>
+                                    {heading && (
+                                        <div role="presentation" className="px-1 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-muted">
+                                            {heading}
+                                        </div>
                                     )}
-                                    <span className="flex-1 min-w-0">
-                                        <span className="block text-sm font-medium text-content truncate">{item.name}</span>
-                                        <span className="block text-xs text-muted truncate">{getBoxName(item.boxId)}</span>
-                                    </span>
-                                    {isSelected && <Check size={18} className="shrink-0 text-primary" />}
-                                </button>
+                                    <button
+                                        type="button"
+                                        role="option"
+                                        aria-selected={isSelected}
+                                        onClick={() => setSelectedExistingId(isSelected ? '' : item.id)}
+                                        className={`picker-row ${isSelected ? 'picker-row--on' : ''}`}
+                                    >
+                                        {thumb ? (
+                                            <img src={thumb} alt="" className="picker-row__thumb" />
+                                        ) : (
+                                            <span className="picker-row__thumb flex items-center justify-center text-muted">
+                                                <Package size={18} />
+                                            </span>
+                                        )}
+                                        <span className="flex-1 min-w-0">
+                                            <span className="block text-sm font-medium text-content truncate">{item.name}</span>
+                                            <span className="block text-xs text-muted truncate">{getBoxName(item.boxId)}</span>
+                                        </span>
+                                        {isSelected && <Check size={18} className="shrink-0 text-primary" />}
+                                    </button>
+                                </Fragment>
                             );
                         })}
 
