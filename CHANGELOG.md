@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.20.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.19.0...v1.20.0) (2026-09-23)
+
+
+### Features
+
+* list items with no box first when adding an existing item ([#68](https://github.com/nemsys/StorageBoxOrganizer/issues/68)) ([5e7f1bb](https://github.com/nemsys/StorageBoxOrganizer/commit/5e7f1bb6fd95e58b47f6f6cbda62cc3d75d95af6))
+* **photos:** view unsaved photos full-size and review camera shots ([#63](https://github.com/nemsys/StorageBoxOrganizer/issues/63)) ([159e0c4](https://github.com/nemsys/StorageBoxOrganizer/commit/159e0c4f1fcb3667041fd93847ba202f4dbdddac))
+
+
+### Bug Fixes
+
+* **box:** keep Add item in view in an empty box ([#69](https://github.com/nemsys/StorageBoxOrganizer/issues/69)) ([4a9e3a0](https://github.com/nemsys/StorageBoxOrganizer/commit/4a9e3a0d016ef53b57a183a02b0d19a95bb90b8c))
+* close settings menu after choosing a language ([#61](https://github.com/nemsys/StorageBoxOrganizer/issues/61)) ([d65205c](https://github.com/nemsys/StorageBoxOrganizer/commit/d65205cf904c894a903bcecb9ab5ac46aa154704))
+* name the box or item in delete and remove confirmations ([#70](https://github.com/nemsys/StorageBoxOrganizer/issues/70)) ([14b5933](https://github.com/nemsys/StorageBoxOrganizer/commit/14b5933994494741bbc9b160a650f98b5aa1cd5d))
+* put the card ⋮ top-right and zoom top-left ([#67](https://github.com/nemsys/StorageBoxOrganizer/issues/67)) ([f8cfcda](https://github.com/nemsys/StorageBoxOrganizer/commit/f8cfcda67958984b589d23780032ead15963500a))
+* show edit-box dates above the buttons, as in edit-item ([#66](https://github.com/nemsys/StorageBoxOrganizer/issues/66)) ([14b82f6](https://github.com/nemsys/StorageBoxOrganizer/commit/14b82f69d69b4817a4a9ed5c95f9ac18dbd51442))
+* **site:** hero shows the search screen the caption promises ([#64](https://github.com/nemsys/StorageBoxOrganizer/issues/64)) ([19df211](https://github.com/nemsys/StorageBoxOrganizer/commit/19df211ebf7a52bb94f713bb68474157b99bbf36))
+* **site:** show real photos on the photo feature card ([#65](https://github.com/nemsys/StorageBoxOrganizer/issues/65)) ([fb07f2c](https://github.com/nemsys/StorageBoxOrganizer/commit/fb07f2c953f70a2b57d8d596b30b1c84b8f272fe))
+
 ## [1.19.0](https://github.com/nemsys/StorageBoxOrganizer/compare/v1.18.2...v1.19.0) (2026-09-16)
 
 
